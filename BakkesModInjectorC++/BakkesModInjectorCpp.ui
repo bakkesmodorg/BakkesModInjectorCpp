@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BakkesModInjectorCppClass</class>
+ <widget class="QMainWindow" name="BakkesModInjectorCppClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>310</width>
+    <height>85</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>BakkesModInjectorCpp</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>251</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>310</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionOpen_BakkesMod_folder"/>
+    <addaction name="actionInstall_Python_support"/>
+    <addaction name="actionReinstall"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuLinks">
+    <property name="title">
+     <string>Links</string>
+    </property>
+    <addaction name="actionBakkesMod_com"/>
+    <addaction name="actionBakkesMod_Twitter"/>
+    <addaction name="actionBakkesMod_Discord"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionCheck_injection"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuLinks"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionOpen_BakkesMod_folder">
+   <property name="text">
+    <string>Open BakkesMod folder</string>
+   </property>
+  </action>
+  <action name="actionInstall_Python_support">
+   <property name="text">
+    <string>Install Python support</string>
+   </property>
+  </action>
+  <action name="actionReinstall">
+   <property name="text">
+    <string>Reinstall</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionBakkesMod_Twitter">
+   <property name="text">
+    <string>BakkesMod Twitter</string>
+   </property>
+  </action>
+  <action name="actionBakkesMod_com">
+   <property name="text">
+    <string>BakkesMod.com</string>
+   </property>
+  </action>
+  <action name="actionBakkesMod_Discord">
+   <property name="text">
+    <string>BakkesMod Discord</string>
+   </property>
+  </action>
+  <action name="actionCheck_injection">
+   <property name="text">
+    <string>Check injection</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="BakkesModInjectorCpp.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionOpen_BakkesMod_folder</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnOpenBakkesModFolderClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>153</x>
+     <y>43</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCheck_injection</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnCheckInjection()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>153</x>
+     <y>43</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>OnOpenBakkesModFolderClicked()</slot>
+  <slot>OnCheckInjection()</slot>
+ </slots>
+</ui>
