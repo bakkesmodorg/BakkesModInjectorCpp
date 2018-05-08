@@ -6,7 +6,8 @@
 #include "DllInjector.h"
 #include "qtimer.h"
 #include "BakkesModInstallation.h"
-
+#include "SettingsManager.h"
+#include "Updater.h"
 enum BakkesModStatus
 {
 	BOOTING = 0,
@@ -25,11 +26,14 @@ class BakkesModInjectorCpp : public QMainWindow
 private:
 	BakkesModStatus bakkesModState;
 	BakkesModInstallation installation;
+	Updater updater;
+	RegisterySettingsManager settingsManager;
 	WindowsUtils windowsUtils;
 	DllInjector dllInjector;
 	QTimer timer;
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
+	void initialize();
 public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();

@@ -2,7 +2,7 @@
 #include <string>
 #include <QtNetwork>
 #include "BakkesModInstallation.h"
-class Updater
+class Updater : public QObject
 {
 private:
 	static const std::string UPDATE_SERVER_URL;

@@ -4,8 +4,13 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
-	connect(&timer, SIGNAL(timout()), this, SLOT(TimerTimeout()));
+	connect(&timer, SIGNAL(timeout()), this, SLOT(TimerTimeout()));
 
+}
+
+void BakkesModInjectorCpp::initialize()
+{
+	timer.start(500);
 }
 
 void BakkesModInjectorCpp::OnCheckInjection() 
@@ -36,12 +41,14 @@ void BakkesModInjectorCpp::OnCheckInjection()
 
 void BakkesModInjectorCpp::TimerTimeout()
 {
+
 	switch (bakkesModState)
 	{
 	case BOOTING:
 		if (!installation.IsInstalled())
 		{
-
+			
+			bakkesModState = CHECKING_FOR_UPDATES;
 		}
 		break;
 	case CHECKING_FOR_UPDATES:
@@ -61,6 +68,7 @@ void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 		msgBox.setStandardButtons(QMessageBox::Ok);
 		msgBox.setDefaultButton(QMessageBox::Ok);
 		int ret = msgBox.exec();
+		return;
 	}
 	
 	std::string path = rlPath + "BakkesMod/bakkesmod.dll";

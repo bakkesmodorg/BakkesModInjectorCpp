@@ -23,12 +23,17 @@ void Updater::CheckForUpdates(int version)
 	networkRequest.setHeader(QNetworkRequest::UserAgentHeader, std::string("BakkesMod Updater CPP (" + std::to_string(BAKKESMODINJECTOR_VERSION) + ")").c_str());
 	
 	
-	QObject::connect(networkManager, SIGNAL(finished(QNetworkReply*)),
-		this, SLOT(OnUpdateInfoReceived(QNetworkReply*)));
+	QObject::connect(&networkManager, SIGNAL(finished(QNetworkReply*)),
+		this, SLOT(OnUpdateInfoReceived(QNetworkReply*)), Qt::QueuedConnection);
 
 }
 
 void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 {
-
+	QJsonDocument json = QJsonDocument::fromJson(result->readAll());
+	QJsonObject rootObj = json.object();
+	if (rootObj.empty())
+	{
+		auto test = rootObj;
+	}
 }
