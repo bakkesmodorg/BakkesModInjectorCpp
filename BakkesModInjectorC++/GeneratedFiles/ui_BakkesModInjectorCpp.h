@@ -18,6 +18,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
+#include <QtWidgets/QProgressBar>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
@@ -37,6 +38,7 @@ public:
     QAction *actionCheck_injection;
     QWidget *centralWidget;
     QLabel *label;
+    QProgressBar *progressBar;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuLinks;
@@ -70,6 +72,10 @@ public:
         label = new QLabel(centralWidget);
         label->setObjectName(QStringLiteral("label"));
         label->setGeometry(QRect(10, 0, 251, 41));
+        progressBar = new QProgressBar(centralWidget);
+        progressBar->setObjectName(QStringLiteral("progressBar"));
+        progressBar->setGeometry(QRect(80, 10, 211, 23));
+        progressBar->setValue(24);
         BakkesModInjectorCppClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(BakkesModInjectorCppClass);
         menuBar->setObjectName(QStringLiteral("menuBar"));

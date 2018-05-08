@@ -23,6 +23,9 @@
     <ClCompile Include="Updater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UpdateDownloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource Files">
@@ -50,6 +53,12 @@
     <QtMoc Include="BakkesModInjectorCpp.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="Updater.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="UpdateDownloader.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="BakkesModInjectorCpp.ui">
@@ -75,9 +84,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BakkesModInstallation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Updater.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

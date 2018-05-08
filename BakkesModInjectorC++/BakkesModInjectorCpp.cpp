@@ -1,5 +1,9 @@
 #include "BakkesModInjectorCpp.h"
 #include "qmessagebox.h"
+#include <sstream>
+#include "updatedownloader.h"
+#include <tlhelp32.h>
+
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -41,19 +45,113 @@ void BakkesModInjectorCpp::OnCheckInjection()
 
 void BakkesModInjectorCpp::TimerTimeout()
 {
-
+	static UpdateDownloader* updateDownloader;
 	switch (bakkesModState)
 	{
 	case BOOTING:
-		if (!installation.IsInstalled())
-		{
-			
-			bakkesModState = CHECKING_FOR_UPDATES;
-		}
+	{
+		int version = installation.GetVersion();
+		updater.CheckForUpdates(version);
+		bakkesModState = CHECKING_FOR_UPDATES;
+		timer.setInterval(50);
+	}
 		break;
 	case CHECKING_FOR_UPDATES:
+	{
+		if (updater.latestUpdateInfo.requestFinished)
+		{
+			if (updater.latestUpdateInfo.networkRequestStatus == FINISHED_ERROR)
+			{
+				bakkesModState = BAKKESMOD_IDLE;
+				QMessageBox msgBox2;
+				std::stringstream ss;
+				msgBox2.setText("Could not connect to update server, running in offline mode");
+				msgBox2.setStandardButtons(QMessageBox::Ok);
+				msgBox2.setDefaultButton(QMessageBox::Ok);
+				int ret = msgBox2.exec();
+			}
+			else
+			{
+				if (updater.latestUpdateInfo.requiresUpdate)
+				{
+					QMessageBox msgBox;
+
+					std::stringstream ss;
+					ss << "An update is available: " << std::endl;
+					ss << updater.latestUpdateInfo.updateMessage;
+					msgBox.setText(ss.str().c_str());
+					msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+					msgBox.setDefaultButton(QMessageBox::Yes);
+					int ret = msgBox.exec();
+					if (ret == QMessageBox::Yes)
+					{
+						bakkesModState = UPDATING_BAKKESMOD;
+						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.downloadUrl, "update.zip");
+						updateDownloader->StartDownload();
+						ui.progressBar->setMaximum(100);
+					}
+					else
+					{
+						bakkesModState = BAKKESMOD_IDLE;
+						QMessageBox msgBox2;
+						std::stringstream ss;
+						msgBox2.setText("Update cancelled, mod might not work now though");
+						msgBox2.setStandardButtons( QMessageBox::Ok);
+						msgBox2.setDefaultButton(QMessageBox::Ok);
+						int ret = msgBox2.exec();
+
+					}
+				}
+			}
+
+		}
+	}
 		break;
-	case IDLE:
+	case UPDATING_BAKKESMOD:
+		if (updateDownloader->completed)
+		{
+			ui.progressBar->hide();
+			bakkesModState = BAKKESMOD_IDLE;
+		}
+		else {
+			ui.progressBar->show();
+			ui.progressBar->setValue(updateDownloader->percentComplete);
+
+		}
+	break;
+	case BAKKESMOD_IDLE:
+		timer.setInterval(200);
+		PROCESSENTRY32 processInfo;
+		processInfo.dwSize = sizeof(processInfo);
+
+		HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+		if (processesSnapshot == INVALID_HANDLE_VALUE)
+			return;
+
+		Process32First(processesSnapshot, &processInfo);
+		if (!strcmp("RocketLeague.exe", processInfo.szExeFile))
+		{
+			CloseHandle(processesSnapshot);
+			return processInfo.th32ProcessID;
+		}
+
+		while (Process32Next(processesSnapshot, &processInfo))
+		{
+			if (!strcmp(processName, processInfo.szExeFile))
+			{
+				CloseHandle(processesSnapshot);
+				return processInfo.th32ProcessID;
+			}
+		}
+
+		CloseHandle(processesSnapshot);
+		break;
+	case INJECT_DLL:
+		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
+		std::string path = rlPath + "BakkesMod/bakkesmod.dll";
+		dllInjector.InjectDLL(L"RocketLeague.exe", path);
+		break;
+	case INJECTED:
 		break;
 	}
 }
@@ -71,6 +169,5 @@ void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 		return;
 	}
 	
-	std::string path = rlPath + "BakkesMod/bakkesmod.dll";
-	dllInjector.InjectDLL(L"RocketLeague.exe", path);
+
 }
