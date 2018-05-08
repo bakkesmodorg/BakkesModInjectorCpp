@@ -73,8 +73,18 @@
     </property>
     <addaction name="actionCheck_injection"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionEnable_safe_mode"/>
+    <addaction name="actionRun_on_startup"/>
+    <addaction name="actionHide_when_minimized"/>
+    <addaction name="actionMinimize_on_start"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuLinks"/>
+   <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -126,6 +136,38 @@
     <string>Check injection</string>
    </property>
   </action>
+  <action name="actionEnable_safe_mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable safe mode</string>
+   </property>
+  </action>
+  <action name="actionRun_on_startup">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Run on startup</string>
+   </property>
+  </action>
+  <action name="actionHide_when_minimized">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide when minimized</string>
+   </property>
+  </action>
+  <action name="actionMinimize_on_start">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Minimize on start</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
@@ -164,9 +206,77 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionEnable_safe_mode</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnCheckSafeMode()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRun_on_startup</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnRunOnStartup()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionHide_when_minimized</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnHideOnMinimize()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionMinimize_on_start</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnMinimizeOnStart()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
   <slot>OnCheckInjection()</slot>
+  <slot>OnCheckSafeMode()</slot>
+  <slot>OnRunOnStartup()</slot>
+  <slot>OnMinimizeOnStart()</slot>
+  <slot>OnHideOnMinimize()</slot>
  </slots>
 </ui>

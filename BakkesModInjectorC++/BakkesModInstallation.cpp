@@ -18,11 +18,13 @@ bool BakkesModInstallation::IsInstalled()
 
 unsigned int BakkesModInstallation::GetVersion()
 {
-	std::string versionFilePath = windowsUtils.GetRocketLeagueDirFromLog() + "version.txt";
+	std::string versionFilePath =windowsUtils.GetRocketLeagueDirFromLog() + "bakkesmod\\version.txt";
 	if (!windowsUtils.FileExists(versionFilePath))
 		return 0;
-	std::ifstream versionFile(versionFilePath);
-	unsigned int version = 0;
+	std::ifstream versionFile;
+	versionFile.open(versionFilePath);
+	int version = 0;
 	versionFile >> version;
+	versionFile.close();
 	return version;
 }

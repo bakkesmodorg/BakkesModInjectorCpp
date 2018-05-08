@@ -44,6 +44,11 @@ public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();
 	void TimerTimeout();
+	void OnCheckSafeMode();
+	void OnMinimizeOnStart();
+	void OnHideOnMinimize();
+	void OnRunOnStartup();
+
 private:
 	Ui::BakkesModInjectorCppClass ui;
 };

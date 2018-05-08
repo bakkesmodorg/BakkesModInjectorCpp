@@ -15,6 +15,11 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
+	ui.progressBar->hide();
+	ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
+	ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
+	ui.actionRun_on_startup->setChecked(settingsManager.GetIntSetting(L"HideOnBoot"));
+	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
 std::string BakkesModInjectorCpp::GetStatusString()
@@ -144,7 +149,14 @@ void BakkesModInjectorCpp::TimerTimeout()
 
 					}
 				}
+				else
+				{
+					bakkesModState = BAKKESMOD_IDLE;
+				}
 			}
+
+		}
+		else {
 
 		}
 	}
@@ -203,6 +215,31 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	}
 	ui.label->setText(QString(GetStatusString().c_str()));
+}
+
+void BakkesModInjectorCpp::OnCheckSafeMode()
+{
+	bool newStatus = ui.actionEnable_safe_mode->isChecked();
+	//ui.actionEnable_safe_mode->setChecked(newStatus);
+	settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
+}
+
+void BakkesModInjectorCpp::OnMinimizeOnStart()
+{
+	bool newStatus = ui.actionMinimize_on_start->isChecked();
+	//ui.actionMinimize_on_start->setChecked(newStatus);
+	settingsManager.SaveSetting(L"HideOnBoot", (int)newStatus);
+}
+
+void BakkesModInjectorCpp::OnHideOnMinimize()
+{
+	bool newStatus = ui.actionHide_when_minimized->isChecked();
+	//ui.actionHide_when_minimized->setChecked(newStatus);
+	settingsManager.SaveSetting(L"HideOnMinimize", (int)newStatus);
+}
+
+void BakkesModInjectorCpp::OnRunOnStartup()
+{
 }
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()

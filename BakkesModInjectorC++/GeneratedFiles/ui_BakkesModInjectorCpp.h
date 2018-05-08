@@ -36,6 +36,10 @@ public:
     QAction *actionBakkesMod_com;
     QAction *actionBakkesMod_Discord;
     QAction *actionCheck_injection;
+    QAction *actionEnable_safe_mode;
+    QAction *actionRun_on_startup;
+    QAction *actionHide_when_minimized;
+    QAction *actionMinimize_on_start;
     QWidget *centralWidget;
     QLabel *label;
     QProgressBar *progressBar;
@@ -43,6 +47,7 @@ public:
     QMenu *menuFile;
     QMenu *menuLinks;
     QMenu *menuHelp;
+    QMenu *menuSettings;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
@@ -67,6 +72,18 @@ public:
         actionBakkesMod_Discord->setObjectName(QStringLiteral("actionBakkesMod_Discord"));
         actionCheck_injection = new QAction(BakkesModInjectorCppClass);
         actionCheck_injection->setObjectName(QStringLiteral("actionCheck_injection"));
+        actionEnable_safe_mode = new QAction(BakkesModInjectorCppClass);
+        actionEnable_safe_mode->setObjectName(QStringLiteral("actionEnable_safe_mode"));
+        actionEnable_safe_mode->setCheckable(true);
+        actionRun_on_startup = new QAction(BakkesModInjectorCppClass);
+        actionRun_on_startup->setObjectName(QStringLiteral("actionRun_on_startup"));
+        actionRun_on_startup->setCheckable(true);
+        actionHide_when_minimized = new QAction(BakkesModInjectorCppClass);
+        actionHide_when_minimized->setObjectName(QStringLiteral("actionHide_when_minimized"));
+        actionHide_when_minimized->setCheckable(true);
+        actionMinimize_on_start = new QAction(BakkesModInjectorCppClass);
+        actionMinimize_on_start->setObjectName(QStringLiteral("actionMinimize_on_start"));
+        actionMinimize_on_start->setCheckable(true);
         centralWidget = new QWidget(BakkesModInjectorCppClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         label = new QLabel(centralWidget);
@@ -86,6 +103,8 @@ public:
         menuLinks->setObjectName(QStringLiteral("menuLinks"));
         menuHelp = new QMenu(menuBar);
         menuHelp->setObjectName(QStringLiteral("menuHelp"));
+        menuSettings = new QMenu(menuBar);
+        menuSettings->setObjectName(QStringLiteral("menuSettings"));
         BakkesModInjectorCppClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(BakkesModInjectorCppClass);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -96,6 +115,7 @@ public:
 
         menuBar->addAction(menuFile->menuAction());
         menuBar->addAction(menuLinks->menuAction());
+        menuBar->addAction(menuSettings->menuAction());
         menuBar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionOpen_BakkesMod_folder);
         menuFile->addAction(actionInstall_Python_support);
@@ -105,10 +125,18 @@ public:
         menuLinks->addAction(actionBakkesMod_Twitter);
         menuLinks->addAction(actionBakkesMod_Discord);
         menuHelp->addAction(actionCheck_injection);
+        menuSettings->addAction(actionEnable_safe_mode);
+        menuSettings->addAction(actionRun_on_startup);
+        menuSettings->addAction(actionHide_when_minimized);
+        menuSettings->addAction(actionMinimize_on_start);
 
         retranslateUi(BakkesModInjectorCppClass);
         QObject::connect(actionOpen_BakkesMod_folder, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnOpenBakkesModFolderClicked()));
         QObject::connect(actionCheck_injection, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckInjection()));
+        QObject::connect(actionEnable_safe_mode, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckSafeMode()));
+        QObject::connect(actionRun_on_startup, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnRunOnStartup()));
+        QObject::connect(actionHide_when_minimized, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnHideOnMinimize()));
+        QObject::connect(actionMinimize_on_start, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnMinimizeOnStart()));
 
         QMetaObject::connectSlotsByName(BakkesModInjectorCppClass);
     } // setupUi
@@ -124,10 +152,15 @@ public:
         actionBakkesMod_com->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod.com", nullptr));
         actionBakkesMod_Discord->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Discord", nullptr));
         actionCheck_injection->setText(QApplication::translate("BakkesModInjectorCppClass", "Check injection", nullptr));
+        actionEnable_safe_mode->setText(QApplication::translate("BakkesModInjectorCppClass", "Enable safe mode", nullptr));
+        actionRun_on_startup->setText(QApplication::translate("BakkesModInjectorCppClass", "Run on startup", nullptr));
+        actionHide_when_minimized->setText(QApplication::translate("BakkesModInjectorCppClass", "Hide when minimized", nullptr));
+        actionMinimize_on_start->setText(QApplication::translate("BakkesModInjectorCppClass", "Minimize on start", nullptr));
         label->setText(QApplication::translate("BakkesModInjectorCppClass", "TextLabel", nullptr));
         menuFile->setTitle(QApplication::translate("BakkesModInjectorCppClass", "File", nullptr));
         menuLinks->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Links", nullptr));
         menuHelp->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Help", nullptr));
+        menuSettings->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Settings", nullptr));
     } // retranslateUi
 
 };
