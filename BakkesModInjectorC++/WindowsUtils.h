@@ -11,5 +11,6 @@ public:
 	std::string GetRocketLeagueBuildID();
 	static bool FileExists(std::string path);
 	static void OpenFolder(std::string path);
+	static bool IsProcessRunning(std::wstring processName);
 };
 

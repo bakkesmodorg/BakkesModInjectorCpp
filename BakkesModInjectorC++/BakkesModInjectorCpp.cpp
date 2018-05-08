@@ -17,6 +17,48 @@ void BakkesModInjectorCpp::initialize()
 	timer.start(500);
 }
 
+std::string BakkesModInjectorCpp::GetStatusString()
+{
+	std::string status = "";
+	switch (bakkesModState)
+	{
+	case BOOTING:
+		status = "Starting...";
+		break;
+	case BAKKESMOD_IDLE:
+		status = "Uninjected";
+		break;
+	case WAITING_FOR_RL:
+		break;
+	case OUT_OF_DATE:
+		status = "Out of date";
+		break;
+	case OUT_OF_DATE_SAFEMODE_DISABLED:
+		break;
+	case CHECKING_FOR_UPDATES:
+		status = "Checking for updates";
+		break;
+	case START_UPDATING:
+		status = "Starting update process";
+		break;
+	case UPDATING_BAKKESMOD:
+		status = "Updating BakkesMod";
+		break;
+	case UPDATING_INJECTOR:
+		break;
+	case INJECT_DLL:
+		status = "Injecting DLL";
+		break;
+	case INJECTED:
+		status = "Injected";
+		break;
+	case INJECTION_FAILED:
+		status = "Injection failed, please download vc_redist.x86.exe and restart your PC";
+		break;
+	}
+	return status;
+}
+
 void BakkesModInjectorCpp::OnCheckInjection() 
 {
 	DWORD injectionResult = dllInjector.IsBakkesModDllInjected(L"RocketLeague.exe");
@@ -121,39 +163,46 @@ void BakkesModInjectorCpp::TimerTimeout()
 	break;
 	case BAKKESMOD_IDLE:
 		timer.setInterval(200);
-		PROCESSENTRY32 processInfo;
-		processInfo.dwSize = sizeof(processInfo);
-
-		HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-		if (processesSnapshot == INVALID_HANDLE_VALUE)
-			return;
-
-		Process32First(processesSnapshot, &processInfo);
-		if (!strcmp("RocketLeague.exe", processInfo.szExeFile))
+		if (dllInjector.GetProcessID(L"RocketLeague.exe"))
 		{
-			CloseHandle(processesSnapshot);
-			return processInfo.th32ProcessID;
+			bakkesModState = INJECT_DLL;
 		}
-
-		while (Process32Next(processesSnapshot, &processInfo))
-		{
-			if (!strcmp(processName, processInfo.szExeFile))
-			{
-				CloseHandle(processesSnapshot);
-				return processInfo.th32ProcessID;
-			}
-		}
-
-		CloseHandle(processesSnapshot);
 		break;
 	case INJECT_DLL:
+	{
 		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
 		std::string path = rlPath + "BakkesMod/bakkesmod.dll";
 		dllInjector.InjectDLL(L"RocketLeague.exe", path);
+
+		DWORD injectionResult = dllInjector.IsBakkesModDllInjected(L"RocketLeague.exe");
+		if (injectionResult == NOPE)
+		{
+			bakkesModState = INJECTION_FAILED;
+			QMessageBox msgBox;
+			msgBox.setText("It looks like injection was unsuccessful, this probably means you're missing a dependency. Please take a look at http://bakkesmod.wikia.com/wiki/Troubleshooting");
+			msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+			msgBox.setDefaultButton(QMessageBox::Yes);
+			int ret = msgBox.exec();
+			if (ret == QMessageBox::Yes)
+			{
+
+			}
+		}
+		else
+		{
+			bakkesModState = INJECTED;
+		}
+	}
 		break;
 	case INJECTED:
+		timer.setInterval(1000);
+		if (!dllInjector.GetProcessID(L"RocketLeague.exe"))
+		{
+			bakkesModState = BAKKESMOD_IDLE;
+		}
 		break;
 	}
+	ui.label->setText(QString(GetStatusString().c_str()));
 }
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()

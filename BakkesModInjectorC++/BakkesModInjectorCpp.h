@@ -18,7 +18,10 @@ enum BakkesModStatus
 	CHECKING_FOR_UPDATES = 5,
 	START_UPDATING = 6,
 	UPDATING_BAKKESMOD = 7,
-	UPDATING_INJECTOR = 8
+	UPDATING_INJECTOR = 8,
+	INJECT_DLL = 9,
+	INJECTED = 10,
+	INJECTION_FAILED = 11
 	
 };
 
@@ -36,6 +39,7 @@ private:
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
 	void initialize();
+	std::string GetStatusString();
 public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();
