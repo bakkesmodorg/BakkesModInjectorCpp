@@ -86,5 +86,18 @@
     <ClInclude Include="BakkesModInstallation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\BakkesModInjectorC.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BakkesModInjectorC++.rc" />
+    <ResourceCompile Include="resource.rc" />
   </ItemGroup>
 </Project>

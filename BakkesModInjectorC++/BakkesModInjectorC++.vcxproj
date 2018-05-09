@@ -137,6 +137,8 @@
     <ClInclude Include="BakkesModInstallation.h" />
     <ClInclude Include="DllInjector.h" />
     <ClInclude Include="Installer.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="SettingsManager.h" />
     <QtMoc Include="Updater.h">
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\QtWidgets</IncludePath>
@@ -151,6 +153,13 @@
       <Define Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UNICODE;_UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_WIDGETS_LIB</Define>
     </QtMoc>
     <ClInclude Include="WindowsUtils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\BakkesModInjectorC.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BakkesModInjectorC++.rc" />
+    <ResourceCompile Include="resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

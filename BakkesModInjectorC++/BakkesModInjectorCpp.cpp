@@ -10,6 +10,16 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	ui.setupUi(this);
 	connect(&timer, SIGNAL(timeout()), this, SLOT(TimerTimeout()));
 
+	QIcon icon(":/BakkesModInjectorCpp/mainicon");
+	this->setWindowIcon(icon);
+
+	//Create tray icon
+	trayIcon = new QSystemTrayIcon(QIcon(":/BakkesModInjectorCpp/mainicon"), this);
+	trayIcon->show();
+
+	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayClicked(QSystemTrayIcon::ActivationReason)));
+
+
 }
 
 void BakkesModInjectorCpp::initialize()
@@ -18,8 +28,32 @@ void BakkesModInjectorCpp::initialize()
 	ui.progressBar->hide();
 	ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 	ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
-	ui.actionRun_on_startup->setChecked(settingsManager.GetIntSetting(L"HideOnBoot"));
+
+	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
+	ui.actionRun_on_startup->setChecked(hideOnBoot);
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
+}
+
+void BakkesModInjectorCpp::changeEvent(QEvent* e)
+{
+	switch (e->type())
+	{
+	case QEvent::LanguageChange:
+		//this->ui->retranslateUi(this);
+		break;
+	case QEvent::WindowStateChange:
+	{
+		if (this->windowState() & Qt::WindowMinimized)
+		{
+			QTimer::singleShot(250, this, SLOT(hide()));
+		}
+		break;
+	}
+	default:
+		break;
+	}
+
+	QMainWindow::changeEvent(e);
 }
 
 std::string BakkesModInjectorCpp::GetStatusString()
@@ -240,6 +274,16 @@ void BakkesModInjectorCpp::OnHideOnMinimize()
 
 void BakkesModInjectorCpp::OnRunOnStartup()
 {
+}
+
+void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
+{
+	if (e == QSystemTrayIcon::Trigger) {
+		if (this->isVisible()) 
+			this->hide();
+		else 
+			this->show();
+	}
 }
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()

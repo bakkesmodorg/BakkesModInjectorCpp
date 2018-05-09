@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="BakkesModInjectorCpp">
+    <qresource prefix="/BakkesModInjectorCpp">
+        <file alias="mainicon">BakkesModInjectorC.ico</file>
     </qresource>
 </RCC>

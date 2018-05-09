@@ -8,6 +8,7 @@
 #include "BakkesModInstallation.h"
 #include "SettingsManager.h"
 #include "Updater.h"
+#include <qsystemtrayicon.h>
 enum BakkesModStatus
 {
 	BOOTING = 0,
@@ -36,10 +37,12 @@ private:
 	WindowsUtils windowsUtils;
 	DllInjector dllInjector;
 	QTimer timer;
+	QSystemTrayIcon* trayIcon;
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
 	void initialize();
 	std::string GetStatusString();
+	void changeEvent(QEvent* e);
 public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();
@@ -48,6 +51,7 @@ public slots:
 	void OnMinimizeOnStart();
 	void OnHideOnMinimize();
 	void OnRunOnStartup();
+	void trayClicked(QSystemTrayIcon::ActivationReason e);
 
 private:
 	Ui::BakkesModInjectorCppClass ui;
