@@ -436,6 +436,6 @@ void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 		int ret = msgBox.exec();
 		return;
 	}
-	
+	windowsUtils.OpenFolder(rlPath);
 
 }
