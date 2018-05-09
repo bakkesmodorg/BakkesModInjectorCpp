@@ -267,7 +267,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		{
 			ui.progressBar->hide();
 			auto currentName = windowsUtils.GetCurrentExecutablePath();
-			if (rename(WindowsUtils::WStringToString(currentName).c_str(), "bakkesmod_old.exe"))
+			if (rename(WindowsUtils::WStringToString(currentName).c_str(), "bakkesmod_old.exe") == 0)
 			{
 				rename(updateDownloader->packageUrl.c_str(), WindowsUtils::WStringToString(currentName).c_str());
 				system(WindowsUtils::WStringToString(currentName).c_str());
@@ -284,6 +284,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				{
 
 				}
+				bakkesModState = BAKKESMOD_IDLE;
 			}
 		}
 		else {
