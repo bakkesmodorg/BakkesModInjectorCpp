@@ -1,7 +1,8 @@
 #pragma once
 #include "windowsutils.h"
 #include "SettingsManager.h"
-class BakkesModInstallation
+#include <qwidget.h>
+class BakkesModInstallation : public QWidget
 {
 private:
 	std::string bakkesModFolder = "";

@@ -1,6 +1,7 @@
 #include "BakkesModInstallation.h"
 #include <fstream>
-
+#include <string>
+#include <qfiledialog.h>
 
 BakkesModInstallation::BakkesModInstallation()
 {
@@ -15,10 +16,10 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 {
 	if (bakkesModFolder.empty())
 	{
-		std::string registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+		std::wstring registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 		if (!registryString.empty())
 		{
-			bakkesModFolder = registryString;
+			bakkesModFolder = windowsUtils.WStringToString(registryString);
 			return bakkesModFolder;
 		}
 
@@ -30,9 +31,9 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 		}
 		else
 		{
-			std::string path = QFileDialog::getOpenFileName(this,
-				tr("Select the Rocket League executable"), "C:/", tr("RocketLeague.exe (RocketLeague.exe)"));
-			bakkesModFolder = path.substr(0, path.size() - "RocketLeague.exe".size());
+			QString path = QFileDialog::getOpenFileName(this,
+				QString("Select the Rocket League executable"), QString("C:/"), QString("RocketLeague.exe (RocketLeague.exe)"));
+			bakkesModFolder = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());
 		}
 		settings.SaveSetting(L"BakkesModPath", windowsUtils.StringToWString(bakkesModFolder), RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 		
