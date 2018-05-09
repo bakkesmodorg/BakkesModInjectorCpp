@@ -35,6 +35,7 @@ void BakkesModInjectorCpp::initialize()
 	{
 		this->showMinimized();
 	}
+
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
@@ -49,7 +50,8 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 	{
 		if (this->windowState() & Qt::WindowMinimized)
 		{
-			if (settingsManager.GetIntSetting(L"HideOnMinimize")) {
+			if (settingsManager.GetIntSetting(L"HideOnMinimize")) 
+			{
 				QTimer::singleShot(250, this, SLOT(hide()));
 			}
 		}
@@ -287,8 +289,9 @@ void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 	if (e == QSystemTrayIcon::Trigger) {
 		if (this->isVisible()) 
 			this->hide();
-		else 
+		else {
 			this->show();
+		}
 	}
 }
 

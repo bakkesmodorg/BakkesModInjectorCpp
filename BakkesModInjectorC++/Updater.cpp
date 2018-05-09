@@ -36,7 +36,7 @@ void Updater::CheckForUpdates(int version)
 
 void Updater::replyFinished(QNetworkReply * result)
 {
-	int k = 5;
+	
 }
 
 void Updater::networkError(QNetworkReply::NetworkError code)

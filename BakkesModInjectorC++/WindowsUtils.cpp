@@ -95,3 +95,17 @@ bool WindowsUtils::IsProcessRunning(std::wstring processName)
 	CloseHandle(processesSnapshot);
 	return 0;
 }
+
+std::wstring WindowsUtils::StringToWString(const std::string & s)
+{
+	std::wstring temp(s.length(), L' ');
+	std::copy(s.begin(), s.end(), temp.begin());
+	return temp;
+}
+
+std::string WindowsUtils::WStringToString(const std::wstring & s)
+{
+	std::string temp(s.length(), ' ');
+	std::copy(s.begin(), s.end(), temp.begin());
+	return temp;
+}
