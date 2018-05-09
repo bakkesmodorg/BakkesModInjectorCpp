@@ -32,7 +32,7 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 		{
 			QString path = QFileDialog::getOpenFileName(this,
 				QString("Select the Rocket League executable"), QString("C:/"), QString("RocketLeague.exe (RocketLeague.exe)"));
-			bakkesModFolder = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());
+			bakkesModFolder = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size()) + "bakkesmod\\";
 		}
 		auto converted = windowsUtils.StringToWString(bakkesModFolder);
 		settings.SaveSetting(L"BakkesModPath", converted, RegisterySettingsManager::REGISTRY_DIR_APPPATH);
