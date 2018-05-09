@@ -22,8 +22,8 @@ enum BakkesModStatus
 	UPDATING_INJECTOR = 8,
 	INJECT_DLL = 9,
 	INJECTED = 10,
-	INJECTION_FAILED = 11
-	
+	INJECTION_FAILED = 11,
+	BAKKESMOD_INSTALLING = 12
 };
 
 class BakkesModInjectorCpp : public QMainWindow

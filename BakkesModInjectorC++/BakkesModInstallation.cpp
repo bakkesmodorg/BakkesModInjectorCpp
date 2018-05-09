@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <qfiledialog.h>
-
+#include <qmessagebox.h>
 BakkesModInstallation::BakkesModInstallation()
 {
 }
@@ -32,7 +32,18 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 		{
 			QString path = QFileDialog::getOpenFileName(this,
 				QString("Select the Rocket League executable"), QString("C:/"), QString("RocketLeague.exe (RocketLeague.exe)"));
-			bakkesModFolder = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size()) + "bakkesmod\\";
+			std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());;
+			bakkesModFolder = rlPath +"bakkesmod\\";
+			if (!WindowsUtils::FileExists(rlPath))
+			{
+				QMessageBox msgBox2;
+				msgBox2.setText("Did not select bakkesmod folder?");
+				msgBox2.setStandardButtons(QMessageBox::Ok);
+				msgBox2.setDefaultButton(QMessageBox::Ok);
+				int ret = msgBox2.exec();
+				bakkesModFolder = "";
+				return "";
+			}
 		}
 		auto converted = windowsUtils.StringToWString(bakkesModFolder);
 		settings.SaveSetting(L"BakkesModPath", converted, RegisterySettingsManager::REGISTRY_DIR_APPPATH);
@@ -53,7 +64,7 @@ unsigned int BakkesModInstallation::GetVersion()
 		return 0;
 	std::ifstream versionFile;
 	versionFile.open(versionFilePath);
-	int version = -1;
+	int version = 0;
 	versionFile >> version;
 	versionFile.close();
 	return version;

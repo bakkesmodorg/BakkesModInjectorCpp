@@ -3,7 +3,7 @@
 #include <sstream>
 #include "updatedownloader.h"
 #include <tlhelp32.h>
-
+#include "Installer.h"
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -26,21 +26,7 @@ void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
 	ui.progressBar->hide();
-	//TODO: set defaults when not installed
-	ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
-	ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
-	ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
-	OnRunOnStartup();
-
-
-	//ui.actionRun_on_startup->setChecked();
 	
-	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
-	ui.actionMinimize_on_start->setChecked(hideOnBoot);
-	if (hideOnBoot)
-	{
-		this->showMinimized();
-	}
 
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
@@ -108,6 +94,9 @@ std::string BakkesModInjectorCpp::GetStatusString()
 	case INJECTION_FAILED:
 		status = "Injection failed, please download vc_redist.x86.exe and restart your PC";
 		break;
+	case BAKKESMOD_INSTALLING:
+		status = "Extracting archive";
+		break;
 	}
 	return status;
 }
@@ -145,6 +134,27 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 	case BOOTING:
 	{
+		if (!installation.IsInstalled())
+		{
+			settingsManager.SaveSetting(L"EnableSafeMode", 1);
+			settingsManager.SaveSetting(L"HideOnMinimize", 1);
+			settingsManager.SaveSetting(L"HideOnBoot", 0);
+			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
+		}
+
+		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
+		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
+		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
+		OnRunOnStartup();
+
+
+		bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
+		ui.actionMinimize_on_start->setChecked(hideOnBoot);
+		if (hideOnBoot)
+		{
+			this->showMinimized();
+		}
+
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
 		bakkesModState = CHECKING_FOR_UPDATES;
@@ -213,7 +223,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		if (updateDownloader->completed)
 		{
 			ui.progressBar->hide();
-			bakkesModState = BAKKESMOD_IDLE;
+			bakkesModState = BAKKESMOD_INSTALLING;
 		}
 		else {
 			ui.progressBar->show();
@@ -221,6 +231,13 @@ void BakkesModInjectorCpp::TimerTimeout()
 
 		}
 	break;
+	case BAKKESMOD_INSTALLING:
+	{
+		Installer i("update.zip", installation.GetBakkesModFolder());
+		i.Install();
+		bakkesModState = BAKKESMOD_IDLE;
+	}
+		break;
 	case BAKKESMOD_IDLE:
 		timer.setInterval(200);
 		if (dllInjector.GetProcessID(L"RocketLeague.exe"))

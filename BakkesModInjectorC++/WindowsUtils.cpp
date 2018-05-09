@@ -67,6 +67,15 @@ void WindowsUtils::OpenFolder(std::string path)
 	system(openPath.c_str());
 }
 
+void WindowsUtils::CreateFolder(std::string path)
+{
+	if (CreateDirectory(StringToWString(path).c_str(), NULL) ||
+		ERROR_ALREADY_EXISTS == GetLastError())
+	{
+		// CopyFile(...)
+	}
+}
+
 bool WindowsUtils::IsProcessRunning(std::wstring processName)
 {
 	PROCESSENTRY32 processInfo;
