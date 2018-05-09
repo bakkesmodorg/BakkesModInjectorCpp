@@ -26,8 +26,7 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
 		if (!rlPath.empty())
 		{
-			bakkesModFolder = rlPath + "bakkesmod/";
-			
+			bakkesModFolder = rlPath + "bakkesmod\\";
 		}
 		else
 		{
@@ -35,7 +34,8 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 				QString("Select the Rocket League executable"), QString("C:/"), QString("RocketLeague.exe (RocketLeague.exe)"));
 			bakkesModFolder = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());
 		}
-		settings.SaveSetting(L"BakkesModPath", windowsUtils.StringToWString(bakkesModFolder), RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+		auto converted = windowsUtils.StringToWString(bakkesModFolder);
+		settings.SaveSetting(L"BakkesModPath", converted, RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 		
 	}
 	return bakkesModFolder;
@@ -48,7 +48,7 @@ bool BakkesModInstallation::IsInstalled()
 
 unsigned int BakkesModInstallation::GetVersion()
 {
-	std::string versionFilePath = windowsUtils.GetRocketLeagueDirFromLog() + "bakkesmod\\version.txt";
+	std::string versionFilePath = GetBakkesModFolder() + "\\version.txt";
 	if (!windowsUtils.FileExists(versionFilePath))
 		return 0;
 	std::ifstream versionFile;

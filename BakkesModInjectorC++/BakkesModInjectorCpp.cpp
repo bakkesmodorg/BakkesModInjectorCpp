@@ -224,7 +224,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case INJECT_DLL:
 	{
-		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
+		std::string rlPath = installation.GetBakkesModFolder();
 		std::string path = rlPath + "BakkesMod/bakkesmod.dll";
 		dllInjector.InjectDLL(L"RocketLeague.exe", path);
 
@@ -297,7 +297,7 @@ void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 {
-	std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
+	std::string rlPath = installation.GetBakkesModFolder();
 	if (rlPath.empty())
 	{
 		QMessageBox msgBox;

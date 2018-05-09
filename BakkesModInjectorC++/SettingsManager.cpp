@@ -13,8 +13,7 @@ void RegisterySettingsManager::SaveSetting(std::wstring key, std::wstring settin
 	if (currentUserOpen != ERROR_SUCCESS)
 		return;
 
-
-	LONG setValueRes = RegSetValueEx(hKey, key.c_str(), 0, REG_SZ, (LPBYTE)setting.c_str(), wcslen(setting.c_str()) + 1);
+	LONG setValueRes = RegSetValueEx(hKey, key.c_str(), 0, REG_SZ, (LPBYTE)setting.c_str(), (setting.size() + 1) * sizeof(wchar_t));
 	if (setValueRes != ERROR_SUCCESS)
 		return;
 	RegCloseKey(hKey);
