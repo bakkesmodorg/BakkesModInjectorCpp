@@ -30,7 +30,11 @@ void BakkesModInjectorCpp::initialize()
 	ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 
 	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
-	ui.actionRun_on_startup->setChecked(hideOnBoot);
+	ui.actionMinimize_on_start->setChecked(hideOnBoot);
+	if (hideOnBoot)
+	{
+		this->showMinimized();
+	}
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
@@ -45,7 +49,9 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 	{
 		if (this->windowState() & Qt::WindowMinimized)
 		{
-			QTimer::singleShot(250, this, SLOT(hide()));
+			if (settingsManager.GetIntSetting(L"HideOnMinimize")) {
+				QTimer::singleShot(250, this, SLOT(hide()));
+			}
 		}
 		break;
 	}
