@@ -26,9 +26,15 @@ void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
 	ui.progressBar->hide();
+	//TODO: set defaults when not installed
 	ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 	ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
+	ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
+	OnRunOnStartup();
 
+
+	//ui.actionRun_on_startup->setChecked();
+	
 	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
 	ui.actionMinimize_on_start->setChecked(hideOnBoot);
 	if (hideOnBoot)
@@ -282,7 +288,20 @@ void BakkesModInjectorCpp::OnHideOnMinimize()
 
 void BakkesModInjectorCpp::OnRunOnStartup()
 {
+	bool newStatus = ui.actionRun_on_startup->isChecked();
+	
+	if (newStatus)
+	{
+		std::wostringstream w;
+		w << "\"" << windowsUtils.GetCurrentExecutablePath() << "\"";
+		settingsManager.SaveSetting(L"BakkesMod", w.str(), RegisterySettingsManager::REGISTRY_DIR_RUN);
+	}
+	else
+	{
+		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
+	}
 }
+
 
 void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 {

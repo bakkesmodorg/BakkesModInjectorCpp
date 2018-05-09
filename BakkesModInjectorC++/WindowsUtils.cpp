@@ -109,3 +109,11 @@ std::string WindowsUtils::WStringToString(const std::wstring & s)
 	std::copy(s.begin(), s.end(), temp.begin());
 	return temp;
 }
+
+std::wstring WindowsUtils::GetCurrentExecutablePath()
+{
+	HMODULE hModule = GetModuleHandleW(NULL);
+	WCHAR path[MAX_PATH];
+	GetModuleFileNameW(hModule, path, MAX_PATH);
+	return path;
+}

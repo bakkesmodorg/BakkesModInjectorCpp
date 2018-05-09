@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <tchar.h>
 
+
+
 const std::wstring RegisterySettingsManager::REGISTRY_DIR = TEXT("SOFTWARE\\BakkesMod");
 const std::wstring RegisterySettingsManager::REGISTRY_DIR_APPPATH = TEXT("SOFTWARE\\BakkesMod\\AppPath");
-
+const std::wstring RegisterySettingsManager::REGISTRY_DIR_RUN = TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
 void RegisterySettingsManager::SaveSetting(std::wstring key, std::wstring setting, std::wstring subKey)
 {
 	HKEY hKey;
@@ -67,4 +69,17 @@ int RegisterySettingsManager::GetIntSetting(std::wstring key, std::wstring subKe
 		reinterpret_cast<LPBYTE>(&nResult),
 		&dwBufferSize);
 	return nResult;
+}
+
+void RegisterySettingsManager::DeleteSetting(std::wstring key, std::wstring subKey)
+{
+	HKEY hKey;
+	LONG currentUserOpen = RegOpenKeyEx(HKEY_CURRENT_USER, subKey.c_str(), 0, KEY_ALL_ACCESS, &hKey);
+	if (currentUserOpen != ERROR_SUCCESS)
+		return;
+	LONG delValueRes = RegDeleteValue(hKey, key.c_str());
+
+	if (delValueRes != ERROR_SUCCESS)
+		return;
+	RegCloseKey(hKey);
 }
