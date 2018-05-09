@@ -25,7 +25,7 @@ void Installer::Install()
 			if (WindowsUtils::FileExists(fullPath)) //Don't overwrite default cfg files
 				continue;
 		}
-		if (member.filename.find(".") == std::string::npos)
+		if (member.filename.find(".") == std::string::npos) //It's a folder
 		{
 			WindowsUtils::CreateFolder(fullPath);
 		}

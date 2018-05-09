@@ -14,6 +14,6 @@ public:
 	std::string GetBakkesModFolder();
 	bool IsInstalled();
 	unsigned int GetVersion();
-	
+	bool IsSafeToInject(std::string currentVersion);
 };
 

@@ -27,7 +27,12 @@ void BakkesModInjectorCpp::initialize()
 	timer.start(500);
 	ui.progressBar->hide();
 	
-
+	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
+	ui.actionMinimize_on_start->setChecked(hideOnBoot);
+	if (hideOnBoot)
+	{
+		this->showMinimized();
+	}
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
@@ -72,7 +77,8 @@ std::string BakkesModInjectorCpp::GetStatusString()
 	case OUT_OF_DATE:
 		status = "Out of date";
 		break;
-	case OUT_OF_DATE_SAFEMODE_DISABLED:
+	case OUT_OF_DATE_SAFEMODE_ENABLED:
+		status = "Mod is out of date, waiting for an update";
 		break;
 	case CHECKING_FOR_UPDATES:
 		status = "Checking for updates";
@@ -84,6 +90,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Updating BakkesMod";
 		break;
 	case UPDATING_INJECTOR:
+		status = "Updating Injector";
 		break;
 	case INJECT_DLL:
 		status = "Injecting DLL";
@@ -143,17 +150,13 @@ void BakkesModInjectorCpp::TimerTimeout()
 		}
 
 		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
+		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
 		OnRunOnStartup();
 
 
-		bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
-		ui.actionMinimize_on_start->setChecked(hideOnBoot);
-		if (hideOnBoot)
-		{
-			this->showMinimized();
-		}
+
 
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
@@ -177,6 +180,26 @@ void BakkesModInjectorCpp::TimerTimeout()
 			}
 			else
 			{
+				if (std::stoi(updater.latestUpdateInfo.injectorVersion) > BAKKESMODINJECTOR_VERSION)
+				{
+					QMessageBox msgBox;
+
+					std::stringstream ss;
+					ss << "An new version of the injector is available " << std::endl;
+					ss << "Would you like to download?";
+					msgBox.setText(ss.str().c_str());
+					msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+					msgBox.setDefaultButton(QMessageBox::Yes);
+					int ret = msgBox.exec();
+					if (ret == QMessageBox::Yes)
+					{
+						bakkesModState = UPDATING_INJECTOR;
+						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorUrl, "newinjector.exe");
+						updateDownloader->StartDownload();
+						ui.progressBar->setMaximum(100);
+						return;
+					}
+				}
 				if (updater.latestUpdateInfo.requiresUpdate)
 				{
 					QMessageBox msgBox;
@@ -191,7 +214,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 					if (ret == QMessageBox::Yes)
 					{
 						bakkesModState = UPDATING_BAKKESMOD;
-						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.downloadUrl, "update.zip");
+						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.downloadUrl, "bmupdate.zip");
 						updateDownloader->StartDownload();
 						ui.progressBar->setMaximum(100);
 					}
@@ -212,13 +235,64 @@ void BakkesModInjectorCpp::TimerTimeout()
 					bakkesModState = BAKKESMOD_IDLE;
 				}
 			}
-
+			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo.buildID)) //Check if out of date
+			{
+				bakkesModState = OUT_OF_DATE_SAFEMODE_ENABLED;
+			}
 		}
 		else {
 
 		}
 	}
 		break;
+	case OUT_OF_DATE_SAFEMODE_ENABLED:
+	{
+		static bool toggle = false;
+		if (!toggle) {
+			timer.setInterval(30000); //Check for updates every 60 seconds
+			toggle = true;
+		}
+		else
+		{
+			updater.latestUpdateInfo = UpdateStatus();
+			bakkesModState = BOOTING;
+			toggle = false;
+		}
+
+	}
+		break;
+	case UPDATING_INJECTOR:
+	{
+		if (updateDownloader->completed)
+		{
+			ui.progressBar->hide();
+			auto currentName = windowsUtils.GetCurrentExecutablePath();
+			if (rename(WindowsUtils::WStringToString(currentName).c_str(), "bakkesmod_old.exe"))
+			{
+				rename(updateDownloader->packageUrl.c_str(), WindowsUtils::WStringToString(currentName).c_str());
+				system(WindowsUtils::WStringToString(currentName).c_str());
+				QCoreApplication::quit();
+			}
+			else
+			{
+				QMessageBox msgBox;
+				msgBox.setText("Could not update BakkesMod injector, no permissions to rename file, sorry!");
+				msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+				msgBox.setDefaultButton(QMessageBox::Yes);
+				int ret = msgBox.exec();
+				if (ret == QMessageBox::Yes)
+				{
+
+				}
+			}
+		}
+		else {
+			ui.progressBar->show();
+			ui.progressBar->setValue(updateDownloader->percentComplete);
+
+		}
+	}
+	break;
 	case UPDATING_BAKKESMOD:
 		if (updateDownloader->completed)
 		{
@@ -233,17 +307,34 @@ void BakkesModInjectorCpp::TimerTimeout()
 	break;
 	case BAKKESMOD_INSTALLING:
 	{
-		Installer i("update.zip", installation.GetBakkesModFolder());
+		Installer i(updateDownloader->packageUrl, installation.GetBakkesModFolder());
 		i.Install();
 		bakkesModState = BAKKESMOD_IDLE;
 	}
 		break;
 	case BAKKESMOD_IDLE:
+	{
 		timer.setInterval(200);
-		if (dllInjector.GetProcessID(L"RocketLeague.exe"))
+		static int intervalLoops = 0;
+		intervalLoops++;
+		if (intervalLoops > 50 && safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo.buildID)) //Check if out of date every X sec
 		{
-			bakkesModState = INJECT_DLL;
+			bakkesModState = OUT_OF_DATE_SAFEMODE_ENABLED;
+			intervalLoops = 0;
 		}
+		else if (dllInjector.GetProcessID(L"RocketLeague.exe"))
+		{
+			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo.buildID)) //Check if safe to inject right before injecting
+			{
+				bakkesModState = OUT_OF_DATE_SAFEMODE_ENABLED;
+			}
+			else
+			{
+				bakkesModState = INJECT_DLL;
+			}
+
+		}
+	}
 		break;
 	case INJECT_DLL:
 	{
@@ -287,6 +378,7 @@ void BakkesModInjectorCpp::OnCheckSafeMode()
 	bool newStatus = ui.actionEnable_safe_mode->isChecked();
 	//ui.actionEnable_safe_mode->setChecked(newStatus);
 	settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
+	safeModeEnabled = newStatus;
 }
 
 void BakkesModInjectorCpp::OnMinimizeOnStart()

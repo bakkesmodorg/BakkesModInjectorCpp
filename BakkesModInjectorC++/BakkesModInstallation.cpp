@@ -3,6 +3,7 @@
 #include <string>
 #include <qfiledialog.h>
 #include <qmessagebox.h>
+#include <fstream>
 BakkesModInstallation::BakkesModInstallation()
 {
 }
@@ -68,4 +69,26 @@ unsigned int BakkesModInstallation::GetVersion()
 	versionFile >> version;
 	versionFile.close();
 	return version;
+}
+
+bool BakkesModInstallation::IsSafeToInject(std::string currentVersion)
+{
+	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
+	if (WindowsUtils::FileExists(manifest))
+	{
+		std::ifstream myfile(manifest);
+		std::string test;
+		while (myfile >> test)
+		{
+			if (test.compare("\"buildid\"") == 0)
+			{
+				std::string buildid = "";
+				myfile >> buildid;
+				return buildid.substr(1, buildid.size() - 2).compare(currentVersion) == 0;
+				
+			}
+			int k = 5;
+		}
+	}
+	return false;
 }

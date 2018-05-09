@@ -4,10 +4,18 @@
 #include "windowsutils.h"
 #include <cstdio>
 #include <qmessagebox.h>
+#include <windows.h>
+
 UpdateDownloader::UpdateDownloader(std::string downloadUrl, std::string packageUrl)
 {
+
+	std::wstring TempPath;
+	wchar_t wcharPath[MAX_PATH];
+	if (GetTempPathW(MAX_PATH, wcharPath))
+		TempPath = wcharPath;
+
 	this->updateUrl = downloadUrl;
-	this->packageUrl = packageUrl;
+	this->packageUrl = WindowsUtils::WStringToString(TempPath) + packageUrl;
 	networkManager = new QNetworkAccessManager(this);
 	connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(finishedSlot(QNetworkReply*)));
 	connect(networkManager, SIGNAL(downloadProgress(qint64, qint64)),

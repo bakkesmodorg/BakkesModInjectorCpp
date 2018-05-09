@@ -9,13 +9,17 @@
 #include "SettingsManager.h"
 #include "Updater.h"
 #include <qsystemtrayicon.h>
+
+
+#define BAKKESMODINJECTOR_VERSION 5
+
 enum BakkesModStatus
 {
 	BOOTING = 0,
 	BAKKESMOD_IDLE = 1, //NO RL RUNNING
 	WAITING_FOR_RL = 2,
 	OUT_OF_DATE = 3,
-	OUT_OF_DATE_SAFEMODE_DISABLED = 4,
+	OUT_OF_DATE_SAFEMODE_ENABLED = 4,
 	CHECKING_FOR_UPDATES = 5,
 	START_UPDATING = 6,
 	UPDATING_BAKKESMOD = 7,
@@ -30,6 +34,7 @@ class BakkesModInjectorCpp : public QMainWindow
 {
 	Q_OBJECT
 private:
+	bool safeModeEnabled = false;
 	BakkesModStatus bakkesModState = BOOTING;
 	BakkesModInstallation installation;
 	Updater updater;

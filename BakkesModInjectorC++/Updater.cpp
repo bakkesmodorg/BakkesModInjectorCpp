@@ -1,16 +1,17 @@
 #include "Updater.h"
 #include "qnetworkrequest.h"
 #include <QObject>
+#include "BakkesModInjectorCpp.h"
 
-#define BAKKESMODINJECTOR_VERSION 5
-
-const std::string Updater::UPDATE_SERVER_URL = "http://149.210.150.107/updater/";
+const std::string Updater::UPDATE_SERVER_URL = "http://127.0.0.1:8000/";//"http://149.210.150.107/updater/";
 
 
 Updater::Updater()
 {
 	networkManager = new QNetworkAccessManager(this);
-
+	connect(networkManager, SIGNAL(finished(QNetworkReply*)),
+		this, SLOT(OnUpdateInfoReceived(QNetworkReply*)));
+	connect(networkManager, SIGNAL(error(QNetworkReply::NetworkError)), SLOT(networkError(QNetworkReply::NetworkError)));
 }
 
 
@@ -20,16 +21,14 @@ Updater::~Updater()
 
 void Updater::CheckForUpdates(int version)
 {
-	std::string fullRequestUrl = UPDATE_SERVER_URL + std::to_string(version);
+	std::string fullRequestUrl = UPDATE_SERVER_URL + std::to_string(version);// +"/";
 	QNetworkRequest networkRequest(QUrl(fullRequestUrl.c_str()));
 	networkRequest.setHeader(QNetworkRequest::UserAgentHeader, std::string("BakkesMod Updater CPP (" + std::to_string(BAKKESMODINJECTOR_VERSION) + ")").c_str());
 	networkRequest.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 	
 
 	auto reply = networkManager->get(networkRequest);
-	connect(networkManager, SIGNAL(finished(QNetworkReply*)),
-		this, SLOT(OnUpdateInfoReceived(QNetworkReply*)));
-	connect(networkManager, SIGNAL(error(QNetworkReply::NetworkError)), SLOT(networkError(QNetworkReply::NetworkError)));
+
 	reply->setProperty("version", version);
 	latestUpdateInfo.networkRequestStatus = REQUESTED;
 }
