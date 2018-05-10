@@ -14,7 +14,11 @@
 #pragma comment(lib, "libeay32.lib")
 #pragma comment(lib, "Crypt32.lib")
 #pragma comment(lib, "Iphlpapi.lib")
+#pragma comment(lib, "qtfreetype.lib")
 #include <QtWidgets/QApplication>
+
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 
 int main(int argc, char *argv[])
 {
