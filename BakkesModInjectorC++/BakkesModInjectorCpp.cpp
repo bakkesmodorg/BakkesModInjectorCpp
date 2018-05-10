@@ -120,6 +120,9 @@ std::string BakkesModInjectorCpp::GetStatusString()
 	case REINSTALL:
 		status = "Reinstalling BakkesMod";
 		break;
+	case INSTALLATION_CORRUPT:
+		status = "Installation corrupted, please do a reinstall (File -> reinstall)";
+		break;
 	}
 	return status;
 }
@@ -170,9 +173,6 @@ void BakkesModInjectorCpp::TimerTimeout()
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
 		OnRunOnStartup();
-
-
-
 
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
@@ -355,8 +355,18 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case INJECT_DLL:
 	{
-		std::string rlPath = installation.GetBakkesModFolder();
-		std::string path = rlPath + "BakkesMod/bakkesmod.dll";
+		std::string bmPath = installation.GetBakkesModFolder();
+		std::string path = bmPath + "bakkesmod.dll";
+		if (!WindowsUtils::FileExists(path))
+		{
+			QMessageBox msgBox;
+			msgBox.setText("Could not find BakkesMod DLL, please try reinstalling (File -> reinstall)");
+			msgBox.setStandardButtons(QMessageBox::Ok);
+			msgBox.setDefaultButton(QMessageBox::Ok);
+			int ret = msgBox.exec();
+			bakkesModState = INSTALLATION_CORRUPT;
+			return;
+		}
 		dllInjector.InjectDLL(L"RocketLeague.exe", path);
 
 		DWORD injectionResult = dllInjector.IsBakkesModDllInjected(L"RocketLeague.exe");
@@ -364,7 +374,10 @@ void BakkesModInjectorCpp::TimerTimeout()
 		{
 			bakkesModState = INJECTION_FAILED;
 			QMessageBox msgBox;
-			msgBox.setText("It looks like injection was unsuccessful, this probably means you're missing a dependency. Please take a look at http://bakkesmod.wikia.com/wiki/Troubleshooting");
+			std::stringstream ss;
+			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency. Please take a look at http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
+			ss << "Would you like to open it now?";
+			msgBox.setText(ss.str().c_str());
 			msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 			msgBox.setDefaultButton(QMessageBox::Yes);
 			int ret = msgBox.exec();
