@@ -137,6 +137,9 @@ public:
         QObject::connect(actionRun_on_startup, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnRunOnStartup()));
         QObject::connect(actionHide_when_minimized, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnHideOnMinimize()));
         QObject::connect(actionMinimize_on_start, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnMinimizeOnStart()));
+        QObject::connect(actionExit, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnExitClick()));
+        QObject::connect(actionReinstall, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnReinstallClick()));
+        QObject::connect(actionInstall_Python_support, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnPythonInstallClick()));
 
         QMetaObject::connectSlotsByName(BakkesModInjectorCppClass);
     } // setupUi

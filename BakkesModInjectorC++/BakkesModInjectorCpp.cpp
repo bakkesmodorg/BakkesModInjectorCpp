@@ -4,6 +4,7 @@
 #include "updatedownloader.h"
 #include <tlhelp32.h>
 #include "Installer.h"
+#include <direct.h>
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -32,6 +33,12 @@ void BakkesModInjectorCpp::initialize()
 	if (hideOnBoot)
 	{
 		this->showMinimized();
+	}
+
+	//Just had an update, remove the old file
+	if (WindowsUtils::FileExists("bakkesmod_old.exe"))
+	{
+		remove("bakkesmod_old.exe");
 	}
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
@@ -103,6 +110,9 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		break;
 	case BAKKESMOD_INSTALLING:
 		status = "Extracting archive";
+		break;
+	case REINSTALL:
+		status = "Reinstalling BakkesMod";
 		break;
 	}
 	return status;
@@ -206,7 +216,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 
 					std::stringstream ss;
 					ss << "An update is available: " << std::endl;
-					ss << updater.latestUpdateInfo.updateMessage;
+					ss << updater.latestUpdateInfo.updateMessage << std::endl;
+					ss << "Would you like to update?";
 					msgBox.setText(ss.str().c_str());
 					msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 					msgBox.setDefaultButton(QMessageBox::Yes);
@@ -247,17 +258,16 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case OUT_OF_DATE_SAFEMODE_ENABLED:
 	{
-		static bool toggle = false;
-		if (!toggle) {
-			timer.setInterval(30000); //Check for updates every 60 seconds
-			toggle = true;
-		}
-		else
+		static int outOfDateCounter = 0;
+		outOfDateCounter++;
+		timer.setInterval(1000);
+		if (outOfDateCounter > 120)
 		{
 			updater.latestUpdateInfo = UpdateStatus();
 			bakkesModState = BOOTING;
-			toggle = false;
+			outOfDateCounter = 0;
 		}
+
 
 	}
 		break;
@@ -410,6 +420,51 @@ void BakkesModInjectorCpp::OnRunOnStartup()
 	{
 		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
 	}
+}
+
+void BakkesModInjectorCpp::OnExitClick()
+{
+	QApplication::exit();
+}
+
+void BakkesModInjectorCpp::OnReinstallClick()
+{
+	QMessageBox msgBox;
+
+	std::stringstream ss;
+	ss << "This will remove all existing BakkesMod files, are you sure you want to continue?" << std::endl;
+	msgBox.setText(ss.str().c_str());
+	msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+	msgBox.setDefaultButton(QMessageBox::Yes);
+	int ret = msgBox.exec();
+	if (ret == QMessageBox::Yes)
+	{
+		if (WindowsUtils::DeleteDirectory(WindowsUtils::StringToWString(installation.GetBakkesModFolder())))
+		{
+			QMessageBox msgBox2;
+			msgBox2.setText("Could not remove BakkesMod folder, no rights or a file is already in use.");
+			msgBox2.setStandardButtons(QMessageBox::Ok);
+			msgBox2.setDefaultButton(QMessageBox::Ok);
+			int ret = msgBox2.exec();
+		}
+		else 
+		{
+			updater.latestUpdateInfo = UpdateStatus();
+			bakkesModState = BOOTING;
+		}
+	}
+}
+
+void BakkesModInjectorCpp::OnPythonInstallClick()
+{
+	QMessageBox msgBox;
+
+	std::stringstream ss;
+	ss << "Not supported yet." << std::endl;
+	msgBox.setText(ss.str().c_str());
+	msgBox.setStandardButtons(QMessageBox::Ok);
+	msgBox.setDefaultButton(QMessageBox::Ok);
+	int ret = msgBox.exec();
 }
 
 

@@ -27,7 +27,8 @@ enum BakkesModStatus
 	INJECT_DLL = 9,
 	INJECTED = 10,
 	INJECTION_FAILED = 11,
-	BAKKESMOD_INSTALLING = 12
+	BAKKESMOD_INSTALLING = 12,
+	REINSTALL = 13
 };
 
 class BakkesModInjectorCpp : public QMainWindow
@@ -56,6 +57,9 @@ public slots:
 	void OnMinimizeOnStart();
 	void OnHideOnMinimize();
 	void OnRunOnStartup();
+	void OnExitClick();
+	void OnReinstallClick();
+	void OnPythonInstallClick();
 	void trayClicked(QSystemTrayIcon::ActivationReason e);
 
 private:
