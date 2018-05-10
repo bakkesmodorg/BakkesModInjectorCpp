@@ -4,6 +4,7 @@
 #include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <fstream>
+#include <sstream>
 BakkesModInstallation::BakkesModInstallation()
 {
 }
@@ -31,6 +32,16 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 		}
 		else
 		{
+			{
+				QMessageBox msgBox2;
+				std::stringstream ss;
+				ss << "Could not find the Rocket League folder, please select it in the next window" << std::endl;
+				ss << "The executable can be found in SteamLibrary\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague.exe";
+				msgBox2.setText(ss.str().c_str());
+				msgBox2.setStandardButtons(QMessageBox::Ok);
+				msgBox2.setDefaultButton(QMessageBox::Ok);
+				int ret = msgBox2.exec();
+			}
 			QString path = QFileDialog::getOpenFileName(this,
 				QString("Select the Rocket League executable"), QString("C:/"), QString("RocketLeague.exe (RocketLeague.exe)"));
 			std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());;

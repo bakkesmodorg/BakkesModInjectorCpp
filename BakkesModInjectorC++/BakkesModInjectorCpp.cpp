@@ -12,6 +12,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	connect(&timer, SIGNAL(timeout()), this, SLOT(TimerTimeout()));
 
 	QIcon icon(":/BakkesModInjectorCpp/mainicon");
+	
 	this->setWindowIcon(icon);
 
 	//Create tray icon

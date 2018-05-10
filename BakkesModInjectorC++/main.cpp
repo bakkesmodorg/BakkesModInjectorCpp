@@ -1,4 +1,7 @@
 #include "BakkesModInjectorCpp.h"
+
+#ifdef _DEBUG
+#else
 #pragma comment(lib, "qtmain.lib")
 #pragma comment(lib, "Qt5Core.lib")
 #pragma comment(lib, "Qt5Gui.lib")
@@ -19,6 +22,7 @@
 
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
+#endif
 
 int main(int argc, char *argv[])
 {
