@@ -57,7 +57,7 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 		{
 			if (settingsManager.GetIntSetting(L"HideOnMinimize")) 
 			{
-				QTimer::singleShot(250, this, SLOT(hide()));
+				QTimer::singleShot(50, this, SLOT(hide()));
 			}
 		}
 		break;
@@ -500,6 +500,9 @@ void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 		if (this->isVisible()) 
 			this->hide();
 		else {
+			setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+			raise();  // for MacOS
+			activateWindow(); // for Windows
 			this->show();
 		}
 	}
