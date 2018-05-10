@@ -72,6 +72,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionCheck_injection"/>
+    <addaction name="actionTroubleshooting"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -166,6 +167,11 @@
    </property>
    <property name="text">
     <string>Minimize on start</string>
+   </property>
+  </action>
+  <action name="actionTroubleshooting">
+   <property name="text">
+    <string>Troubleshooting</string>
    </property>
   </action>
  </widget>
@@ -318,6 +324,70 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionBakkesMod_Discord</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OpenDiscord()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionBakkesMod_Twitter</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OpenTwitter()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionBakkesMod_com</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OpenWebsite()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionTroubleshooting</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OpenTroubleshootPage()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -329,5 +399,9 @@
   <slot>OnExitClick()</slot>
   <slot>OnReinstallClick()</slot>
   <slot>OnPythonInstallClick()</slot>
+  <slot>OpenTwitter()</slot>
+  <slot>OpenDiscord()</slot>
+  <slot>OpenWebsite()</slot>
+  <slot>OpenTroubleshootPage()</slot>
  </slots>
 </ui>

@@ -49,6 +49,7 @@ public:
 	void initialize();
 	std::string GetStatusString();
 	void changeEvent(QEvent* e);
+	void OpenWebsite(std::string url);
 public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();
@@ -60,6 +61,11 @@ public slots:
 	void OnExitClick();
 	void OnReinstallClick();
 	void OnPythonInstallClick();
+
+	void OpenTwitter();
+	void OpenDiscord();
+	void OpenWebsite();
+	void OpenTroubleshootPage();
 	void trayClicked(QSystemTrayIcon::ActivationReason e);
 
 private:

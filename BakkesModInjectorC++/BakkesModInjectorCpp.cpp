@@ -68,6 +68,11 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 	QMainWindow::changeEvent(e);
 }
 
+void BakkesModInjectorCpp::OpenWebsite(std::string url)
+{
+	ShellExecute(0, 0, WindowsUtils::StringToWString(url).c_str(), 0, 0, SW_SHOW);
+}
+
 std::string BakkesModInjectorCpp::GetStatusString()
 {
 	std::string status = "";
@@ -465,6 +470,26 @@ void BakkesModInjectorCpp::OnPythonInstallClick()
 	msgBox.setStandardButtons(QMessageBox::Ok);
 	msgBox.setDefaultButton(QMessageBox::Ok);
 	int ret = msgBox.exec();
+}
+
+void BakkesModInjectorCpp::OpenTwitter()
+{
+	OpenWebsite("https://twitter.com/bakkesmod");
+}
+
+void BakkesModInjectorCpp::OpenDiscord()
+{
+	OpenWebsite("https://discord.gg/HsM6kAR");
+}
+
+void BakkesModInjectorCpp::OpenWebsite()
+{
+	OpenWebsite("http://bakkesmod.com");
+}
+
+void BakkesModInjectorCpp::OpenTroubleshootPage()
+{
+	OpenWebsite("http://bakkesmod.wikia.com/wiki/Troubleshooting");
 }
 
 
