@@ -18,10 +18,12 @@
 #pragma comment(lib, "Crypt32.lib")
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "qtfreetype.lib")
+#pragma comment(lib, "qico.lib")
 #include <QtWidgets/QApplication>
 
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
+Q_IMPORT_PLUGIN(QICOPlugin)
 #endif
 
 int main(int argc, char *argv[])

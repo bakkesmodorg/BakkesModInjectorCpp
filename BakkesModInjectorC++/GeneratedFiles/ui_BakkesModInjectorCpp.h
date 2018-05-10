@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'BakkesModInjectorCpp.ui'
 **
-** Created by: Qt User Interface Compiler version 5.10.1
+** Created by: Qt User Interface Compiler version 5.6.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -154,25 +154,25 @@ public:
 
     void retranslateUi(QMainWindow *BakkesModInjectorCppClass)
     {
-        BakkesModInjectorCppClass->setWindowTitle(QApplication::translate("BakkesModInjectorCppClass", "BakkesModInjectorCpp", nullptr));
-        actionOpen_BakkesMod_folder->setText(QApplication::translate("BakkesModInjectorCppClass", "Open BakkesMod folder", nullptr));
-        actionInstall_Python_support->setText(QApplication::translate("BakkesModInjectorCppClass", "Install Python support", nullptr));
-        actionReinstall->setText(QApplication::translate("BakkesModInjectorCppClass", "Reinstall", nullptr));
-        actionExit->setText(QApplication::translate("BakkesModInjectorCppClass", "Exit", nullptr));
-        actionBakkesMod_Twitter->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Twitter", nullptr));
-        actionBakkesMod_com->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod.com", nullptr));
-        actionBakkesMod_Discord->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Discord", nullptr));
-        actionCheck_injection->setText(QApplication::translate("BakkesModInjectorCppClass", "Check injection", nullptr));
-        actionEnable_safe_mode->setText(QApplication::translate("BakkesModInjectorCppClass", "Enable safe mode", nullptr));
-        actionRun_on_startup->setText(QApplication::translate("BakkesModInjectorCppClass", "Run on startup", nullptr));
-        actionHide_when_minimized->setText(QApplication::translate("BakkesModInjectorCppClass", "Hide when minimized", nullptr));
-        actionMinimize_on_start->setText(QApplication::translate("BakkesModInjectorCppClass", "Minimize on start", nullptr));
-        actionTroubleshooting->setText(QApplication::translate("BakkesModInjectorCppClass", "Troubleshooting", nullptr));
-        label->setText(QApplication::translate("BakkesModInjectorCppClass", "Booting", nullptr));
-        menuFile->setTitle(QApplication::translate("BakkesModInjectorCppClass", "File", nullptr));
-        menuLinks->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Links", nullptr));
-        menuHelp->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Help", nullptr));
-        menuSettings->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Settings", nullptr));
+        BakkesModInjectorCppClass->setWindowTitle(QApplication::translate("BakkesModInjectorCppClass", "BakkesModInjectorCpp", 0));
+        actionOpen_BakkesMod_folder->setText(QApplication::translate("BakkesModInjectorCppClass", "Open BakkesMod folder", 0));
+        actionInstall_Python_support->setText(QApplication::translate("BakkesModInjectorCppClass", "Install Python support", 0));
+        actionReinstall->setText(QApplication::translate("BakkesModInjectorCppClass", "Reinstall", 0));
+        actionExit->setText(QApplication::translate("BakkesModInjectorCppClass", "Exit", 0));
+        actionBakkesMod_Twitter->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Twitter", 0));
+        actionBakkesMod_com->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod.com", 0));
+        actionBakkesMod_Discord->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Discord", 0));
+        actionCheck_injection->setText(QApplication::translate("BakkesModInjectorCppClass", "Check injection", 0));
+        actionEnable_safe_mode->setText(QApplication::translate("BakkesModInjectorCppClass", "Enable safe mode", 0));
+        actionRun_on_startup->setText(QApplication::translate("BakkesModInjectorCppClass", "Run on startup", 0));
+        actionHide_when_minimized->setText(QApplication::translate("BakkesModInjectorCppClass", "Hide when minimized", 0));
+        actionMinimize_on_start->setText(QApplication::translate("BakkesModInjectorCppClass", "Minimize on start", 0));
+        actionTroubleshooting->setText(QApplication::translate("BakkesModInjectorCppClass", "Troubleshooting", 0));
+        label->setText(QApplication::translate("BakkesModInjectorCppClass", "Booting", 0));
+        menuFile->setTitle(QApplication::translate("BakkesModInjectorCppClass", "File", 0));
+        menuLinks->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Links", 0));
+        menuHelp->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Help", 0));
+        menuSettings->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Settings", 0));
     } // retranslateUi
 
 };
