@@ -9,6 +9,7 @@ private:
 	WindowsUtils windowsUtils;
 	RegisterySettingsManager settings;
 public:
+	static std::string overrideBakkesModFolder;
 	BakkesModInstallation();
 	~BakkesModInstallation();
 	std::string GetBakkesModFolder();

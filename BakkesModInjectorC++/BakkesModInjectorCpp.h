@@ -69,6 +69,12 @@ public slots:
 	void OpenTroubleshootPage();
 	void trayClicked(QSystemTrayIcon::ActivationReason e);
 
+	void TrayOpenAction();
+	void TrayCloseAction();
+
+
+	void ReleaseDLL();
+	void DebugDLL();
 private:
 	Ui::BakkesModInjectorCppClass ui;
 };

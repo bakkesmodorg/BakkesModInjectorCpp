@@ -64,6 +64,9 @@
     <QtUic Include="BakkesModInjectorCpp.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="PluginManagerForm.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="BakkesModInjectorCpp.qrc">

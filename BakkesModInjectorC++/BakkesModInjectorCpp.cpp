@@ -5,6 +5,8 @@
 #include <tlhelp32.h>
 #include "Installer.h"
 #include <direct.h>
+#include <qshortcut.h>
+#include <fstream>
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -17,11 +19,24 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 
 	//Create tray icon
 	trayIcon = new QSystemTrayIcon(QIcon(":/BakkesModInjectorCpp/mainicon"), this);
+	
+	QMenu* menu = new QMenu();
+	QAction* openAction = new QAction("Open", menu);
+	QAction* closeAction = new QAction("Exit", menu);
+
+	connect(openAction, SIGNAL(triggered()), this, SLOT(TrayOpenAction()));
+	connect(closeAction, SIGNAL(triggered()), this, SLOT(TrayCloseAction()));
+
+	menu->addAction(openAction);
+	menu->addAction(closeAction);
+	trayIcon->setContextMenu(menu);
+
 	trayIcon->show();
 
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayClicked(QSystemTrayIcon::ActivationReason)));
 
-
+	new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_R), this, SLOT(ReleaseDLL()));
+	new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_T), this, SLOT(DebugDLL()));
 }
 
 void BakkesModInjectorCpp::initialize()
@@ -41,6 +56,11 @@ void BakkesModInjectorCpp::initialize()
 	{
 		remove("bakkesmod_old.exe");
 	}
+
+	
+	std::ofstream out(installation.GetBakkesModFolder() + "injectorversion.txt");
+	out << BAKKESMODINJECTOR_VERSION;
+	out.close();
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
@@ -273,7 +293,10 @@ void BakkesModInjectorCpp::TimerTimeout()
 			bakkesModState = BOOTING;
 			outOfDateCounter = 0;
 		}
-
+		if (!safeModeEnabled)
+		{
+			bakkesModState = BAKKESMOD_IDLE;
+		}
 
 	}
 		break;
@@ -331,7 +354,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case BAKKESMOD_IDLE:
 	{
-		timer.setInterval(200);
+		timer.setInterval(70);
 		static int intervalLoops = 0;
 		intervalLoops++;
 		if (intervalLoops > 50 && safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo.buildID)) //Check if out of date every X sec
@@ -348,6 +371,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			else
 			{
 				bakkesModState = INJECT_DLL;
+				timer.setInterval(150);
 			}
 
 		}
@@ -469,6 +493,8 @@ void BakkesModInjectorCpp::OnReinstallClick()
 		else 
 		{
 			updater.latestUpdateInfo = UpdateStatus();
+			settingsManager.DeleteSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+
 			bakkesModState = BOOTING;
 		}
 	}
@@ -503,6 +529,7 @@ void BakkesModInjectorCpp::OpenWebsite()
 
 void BakkesModInjectorCpp::OpenTroubleshootPage()
 {
+	
 	OpenWebsite("http://bakkesmod.wikia.com/wiki/Troubleshooting");
 }
 
@@ -519,6 +546,39 @@ void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 			this->show();
 		}
 	}
+}
+
+void BakkesModInjectorCpp::TrayOpenAction()
+{
+	setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+	raise();
+	activateWindow();
+	this->show();
+}
+
+void BakkesModInjectorCpp::TrayCloseAction()
+{
+	QApplication::exit();
+}
+
+void BakkesModInjectorCpp::ReleaseDLL()
+{
+	BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Release\\";
+	QMessageBox msgBox;
+	msgBox.setText("Changed to release folder");
+	msgBox.setStandardButtons(QMessageBox::Ok);
+	msgBox.setDefaultButton(QMessageBox::Ok);
+	int ret = msgBox.exec();
+}
+
+void BakkesModInjectorCpp::DebugDLL()
+{
+	BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Debug\\";
+	QMessageBox msgBox;
+	msgBox.setText("Changed to debug folder");
+	msgBox.setStandardButtons(QMessageBox::Ok);
+	msgBox.setDefaultButton(QMessageBox::Ok);
+	int ret = msgBox.exec();
 }
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()

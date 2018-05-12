@@ -5,6 +5,9 @@
 #include <qmessagebox.h>
 #include <fstream>
 #include <sstream>
+
+std::string BakkesModInstallation::overrideBakkesModFolder = "";
+
 BakkesModInstallation::BakkesModInstallation()
 {
 }
@@ -16,6 +19,8 @@ BakkesModInstallation::~BakkesModInstallation()
 
 std::string BakkesModInstallation::GetBakkesModFolder()
 {
+	if (!overrideBakkesModFolder.empty())
+		return overrideBakkesModFolder;
 	if (bakkesModFolder.empty())
 	{
 		std::wstring registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
@@ -96,9 +101,7 @@ bool BakkesModInstallation::IsSafeToInject(std::string currentVersion)
 				std::string buildid = "";
 				myfile >> buildid;
 				return buildid.substr(1, buildid.size() - 2).compare(currentVersion) == 0;
-				
 			}
-			int k = 5;
 		}
 	}
 	return false;

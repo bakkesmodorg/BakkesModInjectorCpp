@@ -129,6 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="BakkesModInjectorCpp.ui" />
+    <QtUic Include="PluginManagerForm.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="BakkesModInjectorCpp.qrc" />
