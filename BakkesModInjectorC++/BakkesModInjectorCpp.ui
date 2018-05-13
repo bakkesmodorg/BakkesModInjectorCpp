@@ -82,6 +82,8 @@
     <addaction name="actionRun_on_startup"/>
     <addaction name="actionHide_when_minimized"/>
     <addaction name="actionMinimize_on_start"/>
+    <addaction name="actionManually_select_BakkesMod_folder"/>
+    <addaction name="actionSet_injection_timeout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuLinks"/>
@@ -172,6 +174,16 @@
   <action name="actionTroubleshooting">
    <property name="text">
     <string>Troubleshooting</string>
+   </property>
+  </action>
+  <action name="actionManually_select_BakkesMod_folder">
+   <property name="text">
+    <string>Manually select BakkesMod folder</string>
+   </property>
+  </action>
+  <action name="actionSet_injection_timeout">
+   <property name="text">
+    <string>Set injection timeout (150)</string>
    </property>
   </action>
  </widget>
@@ -388,6 +400,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionManually_select_BakkesMod_folder</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnSelectBakkesModFolder()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSet_injection_timeout</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnSetInjectionTimeout()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -403,5 +447,7 @@
   <slot>OpenDiscord()</slot>
   <slot>OpenWebsite()</slot>
   <slot>OpenTroubleshootPage()</slot>
+  <slot>OnSelectBakkesModFolder()</slot>
+  <slot>OnSetInjectionTimeout()</slot>
  </slots>
 </ui>

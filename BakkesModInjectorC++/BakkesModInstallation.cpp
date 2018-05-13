@@ -24,14 +24,14 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 	if (bakkesModFolder.empty())
 	{
 		std::wstring registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
-		if (!registryString.empty())
+		if (!registryString.empty() && WindowsUtils::FileExists(windowsUtils.WStringToString(registryString) + "../RocketLeague.exe"))
 		{
 			bakkesModFolder = windowsUtils.WStringToString(registryString);
 			return bakkesModFolder;
 		}
 
 		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
-		if (!rlPath.empty())
+		if (!rlPath.empty() && WindowsUtils::FileExists(rlPath + "RocketLeague.exe"))
 		{
 			bakkesModFolder = rlPath + "bakkesmod\\";
 		}
@@ -48,7 +48,7 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 				int ret = msgBox2.exec();
 			}
 			QString path = QFileDialog::getOpenFileName(this,
-				QString("Select the Rocket League executable"), QString("C:/"), QString("RocketLeague.exe (RocketLeague.exe)"));
+				QString("Select the Rocket League executable"), QString(QDir::currentPath()), QString("RocketLeague.exe (RocketLeague.exe)"));
 			std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());;
 			bakkesModFolder = rlPath +"bakkesmod\\";
 			if (!WindowsUtils::FileExists(rlPath))

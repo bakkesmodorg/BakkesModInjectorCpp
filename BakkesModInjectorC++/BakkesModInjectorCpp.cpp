@@ -7,6 +7,7 @@
 #include <direct.h>
 #include <qshortcut.h>
 #include <fstream>
+
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -57,10 +58,13 @@ void BakkesModInjectorCpp::initialize()
 		remove("bakkesmod_old.exe");
 	}
 
-	
-	std::ofstream out(installation.GetBakkesModFolder() + "injectorversion.txt");
-	out << BAKKESMODINJECTOR_VERSION;
-	out.close();
+	int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
+	if (timeout == 0)
+	{
+		timeout = 150;
+	}
+
+	ui.actionSet_injection_timeout->setText(QString(std::string("Set injection timeout (" + std::to_string(timeout) + ")").c_str()));
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
@@ -180,20 +184,23 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 	case BOOTING:
 	{
+
 		if (!installation.IsInstalled())
 		{
 			settingsManager.SaveSetting(L"EnableSafeMode", 1);
 			settingsManager.SaveSetting(L"HideOnMinimize", 1);
 			settingsManager.SaveSetting(L"HideOnBoot", 0);
 			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
+			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
 		}
+
 
 		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
 		OnRunOnStartup();
-
+		
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
 		bakkesModState = CHECKING_FOR_UPDATES;
@@ -276,6 +283,9 @@ void BakkesModInjectorCpp::TimerTimeout()
 			{
 				bakkesModState = OUT_OF_DATE_SAFEMODE_ENABLED;
 			}
+			std::ofstream out(installation.GetBakkesModFolder() + "injectorversion.txt");
+			out << BAKKESMODINJECTOR_VERSION;
+			out.close();
 		}
 		else {
 
@@ -371,7 +381,10 @@ void BakkesModInjectorCpp::TimerTimeout()
 			else
 			{
 				bakkesModState = INJECT_DLL;
-				timer.setInterval(150);
+				int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
+				if (timeout == 0)
+					timeout = 150;
+				timer.setInterval(timeout);
 			}
 
 		}
@@ -560,6 +573,35 @@ void BakkesModInjectorCpp::TrayCloseAction()
 {
 	QApplication::exit();
 }
+#include <qfiledialog.h>
+void BakkesModInjectorCpp::OnSelectBakkesModFolder()
+{
+	QString path = QFileDialog::getOpenFileName(this,
+		QString("Select the Rocket League executable"), QString(QDir::currentPath()), QString("RocketLeague.exe (RocketLeague.exe)"));
+	std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());
+	auto converted = windowsUtils.StringToWString(rlPath + "bakkesmod\\");
+	settingsManager.SaveSetting(L"BakkesModPath", converted, RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+}
+#include <qinputdialog.h>
+void BakkesModInjectorCpp::OnSetInjectionTimeout()
+{
+	bool ok;
+	int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
+	if (timeout == 0)
+	{
+		timeout = 150;
+	}
+	QString text = QInputDialog::getText(this, "Set injection timeout",
+		"Set the injection timeout (150 = default). Set it to a higher value if you're experiencing crashes during launch.", QLineEdit::Normal,
+		QString(std::to_string(timeout).c_str()), &ok);
+	if (ok && !text.isEmpty()) {
+		std::string test = text.toStdString();
+		int intval = std::stoi(test);
+
+		ui.actionSet_injection_timeout->setText(QString(std::string("Set injection timeout (" + std::to_string(intval) + ")").c_str()));
+		settingsManager.SaveSetting(L"InjectionTimeout", intval);
+	}
+}
 
 void BakkesModInjectorCpp::ReleaseDLL()
 {
@@ -592,6 +634,14 @@ void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 		msgBox.setDefaultButton(QMessageBox::Ok);
 		int ret = msgBox.exec();
 		return;
+	}
+	else
+	{
+		QMessageBox msgBox;
+		msgBox.setText("Should open " + QString(rlPath.c_str()));
+		msgBox.setStandardButtons(QMessageBox::Ok);
+		msgBox.setDefaultButton(QMessageBox::Ok);
+		int ret = msgBox.exec();
 	}
 	windowsUtils.OpenFolder(rlPath);
 

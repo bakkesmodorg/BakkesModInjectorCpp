@@ -72,6 +72,8 @@ public slots:
 	void TrayOpenAction();
 	void TrayCloseAction();
 
+	void OnSelectBakkesModFolder();
+	void OnSetInjectionTimeout();
 
 	void ReleaseDLL();
 	void DebugDLL();

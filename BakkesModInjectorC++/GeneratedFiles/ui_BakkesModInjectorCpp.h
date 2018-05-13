@@ -41,6 +41,8 @@ public:
     QAction *actionHide_when_minimized;
     QAction *actionMinimize_on_start;
     QAction *actionTroubleshooting;
+    QAction *actionManually_select_BakkesMod_folder;
+    QAction *actionSet_injection_timeout;
     QWidget *centralWidget;
     QLabel *label;
     QProgressBar *progressBar;
@@ -87,6 +89,10 @@ public:
         actionMinimize_on_start->setCheckable(true);
         actionTroubleshooting = new QAction(BakkesModInjectorCppClass);
         actionTroubleshooting->setObjectName(QStringLiteral("actionTroubleshooting"));
+        actionManually_select_BakkesMod_folder = new QAction(BakkesModInjectorCppClass);
+        actionManually_select_BakkesMod_folder->setObjectName(QStringLiteral("actionManually_select_BakkesMod_folder"));
+        actionSet_injection_timeout = new QAction(BakkesModInjectorCppClass);
+        actionSet_injection_timeout->setObjectName(QStringLiteral("actionSet_injection_timeout"));
         centralWidget = new QWidget(BakkesModInjectorCppClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         label = new QLabel(centralWidget);
@@ -133,6 +139,8 @@ public:
         menuSettings->addAction(actionRun_on_startup);
         menuSettings->addAction(actionHide_when_minimized);
         menuSettings->addAction(actionMinimize_on_start);
+        menuSettings->addAction(actionManually_select_BakkesMod_folder);
+        menuSettings->addAction(actionSet_injection_timeout);
 
         retranslateUi(BakkesModInjectorCppClass);
         QObject::connect(actionOpen_BakkesMod_folder, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnOpenBakkesModFolderClicked()));
@@ -148,6 +156,8 @@ public:
         QObject::connect(actionBakkesMod_Twitter, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OpenTwitter()));
         QObject::connect(actionBakkesMod_com, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OpenWebsite()));
         QObject::connect(actionTroubleshooting, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OpenTroubleshootPage()));
+        QObject::connect(actionManually_select_BakkesMod_folder, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnSelectBakkesModFolder()));
+        QObject::connect(actionSet_injection_timeout, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnSetInjectionTimeout()));
 
         QMetaObject::connectSlotsByName(BakkesModInjectorCppClass);
     } // setupUi
@@ -168,6 +178,8 @@ public:
         actionHide_when_minimized->setText(QApplication::translate("BakkesModInjectorCppClass", "Hide when minimized", 0));
         actionMinimize_on_start->setText(QApplication::translate("BakkesModInjectorCppClass", "Minimize on start", 0));
         actionTroubleshooting->setText(QApplication::translate("BakkesModInjectorCppClass", "Troubleshooting", 0));
+        actionManually_select_BakkesMod_folder->setText(QApplication::translate("BakkesModInjectorCppClass", "Manually select BakkesMod folder", 0));
+        actionSet_injection_timeout->setText(QApplication::translate("BakkesModInjectorCppClass", "Set injection timeout (150)", 0));
         label->setText(QApplication::translate("BakkesModInjectorCppClass", "Booting", 0));
         menuFile->setTitle(QApplication::translate("BakkesModInjectorCppClass", "File", 0));
         menuLinks->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Links", 0));
