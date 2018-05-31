@@ -11,26 +11,33 @@
 #include <qsystemtrayicon.h>
 
 
-#define BAKKESMODINJECTOR_VERSION 5
+#define BAKKESMODINJECTOR_VERSION 9
 
-enum BakkesModStatus
+#define BAKKESMOD_STATES \
+	X(BOOTING, "BOOTING") \
+	X(BAKKESMOD_IDLE, "BAKKESMOD_IDLE") \
+	X(WAITING_FOR_RL, "WAITING_FOR_RL") \
+	X(OUT_OF_DATE, "OUT_OF_DATE") \
+	X(OUT_OF_DATE_SAFEMODE_ENABLED, "OUT_OF_DATE_SAFEMODE_ENABLED") \
+	X(CHECKING_FOR_UPDATES, "CHECKING_FOR_UPDATES") \
+	X(START_UPDATING, "START_UPDATING") \
+	X(UPDATING_BAKKESMOD, "UPDATING_BAKKESMOD") \
+	X(UPDATING_INJECTOR, "UPDATING_INJECTOR") \
+	X(INJECT_DLL, "INJECT_DLL") \
+	X(INJECTED, "INJECTED") \
+	X(INJECTION_FAILED, "INJECTION_FAILED") \
+	X(BAKKESMOD_INSTALLING, "BAKKESMOD_INSTALLING") \
+	X(REINSTALL, "REINSTALL") \
+	X(INSTALLATION_CORRUPT, "INSTALLATION_CORRUPT") 
+
+#define X(state, name) state,
+enum BakkesModStatus : size_t
 {
-	BOOTING = 0,
-	BAKKESMOD_IDLE = 1, //NO RL RUNNING
-	WAITING_FOR_RL = 2,
-	OUT_OF_DATE = 3,
-	OUT_OF_DATE_SAFEMODE_ENABLED = 4,
-	CHECKING_FOR_UPDATES = 5,
-	START_UPDATING = 6,
-	UPDATING_BAKKESMOD = 7,
-	UPDATING_INJECTOR = 8,
-	INJECT_DLL = 9,
-	INJECTED = 10,
-	INJECTION_FAILED = 11,
-	BAKKESMOD_INSTALLING = 12,
-	REINSTALL = 13,
-	INSTALLATION_CORRUPT = 14
+	BAKKESMOD_STATES
 };
+#undef X
+
+const std::string GetStateName(BakkesModStatus state);
 
 class BakkesModInjectorCpp : public QMainWindow
 {
@@ -51,6 +58,8 @@ public:
 	std::string GetStatusString();
 	void changeEvent(QEvent* e);
 	void OpenWebsite(std::string url);
+	void SetState(BakkesModStatus newState);
+
 public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();

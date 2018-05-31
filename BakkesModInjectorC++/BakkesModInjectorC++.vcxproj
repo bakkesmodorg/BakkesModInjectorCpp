@@ -138,6 +138,7 @@
     <ClInclude Include="BakkesModInstallation.h" />
     <ClInclude Include="DllInjector.h" />
     <ClInclude Include="Installer.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="SettingsManager.h" />
@@ -153,6 +154,7 @@
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtNetwork;$(QTDIR)\include\QtWidgets</IncludePath>
       <Define Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UNICODE;_UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_WIDGETS_LIB</Define>
     </QtMoc>
+    <ClInclude Include="stdafx.h" />
     <ClInclude Include="WindowsUtils.h" />
   </ItemGroup>
   <ItemGroup>

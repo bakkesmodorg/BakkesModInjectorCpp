@@ -46,6 +46,21 @@ void Updater::networkError(QNetworkReply::NetworkError code)
 	
 }
 
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) {
+		*(result++) = item;
+	}
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, std::back_inserter(elems));
+	return elems;
+}
+
 void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 {
 	QJsonDocument json = QJsonDocument::fromJson(result->readAll());
@@ -66,6 +81,9 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 		{
 			auto test = gameInfo.value().toObject();
 			latestUpdateInfo.buildID = test["buildid"].toString().toStdString();
+			std::string buildids = test["buildids"].toString().toStdString();
+			latestUpdateInfo.buildIds = split(buildids, ',');
+			
 		}
 
 		auto updateInfo = rootObj.find("update_info");

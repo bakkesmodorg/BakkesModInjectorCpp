@@ -1,33 +1,10 @@
 #pragma once
+#include "stdafx.h"
 #include <string>
 #include <QtNetwork>
 #include "BakkesModInstallation.h"
+#include <vector>
 
-enum NetworkRequestStatus
-{
-	IDLE = 0,
-	REQUESTED = 1,
-	FINISHED_SUCCESS = 2,
-	FINISHED_ERROR = 3
-};
-
-struct UpdateStatus
-{
-	NetworkRequestStatus networkRequestStatus = IDLE;
-	bool requestFinished = false;
-	bool requiresUpdate = false;
-
-	std::string injectorUrl = "";
-	std::string injectorVersion = "0";
-	std::string buildID = "";
-	
-	int newestTrainerVersion = 0;
-	std::string rocketLeagueVersion = "";
-	std::string publicationDate = "";
-	std::string updateMessage = "";
-	std::string downloadUrl = "";
-	bool updateRequest = false;
-};
 
 
 class Updater : public QObject

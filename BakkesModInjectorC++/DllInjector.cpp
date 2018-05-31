@@ -10,12 +10,41 @@
 
 DllInjector::DllInjector()
 {
+	injectionParameters = new InjectionParameters();
+
+
 }
 
 
 DllInjector::~DllInjector()
 {
 }
+
+InjectionParameters * DllInjector::GetInjectionParameters()
+{
+	return injectionParameters;
+}
+static HANDLE hMapObject;
+static void* vMapData;
+void DllInjector::SetInjectionParameters(InjectionParameters ip)
+{
+	if (!hMapObject) {
+		hMapObject = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(InjectionParameters), L"BakkesModInjectionParameters");
+		if (hMapObject == NULL) {
+			return;
+		}
+
+		vMapData = MapViewOfFile(hMapObject, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(InjectionParameters));
+		if (vMapData == NULL) {
+			CloseHandle(hMapObject);
+			return;
+		}
+		//vMapData = injectionParameters;
+		//UnmapViewOfFile(vMapData);
+	}
+	memcpy(vMapData, &ip, sizeof(InjectionParameters));
+}
+
 
 DWORD DllInjector::InjectDLL(std::wstring processName, std::string path)
 {

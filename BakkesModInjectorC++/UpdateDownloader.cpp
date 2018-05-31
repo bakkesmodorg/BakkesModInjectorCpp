@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "UpdateDownloader.h"
 #include <qfile.h>
 #include <qnetworkreply.h>
@@ -36,11 +37,13 @@ void UpdateDownloader::StartDownload()
 
 void UpdateDownloader::updateProgress(qint64 read, qint64 total)
 {
-	percentComplete = read / total * 100;
+	percentComplete = (float)read / (float)total * 100.f;
+	LOG_LINE(INFO, "Update progress " << percentComplete)
 }
 
 void UpdateDownloader::finishedSlot(QNetworkReply *reply)
 {
+	LOG_LINE(INFO, "Update download completed")
 	if (reply->error() == QNetworkReply::NoError) {
 		if (WindowsUtils::FileExists(packageUrl))
 		{

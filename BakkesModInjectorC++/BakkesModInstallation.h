@@ -1,7 +1,9 @@
 #pragma once
+#include "stdafx.h"
 #include "windowsutils.h"
 #include "SettingsManager.h"
 #include <qwidget.h>
+
 class BakkesModInstallation : public QWidget
 {
 private:
@@ -15,6 +17,6 @@ public:
 	std::string GetBakkesModFolder();
 	bool IsInstalled();
 	unsigned int GetVersion();
-	bool IsSafeToInject(std::string currentVersion);
+	bool IsSafeToInject(UpdateStatus currentVersion);
 };
 

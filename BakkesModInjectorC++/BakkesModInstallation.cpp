@@ -87,7 +87,7 @@ unsigned int BakkesModInstallation::GetVersion()
 	return version;
 }
 
-bool BakkesModInstallation::IsSafeToInject(std::string currentVersion)
+bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 {
 	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
 	if (WindowsUtils::FileExists(manifest))
@@ -100,7 +100,18 @@ bool BakkesModInstallation::IsSafeToInject(std::string currentVersion)
 			{
 				std::string buildid = "";
 				myfile >> buildid;
-				return buildid.substr(1, buildid.size() - 2).compare(currentVersion) == 0;
+				std::string buildidwithoutquotes = buildid.substr(1, buildid.size() - 2);
+				if (currentVersion.buildIds.size() > 0)
+				{
+					for (std::string buildidz : currentVersion.buildIds)
+					{
+						LOG_LINE(INFO, "Comparing buildid " << buildidwithoutquotes << " to " << buildidz)
+						if (buildidwithoutquotes.compare(buildidz) == 0)
+							return true;
+					}
+				}
+				LOG_LINE(INFO, "Comparing buildid " << buildidwithoutquotes << " to " << currentVersion.buildID)
+				return buildidwithoutquotes.compare(currentVersion.buildID) == 0;
 			}
 		}
 	}
