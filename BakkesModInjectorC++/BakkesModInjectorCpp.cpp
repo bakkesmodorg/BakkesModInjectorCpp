@@ -199,6 +199,7 @@ void BakkesModInjectorCpp::OnCheckInjection()
 void BakkesModInjectorCpp::TimerTimeout()
 {
 	static UpdateDownloader* updateDownloader;
+	//LOG_LINE(INFO, GetStateName(bakkesModState))
 	switch (bakkesModState)
 	{
 	case BOOTING:
@@ -405,10 +406,13 @@ void BakkesModInjectorCpp::TimerTimeout()
 		timer.setInterval(70);
 		static int intervalLoops = 0;
 		intervalLoops++;
-		if (intervalLoops > 60 && safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date every X sec
+		if (intervalLoops > 200)
 		{
-			SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
 			intervalLoops = 10;
+			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date every X sec
+			{
+				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
+			}
 		}
 		else if (dllInjector.GetProcessID(L"RocketLeague.exe"))
 		{

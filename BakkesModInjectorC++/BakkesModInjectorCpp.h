@@ -11,7 +11,7 @@
 #include <qsystemtrayicon.h>
 
 
-#define BAKKESMODINJECTOR_VERSION 9
+#define BAKKESMODINJECTOR_VERSION 10
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \
