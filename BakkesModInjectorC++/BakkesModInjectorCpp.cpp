@@ -24,12 +24,13 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	LOG_LINE(INFO, "Initialized logger")
 
 	ui.setupUi(this);
+	LOG_LINE(INFO, "Set up UI")
 	connect(&timer, SIGNAL(timeout()), this, SLOT(TimerTimeout()));
 
 	QIcon icon(":/BakkesModInjectorCpp/mainicon");
 	
 	this->setWindowIcon(icon);
-
+	LOG_LINE(INFO, "Set window icon")
 	//Create tray icon
 	trayIcon = new QSystemTrayIcon(QIcon(":/BakkesModInjectorCpp/mainicon"), this);
 	
@@ -45,7 +46,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	trayIcon->setContextMenu(menu);
 
 	trayIcon->show();
-
+	LOG_LINE(INFO, "Initialized tray icon")
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayClicked(QSystemTrayIcon::ActivationReason)));
 
 	new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_R), this, SLOT(ReleaseDLL()));
@@ -57,15 +58,17 @@ void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
 	ui.progressBar->hide();
-	
+	LOG_LINE(INFO, "Checking if hideonboot is on")
 	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
 	ui.actionMinimize_on_start->setChecked(hideOnBoot);
 	if (hideOnBoot)
 	{
+		LOG_LINE(INFO, "Hiding to tray")
 		this->showMinimized();
 	}
 
 	//Just had an update, remove the old file
+	LOG_LINE(INFO, "Removing old exe")
 	if (WindowsUtils::FileExists("bakkesmod_old.exe"))
 	{
 		remove("bakkesmod_old.exe");
@@ -76,7 +79,7 @@ void BakkesModInjectorCpp::initialize()
 	{
 		timeout = INJECTION_TIMEOUT_DEFAULT;
 	}
-
+	LOG_LINE(INFO, "Current injection timeout is " << timeout)
 	ui.actionSet_injection_timeout->setText(QString(std::string("Set injection timeout (" + std::to_string(timeout) + ")").c_str()));
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
@@ -204,13 +207,15 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 	case BOOTING:
 	{
-
+		LOG_LINE(INFO, "Booting")
 		if (!installation.IsInstalled())
 		{
+			LOG_LINE(INFO, "Not installed, setting default values")
 			settingsManager.SaveSetting(L"EnableSafeMode", 1);
 			settingsManager.SaveSetting(L"HideOnMinimize", 1);
 			settingsManager.SaveSetting(L"HideOnBoot", 0);
 			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
+			LOG_LINE(INFO, "Default settings set")
 			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
 		}
 
@@ -690,14 +695,14 @@ void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 		int ret = msgBox.exec();
 		return;
 	}
-	else
-	{
-		QMessageBox msgBox;
-		msgBox.setText("Should open " + QString(rlPath.c_str()));
-		msgBox.setStandardButtons(QMessageBox::Ok);
-		msgBox.setDefaultButton(QMessageBox::Ok);
-		int ret = msgBox.exec();
-	}
+	//else
+	//{
+	//	QMessageBox msgBox;
+	//	msgBox.setText("Should open " + QString(rlPath.c_str()));
+	//	msgBox.setStandardButtons(QMessageBox::Ok);
+	//	msgBox.setDefaultButton(QMessageBox::Ok);
+	//	int ret = msgBox.exec();
+	//}
 	windowsUtils.OpenFolder(rlPath);
 
 }

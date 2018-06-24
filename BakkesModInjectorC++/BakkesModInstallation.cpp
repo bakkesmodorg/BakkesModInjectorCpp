@@ -5,7 +5,7 @@
 #include <qmessagebox.h>
 #include <fstream>
 #include <sstream>
-
+#include "logger.h"
 std::string BakkesModInstallation::overrideBakkesModFolder = "";
 
 BakkesModInstallation::BakkesModInstallation()
@@ -34,9 +34,11 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 		if (!rlPath.empty() && WindowsUtils::FileExists(rlPath + "RocketLeague.exe"))
 		{
 			bakkesModFolder = rlPath + "bakkesmod\\";
+			LOG_LINE(INFO, "Automatically detected Rocket League path: " << rlPath)
 		}
 		else
 		{
+			LOG_LINE(INFO, "Could not find Rocket League path, asking user.")
 			{
 				QMessageBox msgBox2;
 				std::stringstream ss;
@@ -51,8 +53,10 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 				QString("Select the Rocket League executable"), QString(QDir::currentPath()), QString("RocketLeague.exe (RocketLeague.exe)"));
 			std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());;
 			bakkesModFolder = rlPath +"bakkesmod\\";
+			LOG_LINE(INFO, "User selected executable: " << path.toStdString())
 			if (!WindowsUtils::FileExists(rlPath))
 			{
+				LOG_LINE(INFO, "Folder does not exist: " << rlPath)
 				QMessageBox msgBox2;
 				msgBox2.setText("Did not select bakkesmod folder?");
 				msgBox2.setStandardButtons(QMessageBox::Ok);

@@ -63,8 +63,10 @@ bool WindowsUtils::FileExists(std::string path)
 
 void WindowsUtils::OpenFolder(std::string path)
 {
-	std::string openPath = "explorer \"" + path + "\"";
-	system(openPath.c_str());
+	//std::string openPath = "explorer \"" + path + "\"";
+	//system(openPath.c_str());
+	//openPath.replace(openPath.begin(), openPath.end(), '/', '\\\\')
+	ShellExecute(NULL, L"open", StringToWString(path).c_str(), NULL, NULL, SW_SHOWDEFAULT);
 }
 
 void WindowsUtils::CreateFolder(std::string path)
