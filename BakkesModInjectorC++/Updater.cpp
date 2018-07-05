@@ -25,10 +25,8 @@ void Updater::CheckForUpdates(int version)
 	QNetworkRequest networkRequest(QUrl(fullRequestUrl.c_str()));
 	networkRequest.setHeader(QNetworkRequest::UserAgentHeader, std::string("BakkesMod Updater CPP (" + std::to_string(BAKKESMODINJECTOR_VERSION) + ")").c_str());
 	networkRequest.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
-	
 
 	auto reply = networkManager->get(networkRequest);
-
 	reply->setProperty("version", version);
 	latestUpdateInfo.networkRequestStatus = REQUESTED;
 }

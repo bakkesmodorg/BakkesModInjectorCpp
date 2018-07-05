@@ -57,6 +57,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
+	QApplication::setQuitOnLastWindowClosed(false);
 	ui.progressBar->hide();
 	LOG_LINE(INFO, "Checking if hideonboot is on")
 	bool hideOnBoot = settingsManager.GetIntSetting(L"HideOnBoot");
@@ -86,6 +87,7 @@ void BakkesModInjectorCpp::initialize()
 
 void BakkesModInjectorCpp::changeEvent(QEvent* e)
 {
+	QApplication::setQuitOnLastWindowClosed(true);
 	switch (e->type())
 	{
 	case QEvent::LanguageChange:
@@ -97,6 +99,7 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 		{
 			if (settingsManager.GetIntSetting(L"HideOnMinimize")) 
 			{
+				QApplication::setQuitOnLastWindowClosed(false);
 				QTimer::singleShot(50, this, SLOT(hide()));
 			}
 		}
@@ -201,7 +204,7 @@ void BakkesModInjectorCpp::OnCheckInjection()
 
 void BakkesModInjectorCpp::TimerTimeout()
 {
-	static UpdateDownloader* updateDownloader;
+	static UpdateDownloader* updateDownloader = NULL;
 	//LOG_LINE(INFO, GetStateName(bakkesModState))
 	switch (bakkesModState)
 	{
@@ -219,13 +222,11 @@ void BakkesModInjectorCpp::TimerTimeout()
 			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
 		}
 
-
 		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
 		OnRunOnStartup();
-		
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
 		SetState(CHECKING_FOR_UPDATES);
@@ -292,30 +293,34 @@ void BakkesModInjectorCpp::TimerTimeout()
 					{
 						LOG_LINE(INFO, "User accepted update, downloading now...")
 						SetState(UPDATING_BAKKESMOD);
+						LOG_LINE(INFO, "Constructing update downloader...")
 						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.downloadUrl, "bmupdate.zip");
+						LOG_LINE(INFO, "Telling downloader to download...")
 						updateDownloader->StartDownload();
+						LOG_LINE(INFO, "Told update downloader to download...")
 						ui.progressBar->setMaximum(100);
 						return;
 					}
 					else
 					{
 						LOG_LINE(INFO, "User cancelled update")
-						SetState(BAKKESMOD_IDLE);
+						SetState(CHECK_D3D9);
 						QMessageBox msgBox2;
 						std::stringstream ss;
 						msgBox2.setText("Update cancelled, mod might not work now though");
 						msgBox2.setStandardButtons( QMessageBox::Ok);
 						msgBox2.setDefaultButton(QMessageBox::Ok);
 						int ret = msgBox2.exec();
-
+						LOG_LINE(INFO, "Shown message about mod not working")
 					}
 				}
 				else
 				{
 					LOG_LINE(INFO, "No update available, switching to IDLE status")
-					SetState(BAKKESMOD_IDLE);
+					SetState(CHECK_D3D9);
 				}
 			}
+			
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date
 			{
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
@@ -350,6 +355,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case UPDATING_INJECTOR:
 	{
+		if (!updateDownloader)
+			return;
 		if (updateDownloader->completed)
 		{
 			LOG_LINE(INFO, "Injector update download complete")
@@ -381,6 +388,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 	}
 	break;
 	case UPDATING_BAKKESMOD:
+		if (!updateDownloader)
+			return;
 		if (updateDownloader->completed)
 		{
 			LOG_LINE(INFO, "Downloaded BakkesMod update file")
@@ -403,7 +412,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		out << BAKKESMODINJECTOR_VERSION;
 		out.close();
 		LOG_LINE(INFO, "Writing " << BAKKESMODINJECTOR_VERSION << " to injectorversion.txt")
-		SetState(BAKKESMOD_IDLE);
+		SetState(CHECK_D3D9);
 	}
 		break;
 	case BAKKESMOD_IDLE:
@@ -491,8 +500,51 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(BAKKESMOD_IDLE);
 		}
 		break;
+	case CHECK_D3D9:
+	{
+		if (WindowsUtils::FileExists(installation.GetBakkesModFolder() + "../d3d9.dll"))
+		{
+			QMessageBox msgBox;
+			LOG_LINE(INFO, "found a d3d9.dll")
+				std::stringstream ss;
+			ss << "WARNING: d3d9.dll detected. This file is used in reshade and might prevent BakkesMod GUI/new console from working. Would you like BakkesMod to remove this file?" << std::endl;
+			msgBox.setText(ss.str().c_str());
+			msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+			msgBox.setDefaultButton(QMessageBox::Yes);
+			int ret = msgBox.exec();
+			if (ret == QMessageBox::Yes)
+			{
+				if (remove((installation.GetBakkesModFolder() + "../d3d9.dll").c_str()) != 0) 
+				{
+					QMessageBox msgBox2;
+					LOG_LINE(INFO, "Could not remove d3d9.dll")
+						std::stringstream ss;
+					ss << "Unable to remove file, file already in use? BakkesMod GUI will most likely not work" << std::endl;
+					msgBox2.setText(ss.str().c_str());
+					msgBox2.setStandardButtons(QMessageBox::Ok);
+					msgBox2.setDefaultButton(QMessageBox::Ok);
+					int ret = msgBox2.exec();
+				}
+				else
+				{
+					QMessageBox msgBox2;
+					LOG_LINE(INFO, "d3d9.dll removed")
+						std::stringstream ss;
+					ss << "Removed d3d9.dll!" << std::endl;
+					msgBox2.setText(ss.str().c_str());
+					msgBox2.setStandardButtons(QMessageBox::Ok);
+					msgBox2.setDefaultButton(QMessageBox::Ok);
+					int ret = msgBox2.exec();
+				}
+			}
+		}
+		SetState(BAKKESMOD_IDLE);
 	}
-	ui.label->setText(QString(GetStatusString().c_str()));
+		break;
+	}
+	std::string sstr = GetStatusString().c_str();
+	if(ui.label)
+		ui.label->setText(QString(sstr.c_str()));
 }
 
 void BakkesModInjectorCpp::OnCheckSafeMode()
