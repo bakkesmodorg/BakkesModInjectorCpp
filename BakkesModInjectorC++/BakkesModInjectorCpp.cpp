@@ -55,8 +55,8 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	LOG_LINE(INFO, "Initialized tray icon")
 	connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayClicked(QSystemTrayIcon::ActivationReason)));
 
-	new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_R), this, SLOT(ReleaseDLL()));
-	new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_T), this, SLOT(DebugDLL()));
+	//new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_R), this, SLOT(ReleaseDLL()));
+	//new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_T), this, SLOT(DebugDLL()));
 
 }
 
@@ -405,18 +405,19 @@ void BakkesModInjectorCpp::TimerTimeout()
 				ZeroMemory(&si, sizeof(si)); //Use default startup info
 				ZeroMemory(&pi, sizeof(pi));
 				LPWSTR commandLine = L""; //No command line arguments
-				CreateProcess(currentName.c_str(), //Test if it works with spaces
+				CreateProcess(currentName.c_str(),
 					commandLine,
 					NULL,
 					NULL,
 					FALSE,
-					CREATE_BREAKAWAY_FROM_JOB,
+					CREATE_BREAKAWAY_FROM_JOB, //Actually launch new process since we close this one on the next line
 					NULL,
 					NULL,
 					&si,
 					&pi
 					);
 
+				//LOG_LINE(INFO, "Result " << GetLastError())//For now, I guess we do nothing if launching new process didn't work
 				//system(WindowsUtils::WStringToString(currentName).c_str());
 				QCoreApplication::quit();
 			}
