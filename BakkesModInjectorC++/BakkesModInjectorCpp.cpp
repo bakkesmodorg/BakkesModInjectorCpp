@@ -26,13 +26,19 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	ui.setupUi(this);
 	LOG_LINE(INFO, "Set up UI")
 	connect(&timer, SIGNAL(timeout()), this, SLOT(TimerTimeout()));
-
-	QIcon icon(":/BakkesModInjectorCpp/mainicon");
-	
+	QIcon icon;
+	if(qApp->arguments().contains("icon"))
+	{
+		icon = QIcon(qApp->arguments().at(qApp->arguments().indexOf("icon")));
+		LOG(INFO, "Custom icon " << qApp->arguments().at(qApp->arguments().indexOf("icon")));
+	}
+	else {
+		icon = QIcon(":/BakkesModInjectorCpp/mainicon");
+	}
 	this->setWindowIcon(icon);
 	LOG_LINE(INFO, "Set window icon")
 	//Create tray icon
-	trayIcon = new QSystemTrayIcon(QIcon(":/BakkesModInjectorCpp/mainicon"), this);
+	trayIcon = new QSystemTrayIcon(icon, this);
 	
 	QMenu* menu = new QMenu();
 	QAction* openAction = new QAction("Open", menu);
@@ -40,7 +46,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 
 	connect(openAction, SIGNAL(triggered()), this, SLOT(TrayOpenAction()));
 	connect(closeAction, SIGNAL(triggered()), this, SLOT(TrayCloseAction()));
-
+	//qApp->arguments().at(qApp->arguments().indexOf("icon"))
 	menu->addAction(openAction);
 	menu->addAction(closeAction);
 	trayIcon->setContextMenu(menu);
@@ -537,6 +543,19 @@ void BakkesModInjectorCpp::TimerTimeout()
 					int ret = msgBox2.exec();
 				}
 			}
+		}
+		if (!installation.ManifestFileExists() && ui.actionEnable_safe_mode->isChecked())
+		{
+			QMessageBox msgBox;
+			LOG_LINE(INFO, "Could not find manifest file")
+				std::stringstream ss;
+			ss << "Unable to find manifest file, disabling safe mode" << std::endl << "Warning: might result in instability after a RL update";
+			msgBox.setText(ss.str().c_str());
+			msgBox.setStandardButtons(QMessageBox::Ok);
+			msgBox.setDefaultButton(QMessageBox::Ok);
+			int ret = msgBox.exec();
+			ui.actionEnable_safe_mode->setChecked(false);
+			OnCheckSafeMode();
 		}
 		SetState(BAKKESMOD_IDLE);
 	}

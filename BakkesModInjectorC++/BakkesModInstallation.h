@@ -18,5 +18,6 @@ public:
 	bool IsInstalled();
 	unsigned int GetVersion();
 	bool IsSafeToInject(UpdateStatus currentVersion);
+	bool ManifestFileExists();
 };
 

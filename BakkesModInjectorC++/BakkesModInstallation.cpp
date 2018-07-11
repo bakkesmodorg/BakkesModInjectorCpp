@@ -51,11 +51,12 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 			}
 			QString path = QFileDialog::getOpenFileName(this,
 				QString("Select the Rocket League executable"), QString(QDir::currentPath()), QString("RocketLeague.exe (RocketLeague.exe)"));
-			std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());;
+			std::string rlPath = path.toStdString().substr(0, path.size() - std::string("RocketLeague.exe").size());
 			bakkesModFolder = rlPath +"bakkesmod\\";
 			LOG_LINE(INFO, "User selected executable: " << path.toStdString())
 			if (!WindowsUtils::FileExists(rlPath))
 			{
+
 				LOG_LINE(INFO, "Folder does not exist: " << rlPath)
 				QMessageBox msgBox2;
 				msgBox2.setText("Did not select bakkesmod folder?");
@@ -94,7 +95,7 @@ unsigned int BakkesModInstallation::GetVersion()
 bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 {
 	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
-	if (WindowsUtils::FileExists(manifest))
+	if (ManifestFileExists())
 	{
 		std::ifstream myfile(manifest);
 		std::string test;
@@ -118,6 +119,17 @@ bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 				return buildidwithoutquotes.compare(currentVersion.buildID) == 0;
 			}
 		}
+		LOG_LINE(INFO, "buildid line not found")
+	}
+	else {
+		LOG_LINE(INFO, "Could not find manifest file at " << manifest << " guess I'll disable safe mode manually?")
+		return true;
 	}
 	return false;
+}
+
+bool BakkesModInstallation::ManifestFileExists()
+{
+	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
+	return (WindowsUtils::FileExists(manifest));
 }

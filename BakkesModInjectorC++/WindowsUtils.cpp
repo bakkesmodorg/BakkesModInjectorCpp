@@ -6,7 +6,7 @@
 #include <fstream>
 #pragma comment(lib, "comsuppw")
 #include <tlhelp32.h>
-
+#include "stdafx.h"
 WindowsUtils::WindowsUtils()
 {
 }
@@ -46,7 +46,8 @@ std::string WindowsUtils::GetRocketLeagueDirFromLog()
 		{
 			if (logLine.substr(0, LOG_LINE_MATCH.size()) == LOG_LINE_MATCH)
 			{
-				fs >> logLine;
+				std::getline(fs, logLine); //Actually read till end of line incase there are spaces in the path
+				LOG_LINE(INFO, "Found RL dir from log: " << logLine)
 				return logLine;
 			}
 
