@@ -75,16 +75,37 @@ void BakkesModInjectorCpp::initialize()
 	}
 
 	//Just had an update, remove the old file
-	LOG_LINE(INFO, "Removing old exe")
-	if (WindowsUtils::FileExists("bakkesmod_old.exe"))
+	LOG_LINE(INFO, "Checking if any old versions are in current folder")
+
+	//Duplicate code, clean this stuff up pls
+	auto currentName = windowsUtils.GetCurrentExecutablePath();
+	size_t loc = currentName.find_last_of('\\') + 1;
+	auto newOldName = currentName.substr(0, loc) + L"bakkesmod_old.exe";
+
+	if (WindowsUtils::FileExists(WindowsUtils::WStringToString(newOldName).c_str()))
 	{
-		remove("bakkesmod_old.exe");
+		LOG_LINE(INFO, "Found old version of bakkesmod, trying to remove")
+		int removed = remove(WindowsUtils::WStringToString(newOldName).c_str());
+		if (removed != 0) //Something went wrong when removing old version
+		{
+			DWORD lastError = GetLastError();
+			LOG_LINE(INFO, "Remove error, status code: " << lastError)
+		}
+		else {
+			LOG_LINE(INFO, "Removed file successfully")
+		}
+		
+	}
+	else
+	{
+		LOG_LINE(INFO, "No old version found")
 	}
 
 	int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
 	if (timeout == 0)
 	{
 		timeout = INJECTION_TIMEOUT_DEFAULT;
+		LOG_LINE(INFO, "Injection timeout not set, using default " << INJECTION_TIMEOUT_DEFAULT)
 	}
 	LOG_LINE(INFO, "Current injection timeout is " << timeout)
 	ui.actionSet_injection_timeout->setText(QString(std::string("Set injection timeout (" + std::to_string(timeout) + ")").c_str()));
@@ -368,18 +389,42 @@ void BakkesModInjectorCpp::TimerTimeout()
 			LOG_LINE(INFO, "Injector update download complete")
 			ui.progressBar->hide();
 			auto currentName = windowsUtils.GetCurrentExecutablePath();
-			if (rename(WindowsUtils::WStringToString(currentName).c_str(), "bakkesmod_old.exe") == 0)
+			LOG_LINE(INFO, "Current executable path is " << WindowsUtils::WStringToString(currentName).c_str())
+			size_t loc = currentName.find_last_of('\\') + 1;
+			auto newOldName = currentName.substr(0, loc) + L"bakkesmod_old.exe";
+			LOG_LINE(INFO, "Renaming current injector to " << WindowsUtils::WStringToString(newOldName).c_str())
+
+			if (rename(WindowsUtils::WStringToString(currentName).c_str(), WindowsUtils::WStringToString(newOldName).c_str()) == 0)
 			{
 				LOG_LINE(INFO, "Successfully renamed current executable to bakkesmod_old.exe");
 				rename(updateDownloader->packageUrl.c_str(), WindowsUtils::WStringToString(currentName).c_str());
-				system(WindowsUtils::WStringToString(currentName).c_str());
+
+
+				STARTUPINFO si; 
+				PROCESS_INFORMATION pi;
+				ZeroMemory(&si, sizeof(si)); //Use default startup info
+				ZeroMemory(&pi, sizeof(pi));
+				LPWSTR commandLine = L""; //No command line arguments
+				CreateProcess(currentName.c_str(), //Test if it works with spaces
+					commandLine,
+					NULL,
+					NULL,
+					FALSE,
+					CREATE_BREAKAWAY_FROM_JOB,
+					NULL,
+					NULL,
+					&si,
+					&pi
+					);
+
+				//system(WindowsUtils::WStringToString(currentName).c_str());
 				QCoreApplication::quit();
 			}
 			else
 			{
 				LOG_LINE(INFO, "Unable to rename current executable to bakkesmod_old.exe, displaying error to user");
 				QMessageBox msgBox;
-				msgBox.setText("Could not update BakkesMod injector, no permissions to rename file, sorry!");
+				msgBox.setText("Could not update BakkesMod injector, no permissions to rename file, sorry! Try downloading it manually from the website");
 				msgBox.setStandardButtons(QMessageBox::Ok);
 				msgBox.setDefaultButton(QMessageBox::Ok);
 				int ret = msgBox.exec();
@@ -447,6 +492,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 				if (timeout == 0)
 					timeout = INJECTION_TIMEOUT_DEFAULT;
 				timer.setInterval(timeout);
+
+				//This stuff is now ignored by the DLL, keeping it for future stuff though.
 				if (intervalLoops < 10)
 				{
 					dllInjector.SetInjectionParameters({ BAKKESMODINJECTOR_VERSION, 0 });

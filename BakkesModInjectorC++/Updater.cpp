@@ -4,7 +4,7 @@
 #include "BakkesModInjectorCpp.h"
 
 //http://updater.bakkesmod.com/static/versions/bakkesmod_57.zip
-const std::string Updater::UPDATE_SERVER_URL = "http://updater.bakkesmod.com/updater/"; //"http://127.0.0.1:8000/";//
+const std::string Updater::UPDATE_SERVER_URL = "http://127.0.0.1:8000/";//"http://updater.bakkesmod.com/updater/"; //
 
 
 Updater::Updater()
@@ -22,7 +22,7 @@ Updater::~Updater()
 
 void Updater::CheckForUpdates(int version)
 {
-	std::string fullRequestUrl = UPDATE_SERVER_URL + std::to_string(version) + "/";
+	std::string fullRequestUrl = UPDATE_SERVER_URL + std::to_string(version);// +"/";
 	QNetworkRequest networkRequest(QUrl(fullRequestUrl.c_str()));
 	networkRequest.setHeader(QNetworkRequest::UserAgentHeader, std::string("BakkesMod Updater CPP (" + std::to_string(BAKKESMODINJECTOR_VERSION) + ")").c_str());
 	networkRequest.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
