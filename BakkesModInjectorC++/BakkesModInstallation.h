@@ -19,5 +19,5 @@ public:
 	unsigned int GetVersion();
 	bool IsSafeToInject(UpdateStatus currentVersion);
 	bool ManifestFileExists();
+	std::string DetectRocketLeagueFolder();
 };
-

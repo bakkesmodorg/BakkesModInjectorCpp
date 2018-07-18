@@ -2,7 +2,6 @@
 #include "logger.h"
 #define LOG_LINE(sev, msg) LOG(sev) << msg << std::endl;
 
-
 enum NetworkRequestStatus
 {
 	IDLE = 0,

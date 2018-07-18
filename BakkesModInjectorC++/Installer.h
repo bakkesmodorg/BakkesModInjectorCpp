@@ -10,4 +10,3 @@ public:
 	~Installer();
 	void Install();
 };
-

@@ -15,7 +15,6 @@ struct InjectionParameters
 	int injectionMode = 0; //0 is RL already running, 1 = RL just started
 };
 
-
 class DllInjector
 {
 private:
@@ -29,4 +28,3 @@ public:
 	DWORD GetProcessID(std::wstring processName);
 	DWORD IsBakkesModDllInjected(std::wstring processName);
 };
-

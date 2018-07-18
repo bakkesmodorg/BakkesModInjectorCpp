@@ -22,7 +22,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 		TempPath = wcharPath;
 	AixLog::Log::init<AixLog::SinkFile>(AixLog::Severity::trace, AixLog::Type::all, WindowsUtils::WStringToString(TempPath) + "\\injectorlog.log");
 	LOG_LINE(INFO, "Initialized logger")
-
+	LOG_LINE(INFO, "BakkesMod injector version " << BAKKESMODINJECTOR_VERSION << ". Compiled at " __DATE__ " " __TIME__)
 	ui.setupUi(this);
 	LOG_LINE(INFO, "Set up UI")
 	connect(&timer, SIGNAL(timeout()), this, SLOT(TimerTimeout()));
@@ -109,6 +109,8 @@ void BakkesModInjectorCpp::initialize()
 	}
 	LOG_LINE(INFO, "Current injection timeout is " << timeout)
 	ui.actionSet_injection_timeout->setText(QString(std::string("Set injection timeout (" + std::to_string(timeout) + ")").c_str()));
+
+
 	//settingsManager.SaveSetting(L"EnableSafeMode", (int)newStatus);
 }
 
@@ -198,6 +200,9 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		break;
 	case INSTALLATION_CORRUPT:
 		status = "Installation corrupted, please do a reinstall (File -> reinstall)";
+		break;
+	case WAIT_FOR_RL_CLOSE:
+		status = "Postponing update until RL is closed...";
 		break;
 	}
 	return status;
@@ -455,8 +460,30 @@ void BakkesModInjectorCpp::TimerTimeout()
 
 		}
 	break;
+	case WAIT_FOR_RL_CLOSE:
+	{
+		timer.setInterval(2500);
+		DWORD processId = dllInjector.GetProcessID(L"RocketLeague.exe");
+		if (processId == 0)
+		{
+			SetState(BAKKESMOD_INSTALLING);
+		}
+	}
+		break;
 	case BAKKESMOD_INSTALLING:
 	{
+		if (installation.IsInstalled() && !PopupRLRunningTillClosed())
+		{
+			QMessageBox msgBox;
+			std::stringstream ss;
+			ss << "Cannot install/update BakkesMod while Rocket League is running! Mod will be updated when RL is closed." << std::endl;
+			msgBox.setText(ss.str().c_str());
+			msgBox.setStandardButtons(QMessageBox::Ok);
+			msgBox.setDefaultButton(QMessageBox::Ok);
+			int ret = msgBox.exec();
+			SetState(WAIT_FOR_RL_CLOSE);
+			return;
+		}
 		Installer i(updateDownloader->packageUrl, installation.GetBakkesModFolder());
 		i.Install();
 		
@@ -800,6 +827,49 @@ void BakkesModInjectorCpp::DebugDLL()
 	msgBox.setStandardButtons(QMessageBox::Ok);
 	msgBox.setDefaultButton(QMessageBox::Ok);
 	int ret = msgBox.exec();
+}
+
+bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
+{
+	DWORD processId = dllInjector.GetProcessID(L"RocketLeague.exe");
+	LOG_LINE(INFO, "Rocket League process id is " << processId)
+	if (processId > 0)
+	{
+		LOG_LINE(INFO, "Prompting user for RL close")
+		QMessageBox msgBox;
+		std::stringstream ss;
+		ss << "Rocket League needs to be closed for BakkesMod to update, would you like BakkesMod to exit Rocket League?" << std::endl;
+		msgBox.setText(ss.str().c_str());
+		msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+		msgBox.setDefaultButton(QMessageBox::Yes);
+		int ret = msgBox.exec();
+		if (ret == QMessageBox::Yes)
+		{
+			LOG_LINE(INFO, "User accepted RL close")
+			processId = dllInjector.GetProcessID(L"RocketLeague.exe"); //User might close process themselves in the mean time
+			if (processId == 0) {
+				LOG_LINE(INFO, "User closed RL by themselves, returning true");
+				return true;
+			}
+			HANDLE explorer;
+			explorer = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
+			TerminateProcess(explorer, 1);
+			CloseHandle(explorer);
+			LOG_LINE(INFO, "Force closed rl, new process id should be 0: " << dllInjector.GetProcessID(L"RocketLeague.exe"))
+			return true;
+		}
+		else {
+			LOG_LINE(INFO, "User denied RL close")
+			processId = dllInjector.GetProcessID(L"RocketLeague.exe"); //User might close process themselves in the mean time
+			if (processId == 0) {
+				LOG_LINE(INFO, "User closed RL by themselves, returning true");
+				return true;
+			}
+			LOG_LINE(INFO, "RL still running, returning false")
+			return false;
+		}
+	}
+	return true;
 }
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()

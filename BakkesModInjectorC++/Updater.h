@@ -5,8 +5,6 @@
 #include "BakkesModInstallation.h"
 #include <vector>
 
-
-
 class Updater : public QObject
 {
 	Q_OBJECT
@@ -18,9 +16,8 @@ public:
 	Updater();
 	~Updater();
 	void CheckForUpdates(int version);
-private slots:
+	private slots:
 	void OnUpdateInfoReceived(QNetworkReply* result);
 	void replyFinished(QNetworkReply* result);
 	void networkError(QNetworkReply::NetworkError code);
 };
-

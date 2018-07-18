@@ -3,7 +3,6 @@
 #include <memory>
 #include <windows.h>
 
-
 //class SettingsManager
 //{
 //public:
@@ -29,4 +28,3 @@ public:
 	int GetIntSetting(std::wstring key, std::wstring subKey = REGISTRY_DIR);
 	void DeleteSetting(std::wstring key, std::wstring subKey = REGISTRY_DIR);
 };
-

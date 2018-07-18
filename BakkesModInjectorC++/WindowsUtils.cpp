@@ -79,7 +79,7 @@ void WindowsUtils::CreateFolder(std::string path)
 	}
 }
 
-bool WindowsUtils::IsProcessRunning(std::wstring processName)
+DWORD WindowsUtils::IsProcessRunning(std::wstring processName)
 {
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -200,4 +200,25 @@ std::wstring WindowsUtils::GetCurrentExecutablePath()
 	WCHAR path[MAX_PATH];
 	GetModuleFileNameW(hModule, path, MAX_PATH);
 	return path;
+}
+
+std::wstring WindowsUtils::GetExecutablePath(std::string process)
+{
+	/*HANDLE processHandle = NULL;
+	TCHAR filename[MAX_PATH];
+
+	processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, 1234);
+	if (processHandle != NULL) {
+		if (GetModuleFileNameEx(processHandle, NULL, filename, MAX_PATH) == 0) {
+			tcerr << "Failed to get module filename." << endl;
+		}
+		else {
+			tcout << "Module filename is: " << filename << endl;
+		}
+		CloseHandle(processHandle);
+	}
+	else {
+		tcerr << "Failed to open process." << endl;
+	}*/
+	return std::wstring();
 }

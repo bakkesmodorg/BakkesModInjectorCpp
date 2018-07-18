@@ -98,6 +98,12 @@
     <ClInclude Include="logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vdf_parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\BakkesModInjectorC.ico" />

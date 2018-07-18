@@ -5,7 +5,7 @@ class UpdateDownloader : public QObject
 {
 	Q_OBJECT
 
-private slots:
+		private slots:
 	void updateProgress(qint64 read, qint64 total);
 public:
 	QNetworkAccessManager* networkManager;
@@ -16,7 +16,6 @@ public:
 	UpdateDownloader(std::string downloadUrl, std::string packageUrl);
 	~UpdateDownloader();
 	void StartDownload();
-public slots:
+	public slots:
 	void finishedSlot(QNetworkReply *reply);
 };
-

@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include "logger.h"
+#include "vdf_parser.h"
+#include <fstream>
 std::string BakkesModInstallation::overrideBakkesModFolder = "";
 
 BakkesModInstallation::BakkesModInstallation()
@@ -21,6 +23,7 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 {
 	if (!overrideBakkesModFolder.empty())
 		return overrideBakkesModFolder;
+
 	if (bakkesModFolder.empty())
 	{
 		std::wstring registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
@@ -30,8 +33,14 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 			return bakkesModFolder;
 		}
 
+		std::string newDetectedFolder = DetectRocketLeagueFolder();
 		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
-		if (!rlPath.empty() && WindowsUtils::FileExists(rlPath + "RocketLeague.exe"))
+		if (!newDetectedFolder.empty()) {
+			LOG_LINE(INFO, "Advanced detection found installation path " << newDetectedFolder)
+			rlPath = newDetectedFolder;
+			bakkesModFolder = rlPath + "bakkesmod\\";
+
+		} else if (!rlPath.empty() && WindowsUtils::FileExists(rlPath + "RocketLeague.exe"))
 		{
 			bakkesModFolder = rlPath + "bakkesmod\\";
 			LOG_LINE(INFO, "Automatically detected Rocket League path: " << rlPath)
@@ -95,33 +104,35 @@ unsigned int BakkesModInstallation::GetVersion()
 bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 {
 	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
-	if (ManifestFileExists())
+	if (WindowsUtils::FileExists(manifest))
 	{
-		std::ifstream myfile(manifest);
-		std::string test;
-		while (myfile >> test)
+		LOG_LINE(INFO, "Path contains a manifest file");
+		std::ifstream manifestStream(manifest);
+		tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
+
+		if (manifestRoot.name.compare("AppState") == std::string::npos)
 		{
-			if (test.compare("\"buildid\"") == 0)
+			LOG_LINE(INFO, "Manifest at " << manifest << " corrupt? Guess I'll disable safe mode manually?")
+				return true;
+		}
+
+		if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
+		{
+			LOG_LINE(INFO, "Manifest does not contain a buildid");
+			return false;
+		}
+		std::string buildId = manifestRoot.attribs["buildid"];
+
+		if (currentVersion.buildIds.size() > 0)
+		{
+			for (std::string buildidz : currentVersion.buildIds)
 			{
-				std::string buildid = "";
-				myfile >> buildid;
-				std::string buildidwithoutquotes = buildid.substr(1, buildid.size() - 2);
-				if (currentVersion.buildIds.size() > 0)
-				{
-					for (std::string buildidz : currentVersion.buildIds)
-					{
-						LOG_LINE(INFO, "Comparing buildid " << buildidwithoutquotes << " to " << buildidz)
-						if (buildidwithoutquotes.compare(buildidz) == 0)
-							return true;
-					}
-				}
-				LOG_LINE(INFO, "Comparing buildid " << buildidwithoutquotes << " to " << currentVersion.buildID)
-				return buildidwithoutquotes.compare(currentVersion.buildID) == 0;
+				LOG_LINE(INFO, "Comparing buildid " << buildId << " to " << buildidz)
+				if (buildId.compare(buildidz) == 0)
+					return true;
 			}
 		}
-		LOG_LINE(INFO, "buildid line not found")
-	}
-	else {
+	} else {
 		LOG_LINE(INFO, "Could not find manifest file at " << manifest << " guess I'll disable safe mode manually?")
 		return true;
 	}
@@ -132,4 +143,71 @@ bool BakkesModInstallation::ManifestFileExists()
 {
 	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
 	return (WindowsUtils::FileExists(manifest));
+}
+
+std::string BakkesModInstallation::DetectRocketLeagueFolder()
+{
+	std::wstring path = settings.GetStringSetting(L"SteamPath", L"SOFTWARE\\Valve\\Steam") + L"\\steamapps\\";
+	std::wstring vdfFile = path + L"libraryfolders.vdf";
+	if (!WindowsUtils::FileExists(WindowsUtils::WStringToString(vdfFile)))
+	{
+		LOG_LINE(INFO, "Could not find steamapps folder, detected " << vdfFile.c_str());
+		return "";
+	}
+	std::ifstream vdfStream(WindowsUtils::WStringToString(vdfFile));
+	tyti::vdf::object root = tyti::vdf::read(vdfStream);
+	if (root.name.compare("LibraryFolders") == std::string::npos)
+	{
+		LOG_LINE(INFO, "File root is not LibraryFolders, but " << root.name.c_str());
+		return "";
+	}
+
+	std::string installationPath = "";
+	int lastBuildId = -1;
+	for (auto child : root.attribs)
+	{
+		bool isPath = WindowsUtils::FileExists(child.second);
+		LOG_LINE(INFO, "Key " << child.first << " = " << child.second << ". is path=" << (isPath ? "true" : "false"));
+		if (isPath)
+		{
+			std::string newPath = child.second + "\\steamapps\\";
+			std::string manifestPath = newPath + "appmanifest_252950.acf";
+			std::string executablePath = newPath + "common\\rocketleague\\Binaries\\Win32\\";
+			std::string executableLocation = executablePath + "RocketLeague.exe";
+			if (WindowsUtils::FileExists(manifestPath))
+			{
+				LOG_LINE(INFO, "Path contains a manifest file");
+				std::ifstream manifestStream(manifestPath);
+				tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
+				
+				if (manifestRoot.name.compare("AppState") == std::string::npos)
+				{
+					LOG_LINE(INFO, "Manifest is invalid, skipping");
+					continue;
+				}
+				
+				if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
+				{
+					LOG_LINE(INFO, "Manifest does not contain a buildid");
+					continue;
+				}
+				std::string buildId = manifestRoot.attribs["buildid"];
+				int buildIdInteger = stoi(buildId);
+				if (buildIdInteger > lastBuildId)
+				{
+					LOG_LINE(INFO, "Found buildid " << buildIdInteger << " (newest high)");
+					if (!WindowsUtils::FileExists(executableLocation))
+					{
+						LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
+						continue;
+					}
+					lastBuildId = buildIdInteger;
+					installationPath = executablePath;
+					LOG_LINE(INFO, "Found RocketLeague.exe at " << installationPath);
+				}
+			}
+		}
+	}
+
+	return installationPath;
 }

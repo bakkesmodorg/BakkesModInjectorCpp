@@ -16,8 +16,6 @@ of the MIT license.  See the LICENSE file for details.
 /// inspired by "eater":
 /// https://stackoverflow.com/questions/2638654/redirect-c-stdclog-to-syslog-on-unix
 
-
-
 #ifndef AIX_LOG_HPP
 #define AIX_LOG_HPP
 
@@ -68,7 +66,6 @@ of the MIT license.  See the LICENSE file for details.
 #include <syslog.h>
 #endif
 
-
 #ifdef __ANDROID__
 // fix for bug "Android NDK __func__ definition is inconsistent with glibc and C++99"
 // https://bugs.chromium.org/p/chromium/issues/detail?id=631489
@@ -81,7 +78,6 @@ of the MIT license.  See the LICENSE file for details.
 #define	AIXLOG_INTERNAL__FUNC __func__
 #endif
 
-
 /// Internal helper macros (exposed, but shouldn't be used directly)
 #define AIXLOG_INTERNAL__LOG_SEVERITY(SEVERITY_) std::clog << static_cast<AixLog::Severity>(SEVERITY_)
 #define AIXLOG_INTERNAL__LOG_SEVERITY_TAG(SEVERITY_, TAG_) std::clog << static_cast<AixLog::Severity>(SEVERITY_) << TAG(TAG_)
@@ -91,7 +87,6 @@ of the MIT license.  See the LICENSE file for details.
 
 //https://stackoverflow.com/questions/3046889/optional-parameters-with-c-macros
 #define AIXLOG_INTERNAL__VAR_PARM(x,PARAM1_,PARAM2_,FUNC_, ...) FUNC_
-
 
 /// External logger macros
 // usage: LOG(SEVERITY) or LOG(SEVERITY, TAG)
@@ -109,7 +104,6 @@ of the MIT license.  See the LICENSE file for details.
 #define SPECIAL AixLog::Type::special
 #define TIMESTAMP AixLog::Timestamp(std::chrono::system_clock::now())
 
-
 /**
 * @brief
 * Severity of the log message
@@ -125,11 +119,8 @@ enum SEVERITY
 	FATAL = 6
 };
 
-
 namespace AixLog
 {
-
-
 	/**
 	* @brief
 	* Severity of the log message
@@ -162,8 +153,6 @@ namespace AixLog
 		fatal = SEVERITY::FATAL
 	};
 
-
-
 	/**
 	* @brief
 	* Type of the log message or Sink
@@ -177,8 +166,6 @@ namespace AixLog
 		special,
 		all
 	};
-
-
 
 	/**
 	* @brief
@@ -206,8 +193,6 @@ namespace AixLog
 		WHITE = 8
 	};
 
-
-
 	/**
 	* @brief
 	* Encapsulation of foreground and background color
@@ -223,8 +208,6 @@ namespace AixLog
 		Color foreground;
 		Color background;
 	};
-
-
 
 	/**
 	* @brief
@@ -253,8 +236,6 @@ namespace AixLog
 	private:
 		bool is_true_;
 	};
-
-
 
 	/**
 	* @brief
@@ -314,8 +295,6 @@ namespace AixLog
 		bool is_null_;
 	};
 
-
-
 	/**
 	* @brief
 	* Tag (string) for log line
@@ -350,8 +329,6 @@ namespace AixLog
 	private:
 		bool is_null_;
 	};
-
-
 
 	/**
 	* @brief
@@ -392,8 +369,6 @@ namespace AixLog
 		bool is_null_;
 	};
 
-
-
 	/**
 	* @brief
 	* Collection of a log line's meta data
@@ -411,8 +386,6 @@ namespace AixLog
 		Function function;
 		Timestamp timestamp;
 	};
-
-
 
 	/**
 	* @brief
@@ -446,7 +419,6 @@ namespace AixLog
 		Type sink_type_;
 	};
 
-
 	/// ostream operators << for the meta data structs
 	static std::ostream& operator<< (std::ostream& os, const Severity& log_severity);
 	static std::ostream& operator<< (std::ostream& os, const Type& log_type);
@@ -458,7 +430,6 @@ namespace AixLog
 	static std::ostream& operator<< (std::ostream& os, const TextColor& text_color);
 
 	using log_sink_ptr = std::shared_ptr<Sink>;
-
 
 	/**
 	* @brief
@@ -544,7 +515,6 @@ namespace AixLog
 			}
 		}
 
-
 	protected:
 		Log() noexcept
 		{
@@ -599,7 +569,6 @@ namespace AixLog
 			return c;
 		}
 
-
 	private:
 		friend std::ostream& operator<< (std::ostream& os, const Severity& log_severity);
 		friend std::ostream& operator<< (std::ostream& os, const Type& log_type);
@@ -614,8 +583,6 @@ namespace AixLog
 		std::vector<log_sink_ptr> log_sinks_;
 		std::recursive_mutex mutex_;
 	};
-
-
 
 	/**
 	* @brief
@@ -645,7 +612,6 @@ namespace AixLog
 		}
 
 		void log(const Metadata& metadata, const std::string& message) override = 0;
-
 
 	protected:
 		virtual void do_log(std::ostream& stream, const Metadata& metadata, const std::string& message) const
@@ -688,8 +654,6 @@ namespace AixLog
 		std::string format_;
 	};
 
-
-
 	/**
 	* @brief
 	* Formatted logging to cout
@@ -707,8 +671,6 @@ namespace AixLog
 		}
 	};
 
-
-
 	/**
 	* @brief
 	* Formatted logging to cerr
@@ -725,8 +687,6 @@ namespace AixLog
 			do_log(std::cerr, metadata, message);
 		}
 	};
-
-
 
 	/**
 	* @brief
@@ -754,8 +714,6 @@ namespace AixLog
 		mutable std::ofstream ofs;
 	};
 
-
-
 #ifdef _WIN32
 	/**
 	* @brief
@@ -775,8 +733,6 @@ namespace AixLog
 		}
 	};
 #endif
-
-
 
 #ifdef HAS_APPLE_UNIFIED_LOG_
 	/**
@@ -818,8 +774,6 @@ namespace AixLog
 	};
 #endif
 
-
-
 #ifdef HAS_SYSLOG_
 	/**
 	* @brief
@@ -860,15 +814,12 @@ namespace AixLog
 			}
 		}
 
-
 		void log(const Metadata& metadata, const std::string& message) override
 		{
 			syslog(get_syslog_priority(metadata.severity), "%s", message.c_str());
 		}
 	};
 #endif
-
-
 
 #ifdef __ANDROID__
 	/**
@@ -927,7 +878,6 @@ namespace AixLog
 	};
 #endif
 
-
 #ifdef _WIN32
 	/**
 	* @brief
@@ -975,8 +925,6 @@ namespace AixLog
 	};
 #endif
 
-
-
 	/**
 	* @brief
 	* Log to the system's native sys logger
@@ -1023,8 +971,6 @@ namespace AixLog
 		std::string ident_;
 	};
 
-
-
 	/**
 	* @brief
 	* Forward log messages to a callback function
@@ -1050,8 +996,6 @@ namespace AixLog
 	private:
 		callback_fun callback_;
 	};
-
-
 
 	/**
 	* @brief
@@ -1083,8 +1027,6 @@ namespace AixLog
 		return os;
 	}
 
-
-
 	static std::ostream& operator<< (std::ostream& os, const Type& log_type)
 	{
 		Log* log = dynamic_cast<Log*>(os.rdbuf());
@@ -1095,8 +1037,6 @@ namespace AixLog
 		}
 		return os;
 	}
-
-
 
 	static std::ostream& operator<< (std::ostream& os, const Timestamp& timestamp)
 	{
@@ -1113,8 +1053,6 @@ namespace AixLog
 		return os;
 	}
 
-
-
 	static std::ostream& operator<< (std::ostream& os, const Tag& tag)
 	{
 		Log* log = dynamic_cast<Log*>(os.rdbuf());
@@ -1129,8 +1067,6 @@ namespace AixLog
 		}
 		return os;
 	}
-
-
 
 	static std::ostream& operator<< (std::ostream& os, const Function& function)
 	{
@@ -1147,8 +1083,6 @@ namespace AixLog
 		return os;
 	}
 
-
-
 	static std::ostream& operator<< (std::ostream& os, const Conditional& conditional)
 	{
 		Log* log = dynamic_cast<Log*>(os.rdbuf());
@@ -1159,8 +1093,6 @@ namespace AixLog
 		}
 		return os;
 	}
-
-
 
 	static std::ostream& operator<< (std::ostream& os, const TextColor& text_color)
 	{
@@ -1181,17 +1113,12 @@ namespace AixLog
 		return os;
 	}
 
-
-
 	static std::ostream& operator<< (std::ostream& os, const Color& color)
 	{
 		os << TextColor(color);
 		return os;
 	}
-
-
 } // namespace AixLog
-
 
 #ifdef _WIN32
   // We restore the ERROR Windows macro

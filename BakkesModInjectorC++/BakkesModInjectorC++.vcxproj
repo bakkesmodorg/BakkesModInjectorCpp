@@ -155,6 +155,7 @@
       <Define Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UNICODE;_UNICODE;WIN32;WIN64;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_NETWORK_LIB;QT_WIDGETS_LIB</Define>
     </QtMoc>
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="vdf_parser.h" />
     <ClInclude Include="WindowsUtils.h" />
   </ItemGroup>
   <ItemGroup>

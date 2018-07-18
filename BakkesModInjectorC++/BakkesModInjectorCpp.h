@@ -10,8 +10,7 @@
 #include "Updater.h"
 #include <qsystemtrayicon.h>
 
-
-#define BAKKESMODINJECTOR_VERSION 10
+#define BAKKESMODINJECTOR_VERSION 12
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \
@@ -29,7 +28,8 @@
 	X(BAKKESMOD_INSTALLING, "BAKKESMOD_INSTALLING") \
 	X(REINSTALL, "REINSTALL") \
 	X(INSTALLATION_CORRUPT, "INSTALLATION_CORRUPT") \
-	X(CHECK_D3D9, "CHECKING_D3D9")
+	X(CHECK_D3D9, "CHECKING_D3D9") \
+	X(WAIT_FOR_RL_CLOSE, "WAIT_FOR_RL_CLOSE")
 
 #define X(state, name) state,
 enum BakkesModStatus : size_t
@@ -61,7 +61,7 @@ public:
 	void OpenWebsite(std::string url);
 	void SetState(BakkesModStatus newState);
 
-public slots:
+	public slots:
 	void OnOpenBakkesModFolderClicked();
 	void OnCheckInjection();
 	void TimerTimeout();
@@ -87,6 +87,8 @@ public slots:
 
 	void ReleaseDLL();
 	void DebugDLL();
+
+	bool PopupRLRunningTillClosed();
 private:
 	Ui::BakkesModInjectorCppClass ui;
 };
