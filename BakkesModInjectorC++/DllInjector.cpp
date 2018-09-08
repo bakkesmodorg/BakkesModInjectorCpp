@@ -1,4 +1,5 @@
 #include "DllInjector.h"
+#include "stdafx.h"
 #include <iostream>
 #include <string>
 #include <windows.h>
@@ -7,6 +8,7 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <psapi.h>
+#include "windowsutils.h"
 
 DllInjector::DllInjector()
 {

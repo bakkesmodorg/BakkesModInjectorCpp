@@ -11,6 +11,7 @@ private:
 	WindowsUtils windowsUtils;
 	RegisterySettingsManager settings;
 public:
+	void resetBMFolder();
 	static std::string overrideBakkesModFolder;
 	BakkesModInstallation();
 	~BakkesModInstallation();

@@ -7,6 +7,9 @@
 #pragma comment(lib, "comsuppw")
 #include <tlhelp32.h>
 #include "stdafx.h"
+#include <cctype>
+#include <string>
+#include <algorithm>
 WindowsUtils::WindowsUtils()
 {
 }
@@ -31,6 +34,13 @@ std::string WindowsUtils::GetMyDocumentsFolder()
 	return "";
 }
 
+inline std::string trim(const std::string &s)
+{
+	auto wsfront = std::find_if_not(s.begin(), s.end(), [](int c) {return std::isspace(c); });
+	auto wsback = std::find_if_not(s.rbegin(), s.rend(), [](int c) {return std::isspace(c); }).base();
+	return (wsback <= wsfront ? std::string() : std::string(wsfront, wsback));
+}
+
 std::string WindowsUtils::GetRocketLeagueDirFromLog()
 {
 	static std::string LOG_LINE_MATCH = "directory:";
@@ -47,6 +57,7 @@ std::string WindowsUtils::GetRocketLeagueDirFromLog()
 			if (logLine.substr(0, LOG_LINE_MATCH.size()) == LOG_LINE_MATCH)
 			{
 				std::getline(fs, logLine); //Actually read till end of line incase there are spaces in the path
+				logLine = trim(logLine);
 				LOG_LINE(INFO, "Found RL dir from log: " << logLine)
 				return logLine;
 			}

@@ -10,7 +10,7 @@
 #include "Updater.h"
 #include <qsystemtrayicon.h>
 
-#define BAKKESMODINJECTOR_VERSION 12
+#define BAKKESMODINJECTOR_VERSION 13
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \
@@ -53,6 +53,7 @@ private:
 	DllInjector dllInjector;
 	QTimer timer;
 	QSystemTrayIcon* trayIcon;
+	int outOfDateCounter = 0;
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
 	void initialize();
@@ -60,6 +61,8 @@ public:
 	void changeEvent(QEvent* e);
 	void OpenWebsite(std::string url);
 	void SetState(BakkesModStatus newState);
+
+	bool PopupRLRunningTillClosed();
 
 	public slots:
 	void OnOpenBakkesModFolderClicked();
@@ -69,6 +72,7 @@ public:
 	void OnMinimizeOnStart();
 	void OnHideOnMinimize();
 	void OnRunOnStartup();
+	void OnDisableWarnings();
 	void OnExitClick();
 	void OnReinstallClick();
 	void OnPythonInstallClick();
@@ -88,7 +92,6 @@ public:
 	void ReleaseDLL();
 	void DebugDLL();
 
-	bool PopupRLRunningTillClosed();
 private:
 	Ui::BakkesModInjectorCppClass ui;
 };

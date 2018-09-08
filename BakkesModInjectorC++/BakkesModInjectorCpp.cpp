@@ -10,8 +10,12 @@
 #include <fstream>
 #include "logger.h"
 #define INJECTION_TIMEOUT_DEFAULT 2500
+#include <sddl.h>
+#include <stdio.h>
+#include <winevt.h>
 
-
+#pragma comment(lib, "wevtapi.lib")
+DWORD WINAPI SubscriptionCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent);
 
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
@@ -161,7 +165,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Starting...";
 		break;
 	case BAKKESMOD_IDLE:
-		status = "Uninjected";
+		status = "Uninjected, waiting for user to start Rocket League";
 		break;
 	case WAITING_FOR_RL:
 		break;
@@ -249,6 +253,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			settingsManager.SaveSetting(L"EnableSafeMode", 1);
 			settingsManager.SaveSetting(L"HideOnMinimize", 1);
 			settingsManager.SaveSetting(L"HideOnBoot", 0);
+			settingsManager.SaveSetting(L"DisableWarnings", 0);
 			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
 			LOG_LINE(INFO, "Default settings set")
 			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
@@ -257,13 +262,14 @@ void BakkesModInjectorCpp::TimerTimeout()
 		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
+		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
 		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
 		OnRunOnStartup();
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
 		SetState(CHECKING_FOR_UPDATES);
 		LOG_LINE(INFO, "Checking for updates, current version = " << version);
-		timer.setInterval(50);
+		timer.setInterval(500);
 	}
 		break;
 	case CHECKING_FOR_UPDATES:
@@ -308,42 +314,51 @@ void BakkesModInjectorCpp::TimerTimeout()
 					}
 					LOG_LINE(INFO, "User denied injector update")
 				}
+				//out of date counter = 0 -> new run. >0 -> Checking for updates
 				if (updater.latestUpdateInfo.requiresUpdate)
 				{
-					LOG_LINE(INFO, "BakkesMod update available, version " << updater.latestUpdateInfo.newestTrainerVersion)
-					QMessageBox msgBox;
-
-					std::stringstream ss;
-					ss << "An update is available: " << std::endl;
-					ss << updater.latestUpdateInfo.updateMessage << std::endl;
-					ss << "Would you like to update?";
-					msgBox.setText(ss.str().c_str());
-					msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-					msgBox.setDefaultButton(QMessageBox::Yes);
-					int ret = msgBox.exec();
-					if (ret == QMessageBox::Yes)
+					if (outOfDateCounter == 0 || dllInjector.GetProcessID(L"RocketLeague.exe") == 0) 
 					{
-						LOG_LINE(INFO, "User accepted update, downloading now...")
-						SetState(UPDATING_BAKKESMOD);
-						LOG_LINE(INFO, "Constructing update downloader...")
-						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.downloadUrl, "bmupdate.zip");
-						LOG_LINE(INFO, "Telling downloader to download...")
-						updateDownloader->StartDownload();
-						LOG_LINE(INFO, "Told update downloader to download...")
-						ui.progressBar->setMaximum(100);
-						return;
+						LOG_LINE(INFO, "BakkesMod update available, version " << updater.latestUpdateInfo.newestTrainerVersion)
+							QMessageBox msgBox;
+
+						std::stringstream ss;
+						ss << "An update is available: " << std::endl;
+						ss << updater.latestUpdateInfo.updateMessage << std::endl;
+						ss << "Would you like to update?";
+						msgBox.setText(ss.str().c_str());
+						msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+						msgBox.setDefaultButton(QMessageBox::Yes);
+						int ret = msgBox.exec();
+						if (ret == QMessageBox::Yes)
+						{
+							LOG_LINE(INFO, "User accepted update, downloading now...")
+								SetState(UPDATING_BAKKESMOD);
+							LOG_LINE(INFO, "Constructing update downloader...")
+								updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.downloadUrl, "bmupdate.zip");
+							LOG_LINE(INFO, "Telling downloader to download...")
+								updateDownloader->StartDownload();
+							LOG_LINE(INFO, "Told update downloader to download...")
+								ui.progressBar->setMaximum(100);
+							return;
+						}
+						else
+						{
+							LOG_LINE(INFO, "User cancelled update")
+								SetState(CHECK_D3D9);
+							QMessageBox msgBox2;
+							std::stringstream ss;
+							msgBox2.setText("Update cancelled, mod might not work now though");
+							msgBox2.setStandardButtons(QMessageBox::Ok);
+							msgBox2.setDefaultButton(QMessageBox::Ok);
+							int ret = msgBox2.exec();
+							LOG_LINE(INFO, "Shown message about mod not working")
+						}
 					}
 					else
 					{
-						LOG_LINE(INFO, "User cancelled update")
-						SetState(CHECK_D3D9);
-						QMessageBox msgBox2;
-						std::stringstream ss;
-						msgBox2.setText("Update cancelled, mod might not work now though");
-						msgBox2.setStandardButtons( QMessageBox::Ok);
-						msgBox2.setDefaultButton(QMessageBox::Ok);
-						int ret = msgBox2.exec();
-						LOG_LINE(INFO, "Shown message about mod not working")
+						LOG_LINE(INFO, "Update available but user is still playing RL after being out of date, not prompting")
+						timer.setInterval(8000);
 					}
 				}
 				else
@@ -367,7 +382,6 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case OUT_OF_DATE_SAFEMODE_ENABLED:
 	{
-		static int outOfDateCounter = 0;
 		outOfDateCounter++;
 		timer.setInterval(1000);
 		if (outOfDateCounter > 120)
@@ -375,7 +389,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			LOG_LINE(INFO, "Checking if BakkesMod has updated yet")
 			updater.latestUpdateInfo = UpdateStatus();
 			SetState(BOOTING);
-			outOfDateCounter = 0;
+			outOfDateCounter = 1;
 		}
 		if (!safeModeEnabled)
 		{
@@ -496,7 +510,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case BAKKESMOD_IDLE:
 	{
-		timer.setInterval(70);
+		timer.setInterval(3000);
 		static int intervalLoops = 0;
 		intervalLoops++;
 		if (intervalLoops > 200)
@@ -515,6 +529,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			}
 			else
 			{
+				LOG_LINE(INFO, "Rocket league process ID is " << dllInjector.GetProcessID(L"RocketLeague.exe"))
 				SetState(INJECT_DLL);
 				int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
 				if (timeout == 0)
@@ -557,7 +572,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(INJECTION_FAILED);
 			QMessageBox msgBox;
 			std::stringstream ss;
-			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency. Please take a look at http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
+			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency (vc_redist.x86.exe). Please download it from http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
 			ss << "Would you like to open it now?";
 			msgBox.setText(ss.str().c_str());
 			msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -583,7 +598,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case CHECK_D3D9:
 	{
-		if (WindowsUtils::FileExists(installation.GetBakkesModFolder() + "../d3d9.dll"))
+		if (settingsManager.GetIntSetting(L"DisableWarnings") == 0 && WindowsUtils::FileExists(installation.GetBakkesModFolder() + "../d3d9.dll"))
 		{
 			QMessageBox msgBox;
 			LOG_LINE(INFO, "found a d3d9.dll")
@@ -679,6 +694,12 @@ void BakkesModInjectorCpp::OnRunOnStartup()
 	}
 }
 
+void BakkesModInjectorCpp::OnDisableWarnings()
+{
+	bool newStatus = ui.actionDisable_warnings->isChecked();
+	settingsManager.SaveSetting(L"DisableWarnings", (int)newStatus);
+}
+
 void BakkesModInjectorCpp::OnExitClick()
 {
 	QApplication::exit();
@@ -710,7 +731,7 @@ void BakkesModInjectorCpp::OnReinstallClick()
 			LOG_LINE(INFO, "Reinstalling BakkesMod")
 			updater.latestUpdateInfo = UpdateStatus();
 			settingsManager.DeleteSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
-
+			installation.resetBMFolder();
 			SetState(BOOTING);
 		}
 	}

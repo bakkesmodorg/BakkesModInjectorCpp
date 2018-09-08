@@ -84,6 +84,7 @@
     <addaction name="actionMinimize_on_start"/>
     <addaction name="actionManually_select_BakkesMod_folder"/>
     <addaction name="actionSet_injection_timeout"/>
+    <addaction name="actionDisable_warnings"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuLinks"/>
@@ -184,6 +185,14 @@
   <action name="actionSet_injection_timeout">
    <property name="text">
     <string>Set injection timeout (150)</string>
+   </property>
+  </action>
+  <action name="actionDisable_warnings">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Disable warnings</string>
    </property>
   </action>
  </widget>
@@ -432,6 +441,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDisable_warnings</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnDisableWarnings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -449,5 +474,6 @@
   <slot>OpenTroubleshootPage()</slot>
   <slot>OnSelectBakkesModFolder()</slot>
   <slot>OnSetInjectionTimeout()</slot>
+  <slot>OnDisableWarnings()</slot>
  </slots>
 </ui>

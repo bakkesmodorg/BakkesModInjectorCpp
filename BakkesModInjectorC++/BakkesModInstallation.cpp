@@ -10,6 +10,11 @@
 #include <fstream>
 std::string BakkesModInstallation::overrideBakkesModFolder = "";
 
+void BakkesModInstallation::resetBMFolder()
+{
+	bakkesModFolder = "";
+}
+
 BakkesModInstallation::BakkesModInstallation()
 {
 }
@@ -35,15 +40,15 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 
 		std::string newDetectedFolder = DetectRocketLeagueFolder();
 		std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
-		if (!newDetectedFolder.empty()) {
+		if (!rlPath.empty() && WindowsUtils::FileExists(rlPath + "RocketLeague.exe"))
+		{
+			bakkesModFolder = rlPath + "bakkesmod\\";
+			LOG_LINE(INFO, "Automatically detected Rocket League path: " << rlPath)
+		} else if (!newDetectedFolder.empty()) {
 			LOG_LINE(INFO, "Advanced detection found installation path " << newDetectedFolder)
 			rlPath = newDetectedFolder;
 			bakkesModFolder = rlPath + "bakkesmod\\";
 
-		} else if (!rlPath.empty() && WindowsUtils::FileExists(rlPath + "RocketLeague.exe"))
-		{
-			bakkesModFolder = rlPath + "bakkesmod\\";
-			LOG_LINE(INFO, "Automatically detected Rocket League path: " << rlPath)
 		}
 		else
 		{
@@ -176,34 +181,40 @@ std::string BakkesModInstallation::DetectRocketLeagueFolder()
 			std::string executableLocation = executablePath + "RocketLeague.exe";
 			if (WindowsUtils::FileExists(manifestPath))
 			{
-				LOG_LINE(INFO, "Path contains a manifest file");
-				std::ifstream manifestStream(manifestPath);
-				tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
-				
-				if (manifestRoot.name.compare("AppState") == std::string::npos)
-				{
-					LOG_LINE(INFO, "Manifest is invalid, skipping");
-					continue;
-				}
-				
-				if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
-				{
-					LOG_LINE(INFO, "Manifest does not contain a buildid");
-					continue;
-				}
-				std::string buildId = manifestRoot.attribs["buildid"];
-				int buildIdInteger = stoi(buildId);
-				if (buildIdInteger > lastBuildId)
-				{
-					LOG_LINE(INFO, "Found buildid " << buildIdInteger << " (newest high)");
-					if (!WindowsUtils::FileExists(executableLocation))
+				try {
+					LOG_LINE(INFO, "Path contains a manifest file");
+					std::ifstream manifestStream(manifestPath);
+					tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
+
+					if (manifestRoot.name.compare("AppState") == std::string::npos)
 					{
-						LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
+						LOG_LINE(INFO, "Manifest is invalid, skipping");
 						continue;
 					}
-					lastBuildId = buildIdInteger;
-					installationPath = executablePath;
-					LOG_LINE(INFO, "Found RocketLeague.exe at " << installationPath);
+
+					if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
+					{
+						LOG_LINE(INFO, "Manifest does not contain a buildid");
+						continue;
+					}
+					std::string buildId = manifestRoot.attribs["buildid"];
+					int buildIdInteger = stoi(buildId);
+					if (buildIdInteger > lastBuildId)
+					{
+						LOG_LINE(INFO, "Found buildid " << buildIdInteger << " (newest high)");
+						if (!WindowsUtils::FileExists(executableLocation))
+						{
+							LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
+							continue;
+						}
+						lastBuildId = buildIdInteger;
+						installationPath = executablePath;
+						LOG_LINE(INFO, "Found RocketLeague.exe at " << installationPath);
+					}
+				}
+				catch (...)
+				{
+					LOG_LINE(INFO, "Error parsing manifest file, skipping this one")
 				}
 			}
 		}
