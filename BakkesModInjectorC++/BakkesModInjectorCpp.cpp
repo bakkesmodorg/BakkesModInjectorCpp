@@ -203,7 +203,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Reinstalling BakkesMod";
 		break;
 	case INSTALLATION_CORRUPT:
-		status = "Installation corrupted, please do a reinstall (File -> reinstall)";
+		status = "Installation corrupted (AV issue?), please reinstall (File -> reinstall)";
 		break;
 	case WAIT_FOR_RL_CLOSE:
 		status = "Postponing update until RL is closed...";
@@ -287,6 +287,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				msgBox2.setStandardButtons(QMessageBox::Ok);
 				msgBox2.setDefaultButton(QMessageBox::Ok);
 				int ret = msgBox2.exec();
+				return;
 			}
 			else
 			{
@@ -557,7 +558,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		if (!WindowsUtils::FileExists(path))
 		{
 			QMessageBox msgBox;
-			msgBox.setText("Could not find BakkesMod DLL, please try reinstalling (File -> reinstall)");
+			msgBox.setText("Could not find BakkesMod DLL, this is most likely due to your antivirus removing it. Please whitelist the BakkesMod folder and injector, then try reinstalling (File -> reinstall)");
 			msgBox.setStandardButtons(QMessageBox::Ok);
 			msgBox.setDefaultButton(QMessageBox::Ok);
 			int ret = msgBox.exec();
