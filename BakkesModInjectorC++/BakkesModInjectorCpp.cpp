@@ -41,6 +41,10 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	}
 	this->setWindowIcon(icon);
 	LOG_LINE(INFO, "Set window icon")
+
+	auto uptime = std::chrono::milliseconds(GetTickCount64());
+	auto conv = std::chrono::duration_cast<std::chrono::seconds>(uptime);
+	LOG_LINE(INFO, "Time: " << conv.count())
 	//Create tray icon
 	trayIcon = new QSystemTrayIcon(icon, this);
 	
@@ -191,7 +195,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Injecting DLL";
 		break;
 	case INJECTED:
-		status = "Injected";
+		status = "Injected, press F2 ingame for options menu";
 		break;
 	case INJECTION_FAILED:
 		status = "Injection failed, please download vc_redist.x86.exe and restart your PC";
@@ -214,7 +218,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 
 void BakkesModInjectorCpp::OnCheckInjection() 
 {
-	DWORD injectionResult = dllInjector.IsBakkesModDllInjected(L"RocketLeague.exe");
+	DWORD injectionResult = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
 	QMessageBox msgBox;
 	
 	if (injectionResult == NOT_RUNNING)
@@ -318,7 +322,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				//out of date counter = 0 -> new run. >0 -> Checking for updates
 				if (updater.latestUpdateInfo.requiresUpdate)
 				{
-					if (outOfDateCounter == 0 || dllInjector.GetProcessID(L"RocketLeague.exe") == 0) 
+					if (outOfDateCounter == 0 || dllInjector.GetProcessID(RL_PROCESS_NAME) == 0)
 					{
 						LOG_LINE(INFO, "BakkesMod update available, version " << updater.latestUpdateInfo.newestTrainerVersion)
 							QMessageBox msgBox;
@@ -478,7 +482,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 	case WAIT_FOR_RL_CLOSE:
 	{
 		timer.setInterval(2500);
-		DWORD processId = dllInjector.GetProcessID(L"RocketLeague.exe");
+		DWORD processId = dllInjector.GetProcessID(RL_PROCESS_NAME);
 		if (processId == 0)
 		{
 			SetState(BAKKESMOD_INSTALLING);
@@ -522,7 +526,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
 			}
 		}
-		else if (dllInjector.GetProcessID(L"RocketLeague.exe"))
+		else if (dllInjector.GetProcessID(RL_PROCESS_NAME))
 		{
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if safe to inject right before injecting
 			{
@@ -530,7 +534,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			}
 			else
 			{
-				LOG_LINE(INFO, "Rocket league process ID is " << dllInjector.GetProcessID(L"RocketLeague.exe"))
+				LOG_LINE(INFO, "Rocket league process ID is " << dllInjector.GetProcessID(RL_PROCESS_NAME))
 				SetState(INJECT_DLL);
 				int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
 				if (timeout == 0)
@@ -565,9 +569,9 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(INSTALLATION_CORRUPT);
 			return;
 		}
-		dllInjector.InjectDLL(L"RocketLeague.exe", path);
+		dllInjector.InjectDLL(RL_PROCESS_NAME, path);
 
-		DWORD injectionResult = dllInjector.IsBakkesModDllInjected(L"RocketLeague.exe");
+		DWORD injectionResult = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
 		if (injectionResult == NOPE)
 		{
 			SetState(INJECTION_FAILED);
@@ -592,7 +596,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case INJECTED:
 		timer.setInterval(1000);
-		if (!dllInjector.GetProcessID(L"RocketLeague.exe"))
+		if (!dllInjector.GetProcessID(RL_PROCESS_NAME))
 		{
 			SetState(BAKKESMOD_IDLE);
 		}
@@ -810,6 +814,12 @@ void BakkesModInjectorCpp::OnSelectBakkesModFolder()
 	auto converted = windowsUtils.StringToWString(rlPath + "bakkesmod\\");
 	settingsManager.SaveSetting(L"BakkesModPath", converted, RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 }
+
+void BakkesModInjectorCpp::OnCheckForUpdates()
+{
+	SetState(BOOTING);
+}
+
 #include <qinputdialog.h>
 void BakkesModInjectorCpp::OnSetInjectionTimeout()
 {
@@ -853,7 +863,7 @@ void BakkesModInjectorCpp::DebugDLL()
 
 bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 {
-	DWORD processId = dllInjector.GetProcessID(L"RocketLeague.exe");
+	DWORD processId = dllInjector.GetProcessID(RL_PROCESS_NAME);
 	LOG_LINE(INFO, "Rocket League process id is " << processId)
 	if (processId > 0)
 	{
@@ -868,7 +878,7 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 		if (ret == QMessageBox::Yes)
 		{
 			LOG_LINE(INFO, "User accepted RL close")
-			processId = dllInjector.GetProcessID(L"RocketLeague.exe"); //User might close process themselves in the mean time
+			processId = dllInjector.GetProcessID(RL_PROCESS_NAME); //User might close process themselves in the mean time
 			if (processId == 0) {
 				LOG_LINE(INFO, "User closed RL by themselves, returning true");
 				return true;
@@ -877,12 +887,12 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 			explorer = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
 			TerminateProcess(explorer, 1);
 			CloseHandle(explorer);
-			LOG_LINE(INFO, "Force closed rl, new process id should be 0: " << dllInjector.GetProcessID(L"RocketLeague.exe"))
+			LOG_LINE(INFO, "Force closed rl, new process id should be 0: " << dllInjector.GetProcessID(RL_PROCESS_NAME))
 			return true;
 		}
 		else {
 			LOG_LINE(INFO, "User denied RL close")
-			processId = dllInjector.GetProcessID(L"RocketLeague.exe"); //User might close process themselves in the mean time
+			processId = dllInjector.GetProcessID(RL_PROCESS_NAME); //User might close process themselves in the mean time
 			if (processId == 0) {
 				LOG_LINE(INFO, "User closed RL by themselves, returning true");
 				return true;

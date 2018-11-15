@@ -10,6 +10,7 @@
 #include "Updater.h"
 #include <qsystemtrayicon.h>
 
+#define RL_PROCESS_NAME L"RocketLeague.exe"
 #define BAKKESMODINJECTOR_VERSION 13
 
 #define BAKKESMOD_STATES \
@@ -87,6 +88,7 @@ public:
 	void TrayCloseAction();
 
 	void OnSelectBakkesModFolder();
+	void OnCheckForUpdates();
 	void OnSetInjectionTimeout();
 
 	void ReleaseDLL();

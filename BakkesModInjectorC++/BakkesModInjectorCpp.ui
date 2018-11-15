@@ -55,6 +55,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen_BakkesMod_folder"/>
+    <addaction name="actionCheck_for_updates"/>
     <addaction name="actionInstall_Python_support"/>
     <addaction name="actionReinstall"/>
     <addaction name="actionExit"/>
@@ -193,6 +194,11 @@
    </property>
    <property name="text">
     <string>Disable warnings</string>
+   </property>
+  </action>
+  <action name="actionCheck_for_updates">
+   <property name="text">
+    <string>Check for updates</string>
    </property>
   </action>
  </widget>
@@ -457,6 +463,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionCheck_for_updates</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnCheckForUpdates()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -475,5 +497,6 @@
   <slot>OnSelectBakkesModFolder()</slot>
   <slot>OnSetInjectionTimeout()</slot>
   <slot>OnDisableWarnings()</slot>
+  <slot>OnCheckForUpdates()</slot>
  </slots>
 </ui>

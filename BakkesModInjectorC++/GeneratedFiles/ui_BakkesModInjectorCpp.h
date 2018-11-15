@@ -44,6 +44,7 @@ public:
     QAction *actionManually_select_BakkesMod_folder;
     QAction *actionSet_injection_timeout;
     QAction *actionDisable_warnings;
+    QAction *actionCheck_for_updates;
     QWidget *centralWidget;
     QLabel *label;
     QProgressBar *progressBar;
@@ -97,6 +98,8 @@ public:
         actionDisable_warnings = new QAction(BakkesModInjectorCppClass);
         actionDisable_warnings->setObjectName(QStringLiteral("actionDisable_warnings"));
         actionDisable_warnings->setCheckable(true);
+        actionCheck_for_updates = new QAction(BakkesModInjectorCppClass);
+        actionCheck_for_updates->setObjectName(QStringLiteral("actionCheck_for_updates"));
         centralWidget = new QWidget(BakkesModInjectorCppClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         label = new QLabel(centralWidget);
@@ -131,6 +134,7 @@ public:
         menuBar->addAction(menuSettings->menuAction());
         menuBar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionOpen_BakkesMod_folder);
+        menuFile->addAction(actionCheck_for_updates);
         menuFile->addAction(actionInstall_Python_support);
         menuFile->addAction(actionReinstall);
         menuFile->addAction(actionExit);
@@ -164,6 +168,7 @@ public:
         QObject::connect(actionManually_select_BakkesMod_folder, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnSelectBakkesModFolder()));
         QObject::connect(actionSet_injection_timeout, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnSetInjectionTimeout()));
         QObject::connect(actionDisable_warnings, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnDisableWarnings()));
+        QObject::connect(actionCheck_for_updates, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckForUpdates()));
 
         QMetaObject::connectSlotsByName(BakkesModInjectorCppClass);
     } // setupUi
@@ -187,6 +192,7 @@ public:
         actionManually_select_BakkesMod_folder->setText(QApplication::translate("BakkesModInjectorCppClass", "Manually select BakkesMod folder", 0));
         actionSet_injection_timeout->setText(QApplication::translate("BakkesModInjectorCppClass", "Set injection timeout (150)", 0));
         actionDisable_warnings->setText(QApplication::translate("BakkesModInjectorCppClass", "Disable warnings", 0));
+        actionCheck_for_updates->setText(QApplication::translate("BakkesModInjectorCppClass", "Check for updates", 0));
         label->setText(QApplication::translate("BakkesModInjectorCppClass", "Booting", 0));
         menuFile->setTitle(QApplication::translate("BakkesModInjectorCppClass", "File", 0));
         menuLinks->setTitle(QApplication::translate("BakkesModInjectorCppClass", "Links", 0));

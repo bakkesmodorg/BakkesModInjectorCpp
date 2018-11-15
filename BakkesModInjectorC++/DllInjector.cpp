@@ -80,7 +80,7 @@ DWORD DllInjector::GetProcessID(std::wstring processName)
 		return 0;
 
 	Process32First(processesSnapshot, &processInfo);
-	if (!processName.compare(processInfo.szExeFile))
+	if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
 	{
 		CloseHandle(processesSnapshot);
 		return processInfo.th32ProcessID;
@@ -88,11 +88,12 @@ DWORD DllInjector::GetProcessID(std::wstring processName)
 
 	while (Process32Next(processesSnapshot, &processInfo))
 	{
-		if (!processName.compare(processInfo.szExeFile))
+		if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
 		{
 			CloseHandle(processesSnapshot);
 			return processInfo.th32ProcessID;
 		}
+		//CloseHandle(processesSnapshot);
 	}
 
 	CloseHandle(processesSnapshot);
