@@ -9,7 +9,9 @@ class Updater : public QObject
 {
 	Q_OBJECT
 private:
-	static const std::string UPDATE_SERVER_URL;
+	static std::string UPDATE_SERVER_URL;
+	bool useHostname = false;
+	int lastVersionChecked = -1;
 	QNetworkAccessManager* networkManager;
 public:
 	UpdateStatus latestUpdateInfo;

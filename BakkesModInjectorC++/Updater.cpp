@@ -4,7 +4,7 @@
 #include "BakkesModInjectorCpp.h"
 
 //http://updater.bakkesmod.com/static/versions/bakkesmod_57.zip
-const std::string Updater::UPDATE_SERVER_URL = "http://149.210.150.107/updater/"; //
+std::string Updater::UPDATE_SERVER_URL = "http://149.210.150.107/updater/"; //
 
 
 Updater::Updater()
@@ -22,6 +22,7 @@ Updater::~Updater()
 
 void Updater::CheckForUpdates(int version)
 {
+	lastVersionChecked = version;
 	std::string fullRequestUrl = UPDATE_SERVER_URL + std::to_string(version);// +"/";
 	QNetworkRequest networkRequest(QUrl(fullRequestUrl.c_str()));
 	networkRequest.setHeader(QNetworkRequest::UserAgentHeader, std::string("BakkesMod Updater CPP (" + std::to_string(BAKKESMODINJECTOR_VERSION) + ")").c_str());
@@ -39,10 +40,15 @@ void Updater::replyFinished(QNetworkReply * result)
 
 void Updater::networkError(QNetworkReply::NetworkError code)
 {
-	qDebug() << Q_FUNC_INFO << "Error" << code;
-	latestUpdateInfo.requestFinished = true;
-	latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
+	LOG(INFO, Q_FUNC_INFO << "Error" << code);
 	
+	if (useHostname) {
+		latestUpdateInfo.requestFinished = true;
+		latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
+	}
+	UPDATE_SERVER_URL = "http://updater.bakkesmod.com/updater/";
+	useHostname = true;
+	CheckForUpdates(lastVersionChecked);
 }
 
 template<typename Out>
@@ -58,6 +64,17 @@ std::vector<std::string> split(const std::string &s, char delim) {
 	std::vector<std::string> elems;
 	split(s, delim, std::back_inserter(elems));
 	return elems;
+}
+
+void myReplace(std::string& str,
+	const std::string& oldStr,
+	const std::string& newStr)
+{
+	std::string::size_type pos = 0u;
+	while ((pos = str.find(oldStr, pos)) != std::string::npos) {
+		str.replace(pos, oldStr.length(), newStr);
+		pos += newStr.length();
+	}
 }
 
 void Updater::OnUpdateInfoReceived(QNetworkReply* result)
@@ -95,12 +112,24 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 			latestUpdateInfo.publicationDate = test["pub_date"].toString().toStdString();
 			latestUpdateInfo.updateMessage = test["message"].toString().toStdString();
 			latestUpdateInfo.downloadUrl = test["download_url"].toString().toStdString();
+			if (useHostname)
+			{
+				//latestUpdateInfo.downloadUrl = latestUpdateInfo.downloadUrl
+				myReplace(latestUpdateInfo.downloadUrl, "149.210.150.107", "updater.bakkesmod.com");
+				LOG(INFO, "Set update url to " << latestUpdateInfo.downloadUrl);
+			}
 		}
 		latestUpdateInfo.requiresUpdate = version < latestUpdateInfo.newestTrainerVersion;
 		latestUpdateInfo.networkRequestStatus = FINISHED_SUCCESS;
 	}
 	else {
-		latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
+		if (useHostname) {
+			latestUpdateInfo.requestFinished = true;
+			latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
+		}
+		UPDATE_SERVER_URL = "http://updater.bakkesmod.com/updater/";
+		useHostname = true;
+		CheckForUpdates(lastVersionChecked);
 	}
 
 	latestUpdateInfo.requestFinished = true;
