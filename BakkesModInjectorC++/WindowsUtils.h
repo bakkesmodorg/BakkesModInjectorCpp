@@ -10,6 +10,7 @@ public:
 	std::string GetRocketLeagueDirFromLog();
 	std::string GetRocketLeagueBuildID();
 	static bool FileExists(std::string path);
+	static bool FileExists(std::wstring path);
 	static void OpenFolder(std::string path);
 	static void CreateFolder(std::string path);
 	static DWORD IsProcessRunning(std::wstring processName);

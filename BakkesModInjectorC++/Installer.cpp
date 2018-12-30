@@ -6,11 +6,11 @@
 #include "WindowsUtils.h"
 #include "logger.h"
 
-Installer::Installer(std::string updatePackageLocation, std::string destination)
+Installer::Installer(std::wstring updatePackageLocation, std::string destination)
 {
 	updatePackage = updatePackageLocation;
 	extractDir = destination;
-	LOG_LINE(INFO, "Initialized installer, location=" << updatePackage << ", destination=" << extractDir)
+	LOG_LINE(INFO, "Initialized installer, location=" << WindowsUtils::WStringToString(updatePackage) << ", destination=" << extractDir)
 }
 
 Installer::~Installer()
@@ -20,7 +20,22 @@ Installer::~Installer()
 void Installer::Install()
 {
 	LOG_LINE(INFO, "Installing update")
-	miniz_cpp::zip_file file(updatePackage);
+		std::ifstream fileStream;
+	fileStream.open(updatePackage);
+	std::basic_ifstream<BYTE> fileStr(updatePackage, std::ios::binary);
+
+	// read the data:
+	auto data = std::vector<BYTE>((std::istreambuf_iterator<BYTE>(fileStr)),
+	std::istreambuf_iterator<BYTE>());
+
+	std::streampos	fsize = fileStream.tellg();
+	fileStream.seekg(0, std::ios::end);
+	fsize = fileStream.tellg() - fsize;
+	fileStream.seekg(0);
+	//fileStream.close();
+	LOG_LINE(INFO, "Installing update2" << WindowsUtils::WStringToString(updatePackage) << " - " << std::to_string(fsize))
+	miniz_cpp::zip_file file(data);
+	LOG_LINE(INFO, "Installing update3")
 	WindowsUtils::CreateFolder(extractDir);
 	for (auto &member : file.infolist())
 	{

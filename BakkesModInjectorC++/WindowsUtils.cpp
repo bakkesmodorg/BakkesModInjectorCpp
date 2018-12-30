@@ -73,6 +73,11 @@ bool WindowsUtils::FileExists(std::string path)
 	return (stat(path.c_str(), &buffer) == 0);
 }
 
+bool WindowsUtils::FileExists(std::wstring path)
+{
+	return GetFileAttributesW(path.c_str()) != 0xFFFFFFFF;
+}
+
 void WindowsUtils::OpenFolder(std::string path)
 {
 	//std::string openPath = "explorer \"" + path + "\"";

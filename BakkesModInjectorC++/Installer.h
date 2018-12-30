@@ -3,10 +3,10 @@
 class Installer
 {
 private:
-	std::string updatePackage = "";
+	std::wstring updatePackage = L"";
 	std::string extractDir = "";
 public:
-	Installer(std::string updatePackageLocation, std::string destination);
+	Installer(std::wstring updatePackageLocation, std::string destination);
 	~Installer();
 	void Install();
 };

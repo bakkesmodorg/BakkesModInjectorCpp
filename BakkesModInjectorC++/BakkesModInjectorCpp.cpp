@@ -418,10 +418,10 @@ void BakkesModInjectorCpp::TimerTimeout()
 			auto newOldName = currentName.substr(0, loc) + L"bakkesmod_old.exe";
 			LOG_LINE(INFO, "Renaming current injector to " << WindowsUtils::WStringToString(newOldName).c_str())
 
-			if (rename(WindowsUtils::WStringToString(currentName).c_str(), WindowsUtils::WStringToString(newOldName).c_str()) == 0)
+			if (MoveFile(currentName.c_str(), newOldName.c_str()) == 0)
 			{
 				LOG_LINE(INFO, "Successfully renamed current executable to bakkesmod_old.exe");
-				rename(updateDownloader->packageUrl.c_str(), WindowsUtils::WStringToString(currentName).c_str());
+				MoveFile(updateDownloader->packageUrl.c_str(), currentName.c_str());
 
 
 				STARTUPINFO si; 

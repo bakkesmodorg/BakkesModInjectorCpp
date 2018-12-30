@@ -16,13 +16,13 @@ UpdateDownloader::UpdateDownloader(std::string downloadUrl, std::string _package
 		TempPath = wcharPath;
 
 	this->updateUrl = downloadUrl;
-	this->packageUrl = WindowsUtils::WStringToString(TempPath) + _packageUrl;
+	this->packageUrl = TempPath + WindowsUtils::StringToWString(_packageUrl.c_str());
 	if (WindowsUtils::FileExists(packageUrl))
 	{
-		if (remove((packageUrl).c_str()) != 0)
+		if (DeleteFile((packageUrl).c_str()) != 0)
 		{
 			QMessageBox msgBox2;
-			LOG_LINE(INFO, "Could not remove " << packageUrl)
+			LOG_LINE(INFO, "Could not remove " << WindowsUtils::WStringToString(packageUrl))
 				std::stringstream ss;
 			ss << "Unable to remove bmupdate.zip!! Try running as administrator if you aren't already" << std::endl;
 			msgBox2.setText(ss.str().c_str());
@@ -63,7 +63,7 @@ void UpdateDownloader::finishedSlot(QNetworkReply *reply)
 	if (reply->error() == QNetworkReply::NoError) {
 		if (WindowsUtils::FileExists(packageUrl))
 		{
-			if (remove(packageUrl.c_str()) != 0)
+			if (DeleteFile(packageUrl.c_str()) != 0)
 			{
 				LOG(INFO, "Unable to delete " << packageUrl);
 				QMessageBox msgBox;
@@ -71,7 +71,7 @@ void UpdateDownloader::finishedSlot(QNetworkReply *reply)
 				msgBox.show();
 			}
 		}
-		QFile other(packageUrl.c_str());
+		QFile other(QString::fromStdWString(packageUrl.c_str()));
 		other.open(QIODevice::WriteOnly);
 		other.write(reply->readAll());
 		other.flush();

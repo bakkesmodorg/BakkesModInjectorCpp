@@ -10,7 +10,7 @@ class UpdateDownloader : public QObject
 public:
 	QNetworkAccessManager* networkManager;
 	std::string updateUrl;
-	std::string packageUrl;
+	std::wstring packageUrl;
 	float percentComplete = 0;
 	bool completed = false;
 	UpdateDownloader(std::string downloadUrl, std::string packageUrl);
