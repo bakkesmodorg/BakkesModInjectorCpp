@@ -24,9 +24,11 @@ You'll want the `Desktop development with C++` workload as well as the various C
 1. You'll need to add the Qt VS Tools extensions within Visual Studio IDE. To do this, in the taskbar click Extensions -> Manage Extensions; and in the side-bar click Online and search for Qt. Qt Visual Studio Tools should be listed. Initial installation of extensions may require a restart of the Visual Studio IDE.
 2. Add the version of Qt to your project. In Extensions -> Qt VS Tools -> Qt Options: click `Add` and select the path to the Qt5.6.0-static you extracted (e.g. C:\Qt\Qt5.6.0-static)
 3. Open the BakkesModInjectorC++.sln file and change the project build settings from Debug to Release. The injector was meant to be built in release.
-4. Link the other external dependencies. Toggle the solution view in the solution explorer and reload the project if it is unloaded. With the project selected, `Alt+F7` opens the project's settings. Alternatively, right click the project in the solution explorer and select properties. 
+4. Link the other external dependencies. Toggle the solution view in the solution explorer and reload the project if it is unloaded. With the project selected, `Alt+F7` opens the project's settings. Alternatively, right click the project in the solution explorer and select properties. Double check this settings afterwards if you're getting Linker Errors.
+	* Under General: Ensure `Windows SDK Version` is set to `10.0.17763.0+`
 	* Select C/C++ in the sidebar. Under General -> Additional Include Directores (at the top): include the path to `miniz-master`.
 	* Select Linker in the sidebar. Under General -> Additional Library Directores: include the path to `OpenSSL-win32\lib`.
+	* Ensure Linker -> Input -> Additional Dependencies contains: `qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5Widgets.lib;%(AdditionalDependencies)`
 4. Select the main.cpp file and very the include paths are all setup. If there are still issues in linking sources. Use vcpkg to install qt5-base. Follow this instruction set: [here](https://devblogs.microsoft.com/cppblog/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/)
 	* `git clone https://github.com/Microsoft/vcpkg`
     * `cd vcpkg`
