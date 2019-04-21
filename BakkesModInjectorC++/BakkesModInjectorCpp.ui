@@ -56,7 +56,6 @@
     </property>
     <addaction name="actionOpen_BakkesMod_folder"/>
     <addaction name="actionCheck_for_updates"/>
-    <addaction name="actionInstall_Python_support"/>
     <addaction name="actionReinstall"/>
     <addaction name="actionExit"/>
    </widget>
@@ -80,7 +79,7 @@
      <string>Settings</string>
     </property>
     <addaction name="actionEnable_safe_mode"/>
-    <addaction name="actionRun_on_startup"/>
+    <addaction name="actionLaunch_with_RL"/>
     <addaction name="actionHide_when_minimized"/>
     <addaction name="actionMinimize_on_start"/>
     <addaction name="actionManually_select_BakkesMod_folder"/>
@@ -149,12 +148,12 @@
     <string>Enable safe mode</string>
    </property>
   </action>
-  <action name="actionRun_on_startup">
+  <action name="actionLaunch_with_RL">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Run on startup</string>
+    <string>Launch with Rocket League</string>
    </property>
   </action>
   <action name="actionHide_when_minimized">
@@ -256,10 +255,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>actionRun_on_startup</sender>
+   <sender>actionLaunch_with_RL</sender>
    <signal>triggered()</signal>
    <receiver>BakkesModInjectorCppClass</receiver>
-   <slot>OnRunOnStartup()</slot>
+   <slot>OnRunOnLaunch()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -484,7 +483,7 @@
   <slot>OnOpenBakkesModFolderClicked()</slot>
   <slot>OnCheckInjection()</slot>
   <slot>OnCheckSafeMode()</slot>
-  <slot>OnRunOnStartup()</slot>
+  <slot>OnRunOnLaunch()</slot>
   <slot>OnMinimizeOnStart()</slot>
   <slot>OnHideOnMinimize()</slot>
   <slot>OnExitClick()</slot>

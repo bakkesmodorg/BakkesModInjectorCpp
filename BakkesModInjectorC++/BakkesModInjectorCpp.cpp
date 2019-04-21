@@ -47,7 +47,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	LOG_LINE(INFO, "Time: " << conv.count())
 	//Create tray icon
 	trayIcon = new QSystemTrayIcon(icon, this);
-	
+
 	QMenu* menu = new QMenu();
 	QAction* openAction = new QAction("Open", menu);
 	QAction* closeAction = new QAction("Exit", menu);
@@ -102,7 +102,7 @@ void BakkesModInjectorCpp::initialize()
 		else {
 			LOG_LINE(INFO, "Removed file successfully")
 		}
-		
+
 	}
 	else
 	{
@@ -134,7 +134,7 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 	{
 		if (this->windowState() & Qt::WindowMinimized)
 		{
-			if (settingsManager.GetIntSetting(L"HideOnMinimize")) 
+			if (settingsManager.GetIntSetting(L"HideOnMinimize"))
 			{
 				QApplication::setQuitOnLastWindowClosed(false);
 				QTimer::singleShot(50, this, SLOT(hide()));
@@ -216,11 +216,11 @@ std::string BakkesModInjectorCpp::GetStatusString()
 	return status;
 }
 
-void BakkesModInjectorCpp::OnCheckInjection() 
+void BakkesModInjectorCpp::OnCheckInjection()
 {
 	DWORD injectionResult = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
 	QMessageBox msgBox;
-	
+
 	if (injectionResult == NOT_RUNNING)
 	{
 		msgBox.setText("Rocket League is not running");
@@ -267,8 +267,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
-		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
-		OnRunOnStartup();
+		ui.actionLaunch_with_RL->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
+		OnRunOnLaunch();
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
 		SetState(CHECKING_FOR_UPDATES);
@@ -372,7 +372,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 					SetState(CHECK_D3D9);
 				}
 			}
-			
+
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date
 			{
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
@@ -424,7 +424,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				MoveFile(updateDownloader->packageUrl.c_str(), currentName.c_str());
 
 
-				STARTUPINFO si; 
+				STARTUPINFO si;
 				PROCESS_INFORMATION pi;
 				ZeroMemory(&si, sizeof(si)); //Use default startup info
 				ZeroMemory(&pi, sizeof(pi));
@@ -505,7 +505,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		}
 		Installer i(updateDownloader->packageUrl, installation.GetBakkesModFolder());
 		i.Install();
-		
+
 		std::ofstream out(installation.GetBakkesModFolder() + "injectorversion.txt");
 		out << BAKKESMODINJECTOR_VERSION;
 		out.close();
@@ -615,7 +615,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			if (ret == QMessageBox::Yes)
 			{
-				if (remove((installation.GetBakkesModFolder() + "../d3d9.dll").c_str()) != 0) 
+				if (remove((installation.GetBakkesModFolder() + "../d3d9.dll").c_str()) != 0)
 				{
 					QMessageBox msgBox2;
 					LOG_LINE(INFO, "Could not remove d3d9.dll")
@@ -683,19 +683,16 @@ void BakkesModInjectorCpp::OnHideOnMinimize()
 	settingsManager.SaveSetting(L"HideOnMinimize", (int)newStatus);
 }
 
-void BakkesModInjectorCpp::OnRunOnStartup()
+void BakkesModInjectorCpp::OnRunOnLaunch()
 {
-	bool newStatus = ui.actionRun_on_startup->isChecked();
-	
+	bool newStatus = ui.actionLaunch_with_RL->isChecked();
+
 	if (newStatus)
 	{
-		std::wostringstream w;
-		w << "\"" << windowsUtils.GetCurrentExecutablePath() << "\"";
-		settingsManager.SaveSetting(L"BakkesMod", w.str(), RegisterySettingsManager::REGISTRY_DIR_RUN);
-	}
-	else
-	{
-		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
+		if (!FindProcessId(L"RocketLeague.exe")) {
+			LPTSTR szCmdline = _tcsdup(TEXT("\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague\" -L -S"));
+			CreateProcess(NULL, szCmdline, /* ... */);
+		}
 	}
 }
 
@@ -731,7 +728,7 @@ void BakkesModInjectorCpp::OnReinstallClick()
 			msgBox2.setDefaultButton(QMessageBox::Ok);
 			int ret = msgBox2.exec();
 		}
-		else 
+		else
 		{
 			LOG_LINE(INFO, "Reinstalling BakkesMod")
 			updater.latestUpdateInfo = UpdateStatus();
@@ -774,7 +771,7 @@ void BakkesModInjectorCpp::OpenWebsite()
 
 void BakkesModInjectorCpp::OpenTroubleshootPage()
 {
-	
+
 	OpenWebsite("http://bakkesmod.wikia.com/wiki/Troubleshooting");
 }
 
@@ -782,7 +779,7 @@ void BakkesModInjectorCpp::OpenTroubleshootPage()
 void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 {
 	if (e == QSystemTrayIcon::Trigger) {
-		if (this->isVisible()) 
+		if (this->isVisible())
 			this->hide();
 		else {
 			setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
@@ -830,7 +827,7 @@ void BakkesModInjectorCpp::OnSetInjectionTimeout()
 		timeout = INJECTION_TIMEOUT_DEFAULT;
 	}
 	QString text = QInputDialog::getText(this, "Set injection timeout",
-		QString(std::string("Set the injection timeout (" + std::to_string(INJECTION_TIMEOUT_DEFAULT) + " = default). Set it to a higher value if you're experiencing crashes during launch.").c_str()), 
+		QString(std::string("Set the injection timeout (" + std::to_string(INJECTION_TIMEOUT_DEFAULT) + " = default). Set it to a higher value if you're experiencing crashes during launch.").c_str()),
 		QLineEdit::Normal, QString(std::to_string(timeout).c_str()), &ok);
 	if (ok && !text.isEmpty()) {
 		std::string test = text.toStdString();
@@ -902,6 +899,35 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 		}
 	}
 	return true;
+}
+
+DWORD FindProcessId(const std::wstring& processName)
+{
+  PROCESSENTRY32 processInfo;
+  processInfo.dwSize = sizeof(processInfo);
+
+  HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+  if ( processesSnapshot == INVALID_HANDLE_VALUE )
+    return 0;
+
+  Process32First(processesSnapshot, &processInfo);
+  if ( !processName.compare(processInfo.szExeFile) )
+  {
+    CloseHandle(processesSnapshot);
+    return processInfo.th32ProcessID;
+  }
+
+  while ( Process32Next(processesSnapshot, &processInfo) )
+  {
+    if ( !processName.compare(processInfo.szExeFile) )
+    {
+      CloseHandle(processesSnapshot);
+      return processInfo.th32ProcessID;
+    }
+  }
+
+  CloseHandle(processesSnapshot);
+  return 0;
 }
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()

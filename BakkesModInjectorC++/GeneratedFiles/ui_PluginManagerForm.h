@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'PluginManagerForm.ui'
 **
-** Created by: Qt User Interface Compiler version 5.6.0
+** Created by: Qt User Interface Compiler version 5.12.3
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -10,10 +10,7 @@
 #define UI_PLUGINMANAGERFORM_H
 
 #include <QtCore/QVariant>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QButtonGroup>
-#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QListView>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
@@ -33,20 +30,20 @@ public:
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
-            MainWindow->setObjectName(QStringLiteral("MainWindow"));
+            MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
         MainWindow->resize(670, 276);
         centralwidget = new QWidget(MainWindow);
-        centralwidget->setObjectName(QStringLiteral("centralwidget"));
+        centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         pluginList = new QListView(centralwidget);
-        pluginList->setObjectName(QStringLiteral("pluginList"));
+        pluginList->setObjectName(QString::fromUtf8("pluginList"));
         pluginList->setGeometry(QRect(0, 0, 671, 231));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
-        menubar->setObjectName(QStringLiteral("menubar"));
+        menubar->setObjectName(QString::fromUtf8("menubar"));
         menubar->setGeometry(QRect(0, 0, 670, 21));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
-        statusbar->setObjectName(QStringLiteral("statusbar"));
+        statusbar->setObjectName(QString::fromUtf8("statusbar"));
         MainWindow->setStatusBar(statusbar);
 
         retranslateUi(MainWindow);
@@ -56,7 +53,7 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
     } // retranslateUi
 
 };

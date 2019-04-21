@@ -3,15 +3,6 @@
 #include <memory>
 #include <windows.h>
 
-//class SettingsManager
-//{
-//public:
-//	virtual void SaveSetting(std::wstring key, std::wstring setting, std::wstring subKey);
-//	virtual std::wstring GetStringSetting(std::wstring key, bool createIfNew);
-//	virtual void SaveSetting(std::wstring key, int setting);
-//	virtual int GetIntSetting(std::wstring key, bool createIfNew);
-//};
-
 class RegisterySettingsManager
 {
 public:
