@@ -27,5 +27,9 @@ You'll want the `Desktop development with C++` workload as well as the various C
 4. Link the other external dependencies. Toggle the solution view in the solution explorer and reload the project if it is unloaded. With the project selected, `Alt+F7` opens the project's settings. Alternatively, right click the project in the solution explorer and select properties. 
 	* Select C/C++ in the sidebar. Under General -> Additional Include Directores (at the top): include the path to `miniz-master`.
 	* Select Linker in the sidebar. Under General -> Additional Library Directores: include the path to `OpenSSL-win32\lib`.
-4. Select the main.cpp file and very the include paths are all setup. If there are still issues in linking sources. Use vcpkg to install qt-base. Follow this instruction set: [here](https://devblogs.microsoft.com/cppblog/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/)
+4. Select the main.cpp file and very the include paths are all setup. If there are still issues in linking sources. Use vcpkg to install qt5-base. Follow this instruction set: [here](https://devblogs.microsoft.com/cppblog/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/)
+	* `git clone https://github.com/Microsoft/vcpkg`
+    * `cd vcpkg`
+    * `.\bootstrap-vcpkg.bat`
+    * `vcpkg install qt5-base`
 4. Restart Visual Studio IDE. Build! You'll find the executable under the project's source_directory\Win32\Release

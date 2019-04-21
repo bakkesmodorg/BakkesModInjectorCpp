@@ -6,6 +6,7 @@
 #include <tlhelp32.h>
 #include "Installer.h"
 #include <direct.h>
+#include <tchar.h>
 #include <qshortcut.h>
 #include <fstream>
 #include "logger.h"
@@ -158,6 +159,35 @@ void BakkesModInjectorCpp::SetState(BakkesModStatus newState)
 {
 	LOG_LINE(INFO, "Switching from " << GetStateName(bakkesModState) << " (" << bakkesModState << ")" << " to " << GetStateName(newState) << " (" << newState << ")")
 	bakkesModState = newState;
+}
+
+DWORD FindProcessId(const std::wstring& processName)
+{
+	PROCESSENTRY32 processInfo;
+	processInfo.dwSize = sizeof(processInfo);
+
+	HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	if (processesSnapshot == INVALID_HANDLE_VALUE)
+		return 0;
+
+	Process32First(processesSnapshot, &processInfo);
+	if (!processName.compare(processInfo.szExeFile))
+	{
+		CloseHandle(processesSnapshot);
+		return processInfo.th32ProcessID;
+	}
+
+	while (Process32Next(processesSnapshot, &processInfo))
+	{
+		if (!processName.compare(processInfo.szExeFile))
+		{
+			CloseHandle(processesSnapshot);
+			return processInfo.th32ProcessID;
+		}
+	}
+
+	CloseHandle(processesSnapshot);
+	return 0;
 }
 
 std::string BakkesModInjectorCpp::GetStatusString()
@@ -687,12 +717,22 @@ void BakkesModInjectorCpp::OnRunOnLaunch()
 {
 	bool newStatus = ui.actionLaunch_with_RL->isChecked();
 
-	if (newStatus)
+	/*if (newStatus)
 	{
 		if (!FindProcessId(L"RocketLeague.exe")) {
 			LPTSTR szCmdline = _tcsdup(TEXT("\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague\" -L -S"));
-			CreateProcess(NULL, szCmdline, /* ... */);
+			CreateProcess(NULL, szCmdline, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
+	}*/
+	if (newStatus)
+	{
+		std::wostringstream w;
+		w << "\"" << windowsUtils.GetCurrentExecutablePath() << "\"";
+		settingsManager.SaveSetting(L"BakkesMod", w.str(), RegisterySettingsManager::REGISTRY_DIR_RUN);
+	}
+	else
+	{
+		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
 	}
 }
 
@@ -901,34 +941,6 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 	return true;
 }
 
-DWORD FindProcessId(const std::wstring& processName)
-{
-  PROCESSENTRY32 processInfo;
-  processInfo.dwSize = sizeof(processInfo);
-
-  HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-  if ( processesSnapshot == INVALID_HANDLE_VALUE )
-    return 0;
-
-  Process32First(processesSnapshot, &processInfo);
-  if ( !processName.compare(processInfo.szExeFile) )
-  {
-    CloseHandle(processesSnapshot);
-    return processInfo.th32ProcessID;
-  }
-
-  while ( Process32Next(processesSnapshot, &processInfo) )
-  {
-    if ( !processName.compare(processInfo.szExeFile) )
-    {
-      CloseHandle(processesSnapshot);
-      return processInfo.th32ProcessID;
-    }
-  }
-
-  CloseHandle(processesSnapshot);
-  return 0;
-}
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 {

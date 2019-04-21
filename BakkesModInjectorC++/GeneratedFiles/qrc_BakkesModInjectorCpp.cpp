@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Resource object code
 **
-** Created by: The Resource Compiler for Qt version 5.12.3
+** Created by: The Resource Compiler for Qt version 5.6.0
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -10348,13 +10348,10 @@ static const unsigned char qt_resource_name[] = {
 static const unsigned char qt_resource_struct[] = {
   // :
   0x0,0x0,0x0,0x0,0x0,0x2,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x1,
-0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
   // :/BakkesModInjectorCpp
   0x0,0x0,0x0,0x0,0x0,0x2,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x2,
-0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
   // :/BakkesModInjectorCpp/mainicon
   0x0,0x0,0x0,0x2e,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,
-0x0,0x0,0x1,0x6a,0x34,0x3b,0x5d,0xf1,
 
 };
 
@@ -10386,7 +10383,7 @@ int QT_RCC_MANGLE_NAMESPACE(qInitResources_BakkesModInjectorCpp)();
 int QT_RCC_MANGLE_NAMESPACE(qInitResources_BakkesModInjectorCpp)()
 {
     QT_RCC_PREPEND_NAMESPACE(qRegisterResourceData)
-        (0x2, qt_resource_struct, qt_resource_name, qt_resource_data);
+        (0x01, qt_resource_struct, qt_resource_name, qt_resource_data);
     return 1;
 }
 
@@ -10394,7 +10391,7 @@ int QT_RCC_MANGLE_NAMESPACE(qCleanupResources_BakkesModInjectorCpp)();
 int QT_RCC_MANGLE_NAMESPACE(qCleanupResources_BakkesModInjectorCpp)()
 {
     QT_RCC_PREPEND_NAMESPACE(qUnregisterResourceData)
-       (0x2, qt_resource_struct, qt_resource_name, qt_resource_data);
+       (0x01, qt_resource_struct, qt_resource_name, qt_resource_data);
     return 1;
 }
 

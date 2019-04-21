@@ -2,6 +2,7 @@
 #include <map>
 #include <memory>
 #include <windows.h>
+#include <string>
 
 class RegisterySettingsManager
 {
