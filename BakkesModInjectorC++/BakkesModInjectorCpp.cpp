@@ -10,10 +10,13 @@
 #include <qshortcut.h>
 #include <fstream>
 #include "logger.h"
-#define INJECTION_TIMEOUT_DEFAULT 2500
 #include <sddl.h>
 #include <stdio.h>
 #include <winevt.h>
+#include <Windows.h>
+
+#define INJECTION_TIMEOUT_DEFAULT 2500
+
 
 #pragma comment(lib, "wevtapi.lib")
 DWORD WINAPI SubscriptionCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent);
@@ -161,7 +164,7 @@ void BakkesModInjectorCpp::SetState(BakkesModStatus newState)
 	bakkesModState = newState;
 }
 
-DWORD FindProcessId(const std::wstring& processName)
+DWORD BakkesModInjectorCpp::FindProcessId(const std::wstring& processName)
 {
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -629,6 +632,9 @@ void BakkesModInjectorCpp::TimerTimeout()
 		if (!dllInjector.GetProcessID(RL_PROCESS_NAME))
 		{
 			SetState(BAKKESMOD_IDLE);
+			if (ui.actionLaunch_with_RL->isChecked()) {
+				OnExitClick();
+			}
 		}
 		break;
 	case CHECK_D3D9:
@@ -717,22 +723,26 @@ void BakkesModInjectorCpp::OnRunOnLaunch()
 {
 	bool newStatus = ui.actionLaunch_with_RL->isChecked();
 
-	/*if (newStatus)
-	{
-		if (!FindProcessId(L"RocketLeague.exe")) {
-			LPTSTR szCmdline = _tcsdup(TEXT("\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague\" -L -S"));
-			CreateProcess(NULL, szCmdline, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-		}
-	}*/
 	if (newStatus)
 	{
-		std::wostringstream w;
-		w << "\"" << windowsUtils.GetCurrentExecutablePath() << "\"";
-		settingsManager.SaveSetting(L"BakkesMod", w.str(), RegisterySettingsManager::REGISTRY_DIR_RUN);
-	}
-	else
-	{
-		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
+		if (!FindProcessId(L"RocketLeague.exe")) {
+			LPTSTR szCmdline = _tcsdup(TEXT("\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague\""));
+			STARTUPINFO si;
+			PROCESS_INFORMATION pi;
+			ZeroMemory(&si, sizeof(si)); //Use default startup info
+			ZeroMemory(&pi, sizeof(pi));
+			CreateProcess(NULL,
+				szCmdline,
+				NULL,
+				NULL,
+				FALSE,
+				CREATE_BREAKAWAY_FROM_JOB,
+				NULL,
+				NULL,
+				&si,
+				&pi
+			);
+		}
 	}
 }
 
