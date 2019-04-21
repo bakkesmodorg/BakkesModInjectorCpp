@@ -291,7 +291,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			settingsManager.SaveSetting(L"HideOnMinimize", 1);
 			settingsManager.SaveSetting(L"HideOnBoot", 0);
 			settingsManager.SaveSetting(L"DisableWarnings", 0);
-			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
+			settingsManager.SaveSetting(L"LaunchWithRL", 0);
 			LOG_LINE(INFO, "Default settings set")
 			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
 		}
@@ -300,7 +300,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
-		ui.actionLaunch_with_RL->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
+		ui.actionLaunch_with_RL->setChecked(settingsManager.GetIntSetting(L"LaunchWithRL"));
 		OnRunOnLaunch();
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
@@ -743,7 +743,10 @@ void BakkesModInjectorCpp::OnRunOnLaunch()
 				&pi
 			);
 		}
+
 	}
+	settingsManager.SaveSetting(L"LaunchWithRL", (int)newStatus);
+	
 }
 
 void BakkesModInjectorCpp::OnDisableWarnings()

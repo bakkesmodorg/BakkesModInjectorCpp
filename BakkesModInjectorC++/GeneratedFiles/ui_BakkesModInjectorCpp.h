@@ -184,7 +184,7 @@ public:
         actionBakkesMod_Discord->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Discord", 0));
         actionCheck_injection->setText(QApplication::translate("BakkesModInjectorCppClass", "Check injection", 0));
         actionEnable_safe_mode->setText(QApplication::translate("BakkesModInjectorCppClass", "Enable safe mode", 0));
-        actionLaunch_with_RL->setText(QApplication::translate("BakkesModInjectorCppClass", "Launch with Rocket League", 0));
+        actionLaunch_with_RL->setText(QApplication::translate("BakkesModInjectorCppClass", "Launch RL, Close with RL", 0));
         actionHide_when_minimized->setText(QApplication::translate("BakkesModInjectorCppClass", "Hide when minimized", 0));
         actionMinimize_on_start->setText(QApplication::translate("BakkesModInjectorCppClass", "Minimize on start", 0));
         actionTroubleshooting->setText(QApplication::translate("BakkesModInjectorCppClass", "Troubleshooting", 0));
