@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BakkesModInjectorC++", "BakkesModInjectorC++\BakkesModInjectorC++.vcxproj", "{B12702AD-ABFB-343A-A199-8E24837244A3}"
 EndProject
@@ -20,6 +20,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
+		Qt5Version = Qt5.6.0-static
 		SolutionGuid = {5D3E4EAF-7371-4BBF-8F89-AD13553DA46C}
 	EndGlobalSection
 EndGlobal
