@@ -13,7 +13,9 @@
 #include <sddl.h>
 #include <stdio.h>
 #include <winevt.h>
+#include <codecvt>
 #include <Windows.h>
+
 
 #define INJECTION_TIMEOUT_DEFAULT 2500
 
@@ -737,7 +739,6 @@ void BakkesModInjectorCpp::OnRunOnStartup()
 		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
 	}
 }
-
 void BakkesModInjectorCpp::OnRunOnLaunch()
 {
 	bool newStatus = ui.actionLaunch_with_RL->isChecked();
@@ -745,13 +746,19 @@ void BakkesModInjectorCpp::OnRunOnLaunch()
 	if (newStatus)
 	{
 		if (!FindProcessId(L"RocketLeague.exe")) {
-			LPTSTR szCmdline = _tcsdup(TEXT("\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague\""));
+
+			std::string rlPath = windowsUtils.GetRocketLeagueDirFromLog();
+			rlPath += "RocketLeague";
+			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+			std::wstring wide = converter.from_bytes(rlPath);
+			LPWSTR s = (LPWSTR)wide.c_str();
+			// OutputDebugString(s); // Check output window for proper path.
 			STARTUPINFO si;
 			PROCESS_INFORMATION pi;
 			ZeroMemory(&si, sizeof(si)); //Use default startup info
 			ZeroMemory(&pi, sizeof(pi));
 			CreateProcess(NULL,
-				szCmdline,
+				s,
 				NULL,
 				NULL,
 				FALSE,
@@ -765,8 +772,8 @@ void BakkesModInjectorCpp::OnRunOnLaunch()
 
 	}
 	settingsManager.SaveSetting(L"LaunchWithRL", (int)newStatus);
-	
 }
+
 
 void BakkesModInjectorCpp::OnDisableWarnings()
 {
