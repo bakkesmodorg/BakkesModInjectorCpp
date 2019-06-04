@@ -37,7 +37,7 @@ public:
     QAction *actionBakkesMod_Discord;
     QAction *actionCheck_injection;
     QAction *actionEnable_safe_mode;
-    QAction *actionRun_on_startup;
+    QAction *actionLaunch_with_RL;
     QAction *actionHide_when_minimized;
     QAction *actionMinimize_on_start;
     QAction *actionTroubleshooting;
@@ -80,9 +80,9 @@ public:
         actionEnable_safe_mode = new QAction(BakkesModInjectorCppClass);
         actionEnable_safe_mode->setObjectName(QStringLiteral("actionEnable_safe_mode"));
         actionEnable_safe_mode->setCheckable(true);
-        actionRun_on_startup = new QAction(BakkesModInjectorCppClass);
-        actionRun_on_startup->setObjectName(QStringLiteral("actionRun_on_startup"));
-        actionRun_on_startup->setCheckable(true);
+        actionLaunch_with_RL = new QAction(BakkesModInjectorCppClass);
+        actionLaunch_with_RL->setObjectName(QStringLiteral("actionLaunch_with_RL"));
+        actionLaunch_with_RL->setCheckable(true);
         actionHide_when_minimized = new QAction(BakkesModInjectorCppClass);
         actionHide_when_minimized->setObjectName(QStringLiteral("actionHide_when_minimized"));
         actionHide_when_minimized->setCheckable(true);
@@ -135,7 +135,6 @@ public:
         menuBar->addAction(menuHelp->menuAction());
         menuFile->addAction(actionOpen_BakkesMod_folder);
         menuFile->addAction(actionCheck_for_updates);
-        menuFile->addAction(actionInstall_Python_support);
         menuFile->addAction(actionReinstall);
         menuFile->addAction(actionExit);
         menuLinks->addAction(actionBakkesMod_com);
@@ -144,7 +143,7 @@ public:
         menuHelp->addAction(actionCheck_injection);
         menuHelp->addAction(actionTroubleshooting);
         menuSettings->addAction(actionEnable_safe_mode);
-        menuSettings->addAction(actionRun_on_startup);
+        menuSettings->addAction(actionLaunch_with_RL);
         menuSettings->addAction(actionHide_when_minimized);
         menuSettings->addAction(actionMinimize_on_start);
         menuSettings->addAction(actionManually_select_BakkesMod_folder);
@@ -155,7 +154,7 @@ public:
         QObject::connect(actionOpen_BakkesMod_folder, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnOpenBakkesModFolderClicked()));
         QObject::connect(actionCheck_injection, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckInjection()));
         QObject::connect(actionEnable_safe_mode, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckSafeMode()));
-        QObject::connect(actionRun_on_startup, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnRunOnStartup()));
+        QObject::connect(actionLaunch_with_RL, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnRunOnLaunch()));
         QObject::connect(actionHide_when_minimized, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnHideOnMinimize()));
         QObject::connect(actionMinimize_on_start, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnMinimizeOnStart()));
         QObject::connect(actionExit, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnExitClick()));
@@ -185,7 +184,7 @@ public:
         actionBakkesMod_Discord->setText(QApplication::translate("BakkesModInjectorCppClass", "BakkesMod Discord", 0));
         actionCheck_injection->setText(QApplication::translate("BakkesModInjectorCppClass", "Check injection", 0));
         actionEnable_safe_mode->setText(QApplication::translate("BakkesModInjectorCppClass", "Enable safe mode", 0));
-        actionRun_on_startup->setText(QApplication::translate("BakkesModInjectorCppClass", "Run on startup", 0));
+        actionLaunch_with_RL->setText(QApplication::translate("BakkesModInjectorCppClass", "Launch RL, Close with RL", 0));
         actionHide_when_minimized->setText(QApplication::translate("BakkesModInjectorCppClass", "Hide when minimized", 0));
         actionMinimize_on_start->setText(QApplication::translate("BakkesModInjectorCppClass", "Minimize on start", 0));
         actionTroubleshooting->setText(QApplication::translate("BakkesModInjectorCppClass", "Troubleshooting", 0));
