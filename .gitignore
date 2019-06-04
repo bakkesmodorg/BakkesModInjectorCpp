@@ -17,9 +17,6 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-GeneratedFiles/**
-GeneratedFiles/
-qrc_*
 x64/
 x86/
 bld/

@@ -7,7 +7,7 @@
 *****************************************************************************/
 
 static const unsigned char qt_resource_data[] = {
-  // C:/Users/Jason/source/repos/jsonVMod/BakkesModInjectorC++/BakkesModInjectorC.ico
+  // C:/Users/Jason/source/repos/BakkesModInjectorCpp/BakkesModInjectorC++/BakkesModInjectorC.ico
   0x0,0x2,0x84,0xce,
   0x0,
   0x0,0x1,0x0,0x6,0x0,0x10,0x10,0x0,0x0,0x1,0x0,0x20,0x0,0x68,0x4,0x0,
