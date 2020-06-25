@@ -1,8 +1,8 @@
 #include "BakkesModInstallation.h"
 #include <fstream>
 #include <string>
-#include <qfiledialog.h>
-#include <qmessagebox.h>
+#include <QtWidgets/qfiledialog.h>
+#include <QtWidgets/qmessagebox.h>
 #include <fstream>
 #include <sstream>
 #include "logger.h"
@@ -57,7 +57,7 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 				QMessageBox msgBox2;
 				std::stringstream ss;
 				ss << "Could not find the Rocket League folder, please select it in the next window" << std::endl;
-				ss << "The executable can be found in SteamLibrary\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague.exe";
+				ss << "The executable can be found in SteamLibrary\\steamapps\\common\\rocketleague\\Binaries\\Win64\\RocketLeague.exe";
 				msgBox2.setText(ss.str().c_str());
 				msgBox2.setStandardButtons(QMessageBox::Ok);
 				msgBox2.setDefaultButton(QMessageBox::Ok);
@@ -113,21 +113,56 @@ bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 	{
 		LOG_LINE(INFO, "Path contains a manifest file");
 		std::ifstream manifestStream(manifest);
-		tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
-
-		if (manifestRoot.name.compare("AppState") == std::string::npos)
+		std::string str((std::istreambuf_iterator<char>(manifestStream)),
+			std::istreambuf_iterator<char>());
+		if (str.find("buildid") == std::string::npos) //broken
 		{
-			LOG_LINE(INFO, "Manifest at " << manifest << " corrupt? Guess I'll disable safe mode manually?")
-				return true;
-		}
-
-		if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
-		{
-			LOG_LINE(INFO, "Manifest does not contain a buildid");
 			return false;
 		}
-		std::string buildId = manifestRoot.attribs["buildid"];
+		manifestStream = std::ifstream(manifest);
+		tyti::vdf::object manifestRoot;
+		std::string buildId = "";
+		try {
+			manifestRoot = tyti::vdf::read(manifestStream);
+		}
+		catch (...)
+		{
+			manifestStream.seekg(0, manifestStream.beg);
+			std::string line = "";
+			while (std::getline(manifestStream, line))
+			{
+				if (line.find("buildid") != std::string::npos)
+				{
+					std::string bid = "";
+					for (auto c : line)
+					{
+						if (c >= '0' && c <= '9')
+						{
+							bid += c;
+						}
+					}
+					buildId = bid;
+					break;
+				}
+			}
+			manifestRoot.name = "ERR";
+		}
+		if (buildId.size() == 0)
+		{
+			if (manifestRoot.name.compare("AppState") == std::string::npos)
+			{
+				LOG_LINE(INFO, "Manifest at " << manifest << " corrupt? Guess I'll disable safe mode manually?")
+					return true;
+			}
 
+			if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
+			{
+				LOG_LINE(INFO, "Manifest does not contain a buildid");
+				return false;
+			}
+
+			buildId = manifestRoot.attribs["buildid"];
+		}
 		if (currentVersion.buildIds.size() > 0)
 		{
 			for (std::string buildidz : currentVersion.buildIds)
@@ -177,7 +212,7 @@ std::string BakkesModInstallation::DetectRocketLeagueFolder()
 		{
 			std::string newPath = child.second + "\\steamapps\\";
 			std::string manifestPath = newPath + "appmanifest_252950.acf";
-			std::string executablePath = newPath + "common\\rocketleague\\Binaries\\Win32\\";
+			std::string executablePath = newPath + "common\\rocketleague\\Binaries\\Win64\\";
 			std::string executableLocation = executablePath + "RocketLeague.exe";
 			if (WindowsUtils::FileExists(manifestPath))
 			{

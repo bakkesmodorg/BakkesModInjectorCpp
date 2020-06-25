@@ -25,6 +25,6 @@ public:
 	InjectionParameters* GetInjectionParameters();
 	void SetInjectionParameters(InjectionParameters ip);
 	DWORD InjectDLL(std::wstring processName, std::string path);
-	DWORD GetProcessID(std::wstring processName);
+	DWORD GetProcessID64(std::wstring processName);
 	DWORD IsBakkesModDllInjected(std::wstring processName);
 };

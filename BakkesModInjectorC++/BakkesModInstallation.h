@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "windowsutils.h"
 #include "SettingsManager.h"
-#include <qwidget.h>
+#include <QTWidgets/qwidget.h>
 
 class BakkesModInstallation : public QWidget
 {

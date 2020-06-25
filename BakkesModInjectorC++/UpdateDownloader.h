@@ -1,6 +1,6 @@
 #pragma once
-#include <qobject.h>
-#include <qnetworkaccessmanager.h>
+#include <QtCore/qobject.h>
+#include <QtNetwork/qnetworkaccessmanager.h>
 class UpdateDownloader : public QObject
 {
 	Q_OBJECT

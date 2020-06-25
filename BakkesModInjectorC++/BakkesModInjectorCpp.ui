@@ -56,7 +56,6 @@
     </property>
     <addaction name="actionOpen_BakkesMod_folder"/>
     <addaction name="actionCheck_for_updates"/>
-    <addaction name="actionInstall_Python_support"/>
     <addaction name="actionReinstall"/>
     <addaction name="actionExit"/>
    </widget>
@@ -67,6 +66,7 @@
     <addaction name="actionBakkesMod_com"/>
     <addaction name="actionBakkesMod_Twitter"/>
     <addaction name="actionBakkesMod_Discord"/>
+    <addaction name="actionPatreon"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -199,6 +199,11 @@
   <action name="actionCheck_for_updates">
    <property name="text">
     <string>Check for updates</string>
+   </property>
+  </action>
+  <action name="actionPatreon">
+   <property name="text">
+    <string>Patreon</string>
    </property>
   </action>
  </widget>
@@ -468,6 +473,22 @@
    <signal>triggered()</signal>
    <receiver>BakkesModInjectorCppClass</receiver>
    <slot>OnCheckForUpdates()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionPatreon</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnPatreonClick()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

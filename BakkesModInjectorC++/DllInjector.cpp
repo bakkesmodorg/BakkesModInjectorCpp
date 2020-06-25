@@ -50,7 +50,7 @@ void DllInjector::SetInjectionParameters(InjectionParameters ip)
 
 DWORD DllInjector::InjectDLL(std::wstring processName, std::string path)
 {
-	DWORD processID = GetProcessID(processName);
+	DWORD processID = GetProcessID64(processName);
 	if (processID == 0)
 		return NOT_RUNNING;
 
@@ -70,7 +70,7 @@ DWORD DllInjector::InjectDLL(std::wstring processName, std::string path)
 	return NOPE;
 }
 
-DWORD DllInjector::GetProcessID(std::wstring processName)
+DWORD DllInjector::GetProcessID64(std::wstring processName)
 {
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -82,16 +82,65 @@ DWORD DllInjector::GetProcessID(std::wstring processName)
 	Process32First(processesSnapshot, &processInfo);
 	if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
 	{
-		CloseHandle(processesSnapshot);
-		return processInfo.th32ProcessID;
+		
+		BOOL iswow64 = FALSE;
+		//https://stackoverflow.com/questions/14184137/how-can-i-determine-whether-a-process-is-32-or-64-bit
+		//If IsWow64Process() reports true, the process is 32-bit running on a 64-bit OS
+		//So we want it to return false (32 bit on 32 bit os, or 64 bit on 64 bit OS, since we build x64 the first condition will never satisfy since they can't run this exe)
+		
+		auto hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processInfo.th32ProcessID);
+		if (hProcess == NULL)
+		{
+			LOG_LINE(INFO, "Error on OpenProcess to check bitness");
+		}
+		else
+		{
+
+			if (IsWow64Process(hProcess, &iswow64))
+			{
+				//LOG_LINE(INFO, "Rocket league process ID is " << processInfo.th32ProcessID << " | " << " has the WOW factor: " << iswow64);
+				if (!iswow64)
+				{
+					CloseHandle(processesSnapshot);
+					return processInfo.th32ProcessID;
+				}
+			}
+			else
+			{
+				LOG_LINE(INFO, "IsWow64Process failed bruv " << GetLastError());
+			}
+			CloseHandle(hProcess);
+		}
 	}
 
 	while (Process32Next(processesSnapshot, &processInfo))
 	{
 		if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
 		{
-			CloseHandle(processesSnapshot);
-			return processInfo.th32ProcessID;
+			BOOL iswow64 = FALSE;
+			auto hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processInfo.th32ProcessID);
+			if (hProcess == NULL)
+			{
+				LOG_LINE(INFO, "Error on OpenProcess to check bitness");
+			}
+			else
+			{
+
+				if (IsWow64Process(hProcess, &iswow64))
+				{
+					//LOG_LINE(INFO, "Rocket league process ID is " << processInfo.th32ProcessID << " | " << " has the WOW factor: " << iswow64);
+					if (!iswow64)
+					{
+						CloseHandle(processesSnapshot);
+						return processInfo.th32ProcessID;
+					}
+				}
+				else
+				{
+					LOG_LINE(INFO, "IsWow64Process failed bruv " << GetLastError());
+				}
+				CloseHandle(hProcess);
+			}
 		}
 		//CloseHandle(processesSnapshot);
 	}
@@ -107,7 +156,7 @@ DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)
 	HANDLE hProcess;
 	DWORD cbNeeded;
 	unsigned int i;
-	DWORD processID = GetProcessID(processName);
+	DWORD processID = GetProcessID64(processName);
 	if (processID == 0)
 		return NOT_RUNNING;
 

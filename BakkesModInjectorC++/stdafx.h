@@ -16,6 +16,8 @@ struct UpdateStatus
 	bool requestFinished = false;
 	bool requiresUpdate = false;
 
+	std::string jsonData = "";
+
 	std::string injectorUrl = "";
 	std::string injectorVersion = "0";
 	std::string buildID = "";

@@ -1,6 +1,7 @@
 #include "Updater.h"
-#include "qnetworkrequest.h"
-#include <QObject>
+#include <QtNetwork/qnetworkrequest.h>
+#include <QtNetwork/QNetworkReply>
+#include <QtCore/QObject>
 #include "BakkesModInjectorCpp.h"
 
 //http://updater.bakkesmod.com/static/versions/bakkesmod_57.zip
@@ -77,9 +78,13 @@ void myReplace(std::string& str,
 	}
 }
 
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qjsonobject.h>
 void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 {
 	QJsonDocument json = QJsonDocument::fromJson(result->readAll());
+	QString strJson(json.toJson(QJsonDocument::Compact));
+	latestUpdateInfo.jsonData = strJson.toStdString();
 	QJsonObject rootObj = json.object();
 	if (!rootObj.empty())
 	{

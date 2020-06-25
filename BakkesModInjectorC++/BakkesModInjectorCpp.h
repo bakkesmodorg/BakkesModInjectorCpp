@@ -4,14 +4,14 @@
 #include "ui_BakkesModInjectorCpp.h"
 #include "WindowsUtils.h"
 #include "DllInjector.h"
-#include "qtimer.h"
+#include <QtCore/qtimer.h>
 #include "BakkesModInstallation.h"
 #include "SettingsManager.h"
 #include "Updater.h"
-#include <qsystemtrayicon.h>
+#include <QtWidgets/qsystemtrayicon.h>
 
 #define RL_PROCESS_NAME L"RocketLeague.exe"
-#define BAKKESMODINJECTOR_VERSION 13
+#define BAKKESMODINJECTOR_VERSION 15
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \
@@ -77,6 +77,7 @@ public:
 	void OnExitClick();
 	void OnReinstallClick();
 	void OnPythonInstallClick();
+	void OnPatreonClick();
 
 	void OpenTwitter();
 	void OpenDiscord();

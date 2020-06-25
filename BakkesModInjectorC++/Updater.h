@@ -1,7 +1,8 @@
 #pragma once
 #include "stdafx.h"
 #include <string>
-#include <QtNetwork>
+#include <QtNetwork/qnetworkaccessmanager.h>
+#include <QtNetwork/QNetworkReply>
 #include "BakkesModInstallation.h"
 #include <vector>
 
