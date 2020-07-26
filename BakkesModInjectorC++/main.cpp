@@ -26,7 +26,7 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin)
 //#pragma comment(lib, "Qt5PlatformSupport.lib")
 
 //#pragma comment(lib, "qtpcre.lib")
-#pragma comment(lib, "libeay32.lib")
+//#pragma comment(lib, "libeay32.lib")
 #pragma comment(lib, "Crypt32.lib")
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "qtfreetype.lib")
@@ -41,6 +41,8 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin)
 #pragma comment(lib, "qwindows.lib")
 #pragma comment(lib, "qwindowsvistastyle.lib")
 #pragma comment(lib, "qico.lib")
+#pragma comment(lib, "libssl_static.lib")
+#pragma comment(lib, "libcrypto_static.lib")
 #endif
 
 int main(int argc, char *argv[])
