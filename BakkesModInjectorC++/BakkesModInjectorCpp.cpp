@@ -421,29 +421,35 @@ void BakkesModInjectorCpp::TimerTimeout()
 			if (MoveFile(currentName.c_str(), newOldName.c_str()) != 0)
 			{
 				LOG_LINE(INFO, "Successfully renamed current executable to bakkesmod_old.exe");
-				MoveFile(updateDownloader->packageUrl.c_str(), currentName.c_str());
+				if (MoveFile(updateDownloader->packageUrl.c_str(), currentName.c_str()) != 0)
+				{
+					LOG_LINE(INFO, "Moved new injector from " << WindowsUtils::WStringToString(updateDownloader->packageUrl) << " to " << WindowsUtils::WStringToString(currentName));
 
-
-				STARTUPINFO si; 
-				PROCESS_INFORMATION pi;
-				ZeroMemory(&si, sizeof(si)); //Use default startup info
-				ZeroMemory(&pi, sizeof(pi));
-				LPWSTR commandLine = L""; //No command line arguments
-				CreateProcess(currentName.c_str(),
-					commandLine,
-					NULL,
-					NULL,
-					FALSE,
-					CREATE_BREAKAWAY_FROM_JOB, //Actually launch new process since we close this one on the next line
-					NULL,
-					NULL,
-					&si,
-					&pi
+					STARTUPINFO si;
+					PROCESS_INFORMATION pi;
+					ZeroMemory(&si, sizeof(si)); //Use default startup info
+					ZeroMemory(&pi, sizeof(pi));
+					LPWSTR commandLine = L""; //No command line arguments
+					CreateProcess(currentName.c_str(),
+						commandLine,
+						NULL,
+						NULL,
+						FALSE,
+						CREATE_BREAKAWAY_FROM_JOB, //Actually launch new process since we close this one on the next line
+						NULL,
+						NULL,
+						&si,
+						&pi
 					);
 
-				//LOG_LINE(INFO, "Result " << GetLastError())//For now, I guess we do nothing if launching new process didn't work
-				//system(WindowsUtils::WStringToString(currentName).c_str());
-				QCoreApplication::quit();
+					LOG_LINE(INFO, "Result " << GetLastError());//For now, I guess we do nothing if launching new process didn't work
+					//system(WindowsUtils::WStringToString(currentName).c_str());
+						QCoreApplication::quit();
+				}
+				else
+				{
+					LOG_LINE(INFO, "Failed to rename old file to current: " << GetLastError())
+				}
 			}
 			else
 			{
