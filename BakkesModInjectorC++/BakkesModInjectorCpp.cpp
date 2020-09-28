@@ -254,23 +254,78 @@ void BakkesModInjectorCpp::TimerTimeout()
 	case BOOTING:
 	{
 		LOG_LINE(INFO, "Booting")
+
+		{
+			auto oldInstall = installation.GetOldBakkesModFolder();
+			auto newInstall = installation.GetBakkesModFolder();
+			LOG_LINE(INFO, oldInstall.string());
+			LOG_LINE(INFO, newInstall.string());
+			if (oldInstall.string().size() > 0)
+			{
+				LOG_LINE(INFO, "OLD INSTALL DETECTED" << oldInstall.string());
+				if (!std::filesystem::exists(newInstall))
+				{
+					try
+					{
+						LOG_LINE(INFO, "Creating directory " << newInstall.string());
+						std::filesystem::create_directories(newInstall);
+						LOG_LINE(INFO, "Copying directory " << oldInstall.string() << "->" << newInstall.string());
+						std::filesystem::copy(oldInstall, newInstall, std::filesystem::copy_options::recursive);
+						LOG_LINE(INFO, "Removing old directory " << oldInstall.string());
+						std::filesystem::remove_all(oldInstall);
+					}
+					catch (std::exception& e)
+					{
+						LOG_LINE(INFO, "Something went wrong on migration: " << e.what())
+					}
+				}
+			}
+		}
+
 		if (!installation.IsInstalled())
 		{
 			LOG_LINE(INFO, "Not installed, setting default values")
-			settingsManager.SaveSetting(L"EnableSafeMode", 1);
+				settingsManager.SaveSetting(L"EnableSafeMode", 1);
 			settingsManager.SaveSetting(L"HideOnMinimize", 1);
 			settingsManager.SaveSetting(L"HideOnBoot", 0);
 			settingsManager.SaveSetting(L"DisableWarnings", 0);
 			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
 			LOG_LINE(INFO, "Default settings set")
-			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
+				//settingsManager.SaveSetting(L"InjectionTimeout", 70);
+		}
+		
+		{
+			auto currentPid = ::getpid();
+			auto ids = dllInjector.GetProcessIDS(L"bakkesmod.exe");
+			{
+				auto ids2 = dllInjector.GetProcessIDS(L"bakkesmodinjector.exe");
+				ids.insert(ids.end(), ids2.begin(), ids2.end());
+			}
+			for (auto id : ids)
+			{
+				if (id == currentPid)
+					continue;
+				LOG_LINE(INFO, "Found existing BM process " << id);
+				LOG_LINE(INFO, "Found existing BM process, PID: " << id << ". Currently on try 1");
+				HANDLE rlHandle;
+				rlHandle = OpenProcess(PROCESS_ALL_ACCESS, false, id);
+				LOG_LINE(INFO, "Sending terminate");
+				TerminateProcess(rlHandle, 1);
+				LOG_LINE(INFO, "Waiting for Single Object (timeout=1000ms)");
+				WaitForSingleObject(rlHandle, 1000);
+				LOG_LINE(INFO, "Done waiting");
+				CloseHandle(rlHandle);
+				LOG_LINE(INFO, "Closed handle");
+				
+			}
 		}
 
 		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionDisable_warnings->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
-		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
+		bool runOnStartup = !settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty();
+		ui.actionRun_on_startup->setChecked(runOnStartup);
 		OnRunOnStartup();
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
