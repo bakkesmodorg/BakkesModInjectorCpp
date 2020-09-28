@@ -71,6 +71,9 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
+
+
+
 	QApplication::setQuitOnLastWindowClosed(false);
 	ui.progressBar->hide();
 	LOG_LINE(INFO, "Checking if hideonboot is on")
@@ -515,13 +518,13 @@ void BakkesModInjectorCpp::TimerTimeout()
 		i.Install();
 
 		{
-			std::ofstream out(installation.GetBakkesModFolder() + "injectorversion.txt");
+			std::ofstream out(installation.GetBakkesModFolder() / "injectorversion.txt");
 			out << BAKKESMODINJECTOR_VERSION;
 			out.close();
 		}
 		
 		{
-			std::ofstream out(installation.GetBakkesModFolder() + "updaterinfo.txt");
+			std::ofstream out(installation.GetBakkesModFolder() / "updaterinfo.txt");
 			out << updater.latestUpdateInfo.jsonData;
 			out.close();
 		}
@@ -573,8 +576,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case INJECT_DLL:
 	{
-		std::string bmPath = installation.GetBakkesModFolder();
-		std::string path = bmPath + "/dll/bakkesmod.dll";
+		auto bmPath = installation.GetBakkesModFolder();
+		auto path = bmPath / "/dll/bakkesmod.dll";
 		if (!WindowsUtils::FileExists(path))
 		{
 			QMessageBox msgBox;
@@ -586,10 +589,18 @@ void BakkesModInjectorCpp::TimerTimeout()
 			return;
 		}
 		{
-			std::ofstream out(installation.GetBakkesModFolder() + "updaterinfo.txt");
+			std::ofstream out(installation.GetBakkesModFolder() / "updaterinfo.txt");
 			out << updater.latestUpdateInfo.jsonData;
 			out.close();
 		}
+
+		DWORD alreadyInjected = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
+		if (alreadyInjected == OK)
+		{
+			SetState(INJECTED);
+			break;
+		}
+		
 
 		dllInjector.InjectDLL(RL_PROCESS_NAME, path);
 
@@ -599,7 +610,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(INJECTION_FAILED);
 			QMessageBox msgBox;
 			std::stringstream ss;
-			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency (vc_redist.x86.exe). Please download it from http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
+			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency (vc_redist.x64.exe). Please download it from http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
 			ss << "Would you like to open it now?";
 			msgBox.setText(ss.str().c_str());
 			msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -607,7 +618,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			if (ret == QMessageBox::Yes)
 			{
-
+				OpenWebsite("http://bakkesmod.wikia.com/wiki/Troubleshooting");
 			}
 		}
 		else
@@ -625,7 +636,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case CHECK_D3D9:
 	{
-		if (settingsManager.GetIntSetting(L"DisableWarnings") == 0 && WindowsUtils::FileExists(installation.GetBakkesModFolder() + "../d3d9.dll"))
+		if (settingsManager.GetIntSetting(L"DisableWarnings") == 0 && WindowsUtils::FileExists(installation.GetBakkesModFolder() / "../d3d9.dll"))
 		{
 			QMessageBox msgBox;
 			LOG_LINE(INFO, "found a d3d9.dll")
@@ -637,7 +648,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			if (ret == QMessageBox::Yes)
 			{
-				if (remove((installation.GetBakkesModFolder() + "../d3d9.dll").c_str()) != 0) 
+				if (std::filesystem::remove((installation.GetBakkesModFolder() / "../d3d9.dll").c_str()) != 0) 
 				{
 					QMessageBox msgBox2;
 					LOG_LINE(INFO, "Could not remove d3d9.dll")
@@ -744,7 +755,7 @@ void BakkesModInjectorCpp::OnReinstallClick()
 	int ret = msgBox.exec();
 	if (ret == QMessageBox::Yes)
 	{
-		if (WindowsUtils::DeleteDirectory(WindowsUtils::StringToWString(installation.GetBakkesModFolder())))
+		if (WindowsUtils::DeleteDirectory(installation.GetBakkesModFolder().wstring()))
 		{
 			LOG_LINE(INFO, "Could not remove BakkesMod folder")
 			QMessageBox msgBox2;
@@ -949,7 +960,7 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 {
-	std::string rlPath = installation.GetBakkesModFolder();
+	auto rlPath = installation.GetBakkesModFolder();
 	if (rlPath.empty())
 	{
 		QMessageBox msgBox;

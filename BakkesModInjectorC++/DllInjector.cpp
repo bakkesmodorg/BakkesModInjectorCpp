@@ -48,7 +48,7 @@ void DllInjector::SetInjectionParameters(InjectionParameters ip)
 }
 
 
-DWORD DllInjector::InjectDLL(std::wstring processName, std::string path)
+DWORD DllInjector::InjectDLL(std::wstring processName, std::filesystem::path path)
 {
 	DWORD processID = GetProcessID64(processName);
 	if (processID == 0)
@@ -58,11 +58,11 @@ DWORD DllInjector::InjectDLL(std::wstring processName, std::string path)
 	if (h)
 	{
 		LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
-		LPVOID dereercomp = VirtualAllocEx(h, NULL, path.size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-		WriteProcessMemory(h, dereercomp, path.c_str(), path.size(), NULL);
+		LPVOID dereercomp = VirtualAllocEx(h, NULL, path.wstring().size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		WriteProcessMemory(h, dereercomp, path.wstring().c_str(), path.wstring().size(), NULL);
 		HANDLE asdc = CreateRemoteThread(h, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibAddr, dereercomp, 0, NULL);
 		WaitForSingleObject(asdc, INFINITE);
-		VirtualFreeEx(h, dereercomp, path.size(), MEM_RELEASE);
+		VirtualFreeEx(h, dereercomp, path.wstring().size(), MEM_RELEASE);
 		CloseHandle(asdc);
 		CloseHandle(h);
 		return OK;
@@ -148,6 +148,40 @@ DWORD DllInjector::GetProcessID64(std::wstring processName)
 	CloseHandle(processesSnapshot);
 	return 0;
 
+}
+
+std::vector<DWORD> DllInjector::GetProcessIDS(std::wstring processName)
+{
+	std::vector<DWORD> ids;
+	PROCESSENTRY32 processInfo;
+	processInfo.dwSize = sizeof(processInfo);
+
+	HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	if (processesSnapshot == INVALID_HANDLE_VALUE)
+		return { };
+
+	Process32First(processesSnapshot, &processInfo);
+	if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
+	{
+
+		BOOL iswow64 = FALSE;
+		//https://stackoverflow.com/questions/14184137/how-can-i-determine-whether-a-process-is-32-or-64-bit
+		//If IsWow64Process() reports true, the process is 32-bit running on a 64-bit OS
+		//So we want it to return false (32 bit on 32 bit os, or 64 bit on 64 bit OS, since we build x64 the first condition will never satisfy since they can't run this exe)
+
+		ids.push_back(processInfo.th32ProcessID);
+	}
+
+	while (Process32Next(processesSnapshot, &processInfo))
+	{
+		if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
+		{
+			ids.push_back(processInfo.th32ProcessID);
+		}
+	}
+
+	CloseHandle(processesSnapshot);
+	return ids;
 }
 
 DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)

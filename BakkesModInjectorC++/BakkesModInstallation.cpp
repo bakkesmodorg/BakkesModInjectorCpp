@@ -8,6 +8,7 @@
 #include "logger.h"
 #include "vdf_parser.h"
 #include <fstream>
+#include <shlobj_core.h>
 std::string BakkesModInstallation::overrideBakkesModFolder = "";
 
 void BakkesModInstallation::resetBMFolder()
@@ -24,14 +25,34 @@ BakkesModInstallation::~BakkesModInstallation()
 {
 }
 
-std::string BakkesModInstallation::GetBakkesModFolder()
+std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 {
 	if (!overrideBakkesModFolder.empty())
 		return overrideBakkesModFolder;
 
 	if (bakkesModFolder.empty())
 	{
-		std::wstring registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+		PWSTR path_tmp;
+		auto get_folder_path_ret = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path_tmp);
+		/* Error check */
+		if (get_folder_path_ret != S_OK)
+		{
+			CoTaskMemFree(path_tmp);
+			//SHOULD NEVER REACH
+
+		}
+		else
+		{
+
+			/* Convert the Windows path type to a C++ path */
+			std::filesystem::path bmPath = path_tmp;
+			bmPath = bmPath / "bakkesmod" / "bakkesmod";
+			bakkesModFolder = bmPath;
+			CoTaskMemFree(path_tmp);
+			return bakkesModFolder;
+		}
+		
+		/*std::wstring registryString = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 		if (!registryString.empty() && WindowsUtils::FileExists(windowsUtils.WStringToString(registryString) + "../RocketLeague.exe"))
 		{
 			bakkesModFolder = windowsUtils.WStringToString(registryString);
@@ -81,11 +102,27 @@ std::string BakkesModInstallation::GetBakkesModFolder()
 				return "";
 			}
 		}
-		auto converted = windowsUtils.StringToWString(bakkesModFolder);
+		auto converted = bakkesModFolder.wstring();
 		settings.SaveSetting(L"BakkesModPath", converted, RegisterySettingsManager::REGISTRY_DIR_APPPATH);
-		
+
 	}
-	return bakkesModFolder;
+
+	return bakkesModFolder;*/
+	}
+	return std::filesystem::path("");
+}
+
+
+
+std::filesystem::path BakkesModInstallation::GetOldBakkesModFolder()
+{
+	//auto test = GetBakkesModFolder();
+	auto oldPath = settings.GetStringSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+	if (ci_find_substr(oldPath, std::wstring(L"appdata")))
+	{
+		return std::filesystem::path(oldPath);
+	}
+	return std::filesystem::path("");
 }
 
 bool BakkesModInstallation::IsInstalled()
@@ -95,7 +132,7 @@ bool BakkesModInstallation::IsInstalled()
 
 unsigned int BakkesModInstallation::GetVersion()
 {
-	std::string versionFilePath = GetBakkesModFolder() + "\\version.txt";
+	std::filesystem::path versionFilePath = GetBakkesModFolder() / "\\version.txt";
 	if (!windowsUtils.FileExists(versionFilePath))
 		return 0;
 	std::ifstream versionFile;
@@ -108,7 +145,7 @@ unsigned int BakkesModInstallation::GetVersion()
 
 bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 {
-	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
+	std::filesystem::path manifest = GetBakkesModFolder() / "..\\..\\..\\..\\..\\appmanifest_252950.acf";
 	if (WindowsUtils::FileExists(manifest))
 	{
 		LOG_LINE(INFO, "Path contains a manifest file");
@@ -181,7 +218,7 @@ bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 
 bool BakkesModInstallation::ManifestFileExists()
 {
-	std::string manifest = GetBakkesModFolder() + "..\\..\\..\\..\\..\\appmanifest_252950.acf";
+	auto manifest = GetBakkesModFolder() / "..\\..\\..\\..\\..\\appmanifest_252950.acf";
 	return (WindowsUtils::FileExists(manifest));
 }
 

@@ -6,7 +6,7 @@
 #include "WindowsUtils.h"
 #include "logger.h"
 
-Installer::Installer(std::wstring updatePackageLocation, std::string destination)
+Installer::Installer(std::wstring updatePackageLocation, std::filesystem::path destination)
 {
 	updatePackage = updatePackageLocation;
 	extractDir = destination;
@@ -39,9 +39,10 @@ void Installer::Install()
 	WindowsUtils::CreateFolder(extractDir);
 	for (auto &member : file.infolist())
 	{
-		std::string fullPath = extractDir + member.filename;
+		std::string fileName = member.filename;
+		auto fullPath = extractDir / member.filename;
 		LOG_LINE(INFO, "Extracting file " << member.filename)
-		if (fullPath.substr(fullPath.size() - std::string(".cfg").size()).compare(".cfg") == 0)
+		if (fileName.substr(fileName.size() - std::string(".cfg").size()).compare(".cfg") == 0)
 		{
 			
 			if (WindowsUtils::FileExists(fullPath)) {//Don't overwrite default cfg files
@@ -55,11 +56,12 @@ void Installer::Install()
 			WindowsUtils::CreateFolder(fullPath);
 		} else if (WindowsUtils::FileExists(fullPath))
 		{
-			int success = remove(fullPath.c_str());
+			int success = std::filesystem::remove(fullPath);
 			LOG_LINE(INFO, "File " << member.filename << " exists, deleting file result: " << success)
 		}
 		
-		file.extract(member, extractDir);
+		//TODO: maybe fix?
+		file.extract(member, extractDir.string().c_str());
 		LOG_LINE(INFO, "File extraction result: " << WindowsUtils::FileExists(fullPath))
 		//file.extract(member, "");
 	}

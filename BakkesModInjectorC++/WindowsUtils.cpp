@@ -10,6 +10,7 @@
 #include <cctype>
 #include <string>
 #include <algorithm>
+#include <filesystem>
 WindowsUtils::WindowsUtils()
 {
 }
@@ -67,28 +68,29 @@ std::string WindowsUtils::GetRocketLeagueDirFromLog()
 	return std::string();
 }
 
-bool WindowsUtils::FileExists(std::string path)
+//bool WindowsUtils::FileExists(std::filesystem::path path)
+//{
+//	struct stat buffer;
+//	return (stat(path.c_str(), &buffer) == 0);
+//}
+
+bool WindowsUtils::FileExists(std::filesystem::path path)
 {
-	struct stat buffer;
-	return (stat(path.c_str(), &buffer) == 0);
+	return std::filesystem::exists(path);
+	//return GetFileAttributesW(path.c_str()) != 0xFFFFFFFF;
 }
 
-bool WindowsUtils::FileExists(std::wstring path)
-{
-	return GetFileAttributesW(path.c_str()) != 0xFFFFFFFF;
-}
-
-void WindowsUtils::OpenFolder(std::string path)
+void WindowsUtils::OpenFolder(std::filesystem::path path)
 {
 	//std::string openPath = "explorer \"" + path + "\"";
 	//system(openPath.c_str());
 	//openPath.replace(openPath.begin(), openPath.end(), '/', '\\\\')
-	ShellExecute(NULL, L"open", StringToWString(path).c_str(), NULL, NULL, SW_SHOWDEFAULT);
+	ShellExecute(NULL, L"open", path.wstring().c_str(), NULL, NULL, SW_SHOWDEFAULT);
 }
 
-void WindowsUtils::CreateFolder(std::string path)
+void WindowsUtils::CreateFolder(std::filesystem::path path)
 {
-	if (CreateDirectory(StringToWString(path).c_str(), NULL) ||
+	if (std::filesystem::create_directory(path) ||
 		ERROR_ALREADY_EXISTS == GetLastError())
 	{
 		// CopyFile(...)
@@ -124,76 +126,9 @@ DWORD WindowsUtils::IsProcessRunning(std::wstring processName)
 	return 0;
 }
 
-int WindowsUtils::DeleteDirectory(std::wstring &refcstrRootDirectory, bool bDeleteSubdirectories)
+uintmax_t WindowsUtils::DeleteDirectory(std::filesystem::path loc)
 {
-	bool            bSubdirectory = false;       // Flag, indicating whether
-												 // subdirectories have been found
-	HANDLE          hFile;                       // Handle to directory
-	std::wstring     strFilePath;                 // Filepath
-	std::wstring     strPattern;                  // Pattern
-	WIN32_FIND_DATA FileInformation;             // File information
-
-
-	strPattern = refcstrRootDirectory + std::wstring(L"\\*.*");
-	hFile = ::FindFirstFile(strPattern.c_str(), &FileInformation);
-	if (hFile != INVALID_HANDLE_VALUE)
-	{
-		do
-		{
-			if (FileInformation.cFileName[0] != '.')
-			{
-				strFilePath.erase();
-				strFilePath = refcstrRootDirectory + std::wstring(L"\\") + FileInformation.cFileName;
-
-				if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				{
-					if (bDeleteSubdirectories)
-					{
-						// Delete subdirectory
-						int iRC = DeleteDirectory(strFilePath, bDeleteSubdirectories);
-						if (iRC)
-							return iRC;
-					}
-					else
-						bSubdirectory = true;
-				}
-				else
-				{
-					// Set file attributes
-					if (::SetFileAttributes(strFilePath.c_str(),
-						FILE_ATTRIBUTE_NORMAL) == FALSE)
-						return ::GetLastError();
-
-					// Delete file
-					if (::DeleteFile(strFilePath.c_str()) == FALSE)
-						return ::GetLastError();
-				}
-			}
-		} while (::FindNextFile(hFile, &FileInformation) == TRUE);
-
-		// Close handle
-		::FindClose(hFile);
-
-		DWORD dwError = ::GetLastError();
-		if (dwError != ERROR_NO_MORE_FILES)
-			return dwError;
-		else
-		{
-			if (!bSubdirectory)
-			{
-				// Set directory attributes
-				if (::SetFileAttributes(refcstrRootDirectory.c_str(),
-					FILE_ATTRIBUTE_NORMAL) == FALSE)
-					return ::GetLastError();
-
-				// Delete directory
-				if (::RemoveDirectory(refcstrRootDirectory.c_str()) == FALSE)
-					return ::GetLastError();
-			}
-		}
-	}
-
-	return 0;
+	return std::filesystem::remove_all(loc);
 }
 
 std::wstring WindowsUtils::StringToWString(const std::string & s)
@@ -218,23 +153,3 @@ std::wstring WindowsUtils::GetCurrentExecutablePath()
 	return path;
 }
 
-std::wstring WindowsUtils::GetExecutablePath(std::string process)
-{
-	/*HANDLE processHandle = NULL;
-	TCHAR filename[MAX_PATH];
-
-	processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, 1234);
-	if (processHandle != NULL) {
-		if (GetModuleFileNameEx(processHandle, NULL, filename, MAX_PATH) == 0) {
-			tcerr << "Failed to get module filename." << endl;
-		}
-		else {
-			tcout << "Module filename is: " << filename << endl;
-		}
-		CloseHandle(processHandle);
-	}
-	else {
-		tcerr << "Failed to open process." << endl;
-	}*/
-	return std::wstring();
-}

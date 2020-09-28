@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
 #include <windows.h>
-
+#include <vector>
+#include <filesystem>
 enum DllInjectionResult
 {
 	NOPE = 0,
@@ -24,7 +25,8 @@ public:
 	~DllInjector();
 	InjectionParameters* GetInjectionParameters();
 	void SetInjectionParameters(InjectionParameters ip);
-	DWORD InjectDLL(std::wstring processName, std::string path);
+	DWORD InjectDLL(std::wstring processName, std::filesystem::path path);
 	DWORD GetProcessID64(std::wstring processName);
+	std::vector<DWORD> GetProcessIDS(std::wstring processName);
 	DWORD IsBakkesModDllInjected(std::wstring processName);
 };

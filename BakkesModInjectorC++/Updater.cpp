@@ -128,7 +128,8 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 		latestUpdateInfo.networkRequestStatus = FINISHED_SUCCESS;
 	}
 	else {
-		if (useHostname) {
+		if (useHostname) 
+		{
 			latestUpdateInfo.requestFinished = true;
 			latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
 		}
