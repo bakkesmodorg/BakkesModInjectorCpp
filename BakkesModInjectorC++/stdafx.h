@@ -28,5 +28,6 @@ struct UpdateStatus
 	std::string updateMessage = "";
 	std::string downloadUrl = "";
 	std::vector<std::string> buildIds;
+	std::vector<std::string> egsBuildIds;
 	bool updateRequest = false;
 };

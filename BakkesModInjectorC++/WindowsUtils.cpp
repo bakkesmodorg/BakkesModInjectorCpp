@@ -42,7 +42,7 @@ inline std::string trim(const std::string &s)
 	return (wsback <= wsfront ? std::string() : std::string(wsfront, wsback));
 }
 
-std::string WindowsUtils::GetRocketLeagueDirFromLog()
+std::string WindowsUtils::GetSteamRocketLeagueDirFromLog()
 {
 	static std::string LOG_LINE_MATCH = "directory:";
 	static std::string windowsPath = GetMyDocumentsFolder();
@@ -60,7 +60,10 @@ std::string WindowsUtils::GetRocketLeagueDirFromLog()
 				std::getline(fs, logLine); //Actually read till end of line incase there are spaces in the path
 				logLine = trim(logLine);
 				LOG_LINE(INFO, "Found RL dir from log: " << logLine)
-				return logLine;
+
+				//Make sure its steam i guess lol
+				if(logLine.find("steamapps") != std::string::npos)
+					return logLine;
 			}
 
 		}
@@ -90,11 +93,16 @@ void WindowsUtils::OpenFolder(std::filesystem::path path)
 
 void WindowsUtils::CreateFolder(std::filesystem::path path)
 {
-	if (std::filesystem::create_directory(path) ||
-		ERROR_ALREADY_EXISTS == GetLastError())
+	try
 	{
-		// CopyFile(...)
-	}
+		if (std::filesystem::create_directory(path) ||
+			ERROR_ALREADY_EXISTS == GetLastError())
+		{
+			// CopyFile(...)
+		}
+	} 
+	
+	catch(...) {}
 }
 
 DWORD WindowsUtils::IsProcessRunning(std::wstring processName)

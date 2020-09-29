@@ -104,6 +104,9 @@
     <ClInclude Include="vdf_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\BakkesModInjectorC.ico" />

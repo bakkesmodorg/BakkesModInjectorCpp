@@ -105,6 +105,9 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 			std::string buildids = test["buildids"].toString().toStdString();
 			latestUpdateInfo.buildIds = split(buildids, ',');
 			
+			std::string egsbuildids = test["egsbuildids"].toString().toStdString();
+			latestUpdateInfo.egsBuildIds = split(egsbuildids, ',');
+
 		}
 
 		auto updateInfo = rootObj.find("update_info");

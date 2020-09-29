@@ -8,7 +8,7 @@ public:
 	WindowsUtils();
 	~WindowsUtils();
 	static std::string GetMyDocumentsFolder();
-	std::string GetRocketLeagueDirFromLog();
+	std::string GetSteamRocketLeagueDirFromLog();
 	std::string GetRocketLeagueBuildID();
 	//static bool FileExists(std::string path);
 	static bool FileExists(std::filesystem::path path);

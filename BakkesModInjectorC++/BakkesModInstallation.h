@@ -20,6 +20,17 @@ public:
 	bool IsInstalled();
 	unsigned int GetVersion();
 	bool IsSafeToInject(UpdateStatus currentVersion);
+
+	//Steam
 	bool ManifestFileExists();
-	std::string DetectRocketLeagueFolder();
+	std::filesystem::path DetectRocketLeagueFolder();
+
+	std::filesystem::path GetSteamInstallLocation();
+	std::string GetSteamVersion();
+	std::string GetEpicVersion();
+
+	bool IsSteamVersionInstalled();
+	bool IsEpicVersionInstalled();
+	bool IsSteamVersionReady(UpdateStatus currentVersion);
+	bool IsEpicVersionReady(UpdateStatus currentVersion);
 };

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <winevt.h>
 
+
 #pragma comment(lib, "wevtapi.lib")
 DWORD WINAPI SubscriptionCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent);
 
@@ -72,7 +73,7 @@ void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
 
-
+	//installation.GetEpicInstallLocation();
 
 	QApplication::setQuitOnLastWindowClosed(false);
 	ui.progressBar->hide();
@@ -258,25 +259,28 @@ void BakkesModInjectorCpp::TimerTimeout()
 		{
 			auto oldInstall = installation.GetOldBakkesModFolder();
 			auto newInstall = installation.GetBakkesModFolder();
-			LOG_LINE(INFO, oldInstall.string());
-			LOG_LINE(INFO, newInstall.string());
+			LOG_LINE(INFO, "OLD " << oldInstall.string());
+			LOG_LINE(INFO, "NEW " << newInstall.string());
 			if (oldInstall.string().size() > 0)
 			{
-				LOG_LINE(INFO, "OLD INSTALL DETECTED" << oldInstall.string());
+				LOG_LINE(INFO, "OLD INSTALL DETECTED " << oldInstall.string());
 				if (!std::filesystem::exists(newInstall))
 				{
-					try
+					if (std::filesystem::exists(oldInstall))
 					{
-						LOG_LINE(INFO, "Creating directory " << newInstall.string());
-						std::filesystem::create_directories(newInstall);
-						LOG_LINE(INFO, "Copying directory " << oldInstall.string() << "->" << newInstall.string());
-						std::filesystem::copy(oldInstall, newInstall, std::filesystem::copy_options::recursive);
-						LOG_LINE(INFO, "Removing old directory " << oldInstall.string());
-						std::filesystem::remove_all(oldInstall);
-					}
-					catch (std::exception& e)
-					{
-						LOG_LINE(INFO, "Something went wrong on migration: " << e.what())
+						try
+						{
+							LOG_LINE(INFO, "Creating directory " << newInstall.string());
+							std::filesystem::create_directories(newInstall);
+							LOG_LINE(INFO, "Copying directory " << oldInstall.string() << "->" << newInstall.string());
+							std::filesystem::copy(oldInstall, newInstall, std::filesystem::copy_options::recursive);
+							LOG_LINE(INFO, "Removing old directory " << oldInstall.string());
+							std::filesystem::remove_all(oldInstall);
+						}
+						catch (std::exception& e)
+						{
+							LOG_LINE(INFO, "Something went wrong on migration: " << e.what())
+						}
 					}
 				}
 			}
@@ -430,6 +434,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 					SetState(CHECK_D3D9);
 				}
 			}
+			LOG_LINE(INFO, "Safe mode status: " << safeModeEnabled);
 			
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date
 			{
@@ -727,7 +732,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				}
 			}
 		}
-		if (!installation.ManifestFileExists() && ui.actionEnable_safe_mode->isChecked())
+		/*if (!installation.ManifestFileExists() && ui.actionEnable_safe_mode->isChecked())
 		{
 			QMessageBox msgBox;
 			LOG_LINE(INFO, "Could not find manifest file")
@@ -739,7 +744,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			ui.actionEnable_safe_mode->setChecked(false);
 			OnCheckSafeMode();
-		}
+		}*/
 		SetState(BAKKESMOD_IDLE);
 	}
 		break;
@@ -941,7 +946,7 @@ void BakkesModInjectorCpp::OnSetInjectionTimeout()
 
 void BakkesModInjectorCpp::ReleaseDLL()
 {
-	BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Release\\";
+	//BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Release\\";
 	QMessageBox msgBox;
 	msgBox.setText("Changed to release folder");
 	msgBox.setStandardButtons(QMessageBox::Ok);
@@ -951,7 +956,7 @@ void BakkesModInjectorCpp::ReleaseDLL()
 
 void BakkesModInjectorCpp::DebugDLL()
 {
-	BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Debug\\";
+	//BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Debug\\";
 	QMessageBox msgBox;
 	msgBox.setText("Changed to debug folder");
 	msgBox.setStandardButtons(QMessageBox::Ok);

@@ -9,7 +9,8 @@
 #include "vdf_parser.h"
 #include <fstream>
 #include <shlobj_core.h>
-std::string BakkesModInstallation::overrideBakkesModFolder = "";
+#include "json.hpp"
+//std::string BakkesModInstallation::overrideBakkesModFolder = "";
 
 void BakkesModInstallation::resetBMFolder()
 {
@@ -27,16 +28,18 @@ BakkesModInstallation::~BakkesModInstallation()
 
 std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 {
-	if (!overrideBakkesModFolder.empty())
-		return overrideBakkesModFolder;
+	//if (!overrideBakkesModFolder.empty())
+	//	return overrideBakkesModFolder;
 
 	if (bakkesModFolder.empty())
 	{
+		LOG_LINE(INFO, "Not BakkesModFolder set this run");
 		PWSTR path_tmp;
 		auto get_folder_path_ret = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path_tmp);
 		/* Error check */
 		if (get_folder_path_ret != S_OK)
 		{
+			LOG_LINE(INFO, "SHGetKnownFolderPath failed somehow? " << get_folder_path_ret);
 			CoTaskMemFree(path_tmp);
 			//SHOULD NEVER REACH
 
@@ -45,9 +48,11 @@ std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 		{
 
 			/* Convert the Windows path type to a C++ path */
+			LOG_LINE(INFO, "Converting path to filesystem path");
 			std::filesystem::path bmPath = path_tmp;
 			bmPath = bmPath / "bakkesmod" / "bakkesmod";
 			bakkesModFolder = bmPath;
+			LOG_LINE(INFO, bakkesModFolder.string());
 			CoTaskMemFree(path_tmp);
 			return bakkesModFolder;
 		}
@@ -145,73 +150,17 @@ unsigned int BakkesModInstallation::GetVersion()
 
 bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 {
-	std::filesystem::path manifest = GetBakkesModFolder() / "..\\..\\..\\..\\..\\appmanifest_252950.acf";
-	if (WindowsUtils::FileExists(manifest))
+	bool steamReady = IsSteamVersionReady(currentVersion);
+	if (steamReady)
 	{
-		LOG_LINE(INFO, "Path contains a manifest file");
-		std::ifstream manifestStream(manifest);
-		std::string str((std::istreambuf_iterator<char>(manifestStream)),
-			std::istreambuf_iterator<char>());
-		if (str.find("buildid") == std::string::npos) //broken
-		{
-			return false;
-		}
-		manifestStream = std::ifstream(manifest);
-		tyti::vdf::object manifestRoot;
-		std::string buildId = "";
-		try {
-			manifestRoot = tyti::vdf::read(manifestStream);
-		}
-		catch (...)
-		{
-			manifestStream.seekg(0, manifestStream.beg);
-			std::string line = "";
-			while (std::getline(manifestStream, line))
-			{
-				if (line.find("buildid") != std::string::npos)
-				{
-					std::string bid = "";
-					for (auto c : line)
-					{
-						if (c >= '0' && c <= '9')
-						{
-							bid += c;
-						}
-					}
-					buildId = bid;
-					break;
-				}
-			}
-			manifestRoot.name = "ERR";
-		}
-		if (buildId.size() == 0)
-		{
-			if (manifestRoot.name.compare("AppState") == std::string::npos)
-			{
-				LOG_LINE(INFO, "Manifest at " << manifest << " corrupt? Guess I'll disable safe mode manually?")
-					return true;
-			}
-
-			if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
-			{
-				LOG_LINE(INFO, "Manifest does not contain a buildid");
-				return false;
-			}
-
-			buildId = manifestRoot.attribs["buildid"];
-		}
-		if (currentVersion.buildIds.size() > 0)
-		{
-			for (std::string buildidz : currentVersion.buildIds)
-			{
-				LOG_LINE(INFO, "Comparing buildid " << buildId << " to " << buildidz)
-				if (buildId.compare(buildidz) == 0)
-					return true;
-			}
-		}
-	} else {
-		LOG_LINE(INFO, "Could not find manifest file at " << manifest << " guess I'll disable safe mode manually?")
-		return true;
+		LOG_LINE(INFO, "Steam is ready!");
+		return steamReady;
+	}
+	bool epicReady = IsEpicVersionReady(currentVersion);
+	if (epicReady)
+	{
+		LOG_LINE(INFO, "Epic is ready!");
+		return epicReady;
 	}
 	return false;
 }
@@ -222,16 +171,17 @@ bool BakkesModInstallation::ManifestFileExists()
 	return (WindowsUtils::FileExists(manifest));
 }
 
-std::string BakkesModInstallation::DetectRocketLeagueFolder()
+std::filesystem::path BakkesModInstallation::DetectRocketLeagueFolder()
 {
-	std::wstring path = settings.GetStringSetting(L"SteamPath", L"SOFTWARE\\Valve\\Steam") + L"\\steamapps\\";
-	std::wstring vdfFile = path + L"libraryfolders.vdf";
+	std::wstring path_str = settings.GetStringSetting(L"SteamPath", L"SOFTWARE\\Valve\\Steam") + L"\\steamapps\\";
+	std::filesystem::path path = std::filesystem::path(path_str);
+	std::filesystem::path vdfFile = path / L"libraryfolders.vdf";
 	if (!WindowsUtils::FileExists(WindowsUtils::WStringToString(vdfFile)))
 	{
 		LOG_LINE(INFO, "Could not find steamapps folder, detected " << vdfFile.c_str());
 		return "";
 	}
-	std::ifstream vdfStream(WindowsUtils::WStringToString(vdfFile));
+	std::ifstream vdfStream(vdfFile);
 	tyti::vdf::object root = tyti::vdf::read(vdfStream);
 	if (root.name.compare("LibraryFolders") == std::string::npos)
 	{
@@ -239,7 +189,7 @@ std::string BakkesModInstallation::DetectRocketLeagueFolder()
 		return "";
 	}
 
-	std::string installationPath = "";
+	std::filesystem::path installationPath = "";
 	int lastBuildId = -1;
 	for (auto child : root.attribs)
 	{
@@ -247,13 +197,14 @@ std::string BakkesModInstallation::DetectRocketLeagueFolder()
 		LOG_LINE(INFO, "Key " << child.first << " = " << child.second << ". is path=" << (isPath ? "true" : "false"));
 		if (isPath)
 		{
-			std::string newPath = child.second + "\\steamapps\\";
-			std::string manifestPath = newPath + "appmanifest_252950.acf";
-			std::string executablePath = newPath + "common\\rocketleague\\Binaries\\Win64\\";
-			std::string executableLocation = executablePath + "RocketLeague.exe";
+			std::filesystem::path newPath = std::filesystem::path(child.second) / "\\steamapps\\";
+			auto manifestPath = newPath / "appmanifest_252950.acf";
+			auto executablePath = newPath / "common\\rocketleague\\Binaries\\Win64\\";
+			auto executableLocation = executablePath / "RocketLeague.exe";
 			if (WindowsUtils::FileExists(manifestPath))
 			{
-				try {
+				try
+				{
 					LOG_LINE(INFO, "Path contains a manifest file");
 					std::ifstream manifestStream(manifestPath);
 					tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
@@ -293,4 +244,215 @@ std::string BakkesModInstallation::DetectRocketLeagueFolder()
 	}
 
 	return installationPath;
+}
+
+std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
+{
+	std::filesystem::path newDetectedFolder = DetectRocketLeagueFolder();
+	std::filesystem::path rlPath = windowsUtils.GetSteamRocketLeagueDirFromLog();
+	if (!rlPath.string().empty() && WindowsUtils::FileExists(rlPath / "RocketLeague.exe"))
+	{
+		LOG_LINE(INFO, "Automatically detected Rocket League path using log: " << rlPath)
+	}
+	else if (!newDetectedFolder.empty())
+	{
+		LOG_LINE(INFO, "Advanced detection found installation path " << newDetectedFolder)
+			rlPath = newDetectedFolder;
+	}
+	else
+	{
+		return std::filesystem::path("");
+	}
+	return rlPath;
+}
+
+std::string BakkesModInstallation::GetSteamVersion()
+{
+	std::filesystem::path manifest = GetSteamInstallLocation() / "..\\..\\..\\..\\" / "appmanifest_252950.acf";
+	LOG_LINE(INFO, "Looking for steam manifest in " << manifest.string());
+	std::string buildId = "";
+	if (WindowsUtils::FileExists(manifest))
+	{
+		LOG_LINE(INFO, "Path contains a manifest file");
+		std::ifstream manifestStream(manifest);
+		std::string str((std::istreambuf_iterator<char>(manifestStream)),
+			std::istreambuf_iterator<char>());
+		if (str.find("buildid") == std::string::npos) //broken
+		{
+			LOG_LINE(INFO, "Manifest is broken? Could not find buildid string");
+			return "";
+		}
+		manifestStream = std::ifstream(manifest);
+		tyti::vdf::object manifestRoot;
+		try
+		{
+			manifestRoot = tyti::vdf::read(manifestStream);
+		}
+		catch (...)
+		{
+			manifestStream.seekg(0, manifestStream.beg);
+			std::string line = "";
+			while (std::getline(manifestStream, line))
+			{
+				if (line.find("buildid") != std::string::npos)
+				{
+					std::string bid = "";
+					for (auto c : line)
+					{
+						if (c >= '0' && c <= '9')
+						{
+							bid += c;
+						}
+					}
+					buildId = bid;
+					break;
+				}
+			}
+			manifestRoot.name = "ERR";
+		}
+		
+		if (buildId.size() == 0)
+		{
+			if (manifestRoot.name.compare("AppState") == std::string::npos)
+			{
+				LOG_LINE(INFO, "Manifest at " << manifest << " corrupt??")
+				
+			}
+			else if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
+			{
+				LOG_LINE(INFO, "Manifest does not contain a buildid");
+			}
+			else
+			{
+				buildId = manifestRoot.attribs["buildid"];
+			}
+		}
+		LOG_LINE(INFO, "Steam buildID " << buildId);
+	}
+	else
+	{
+		LOG_LINE(INFO, "Could not find any RL manifest file!");
+	}
+	return buildId;
+}
+
+using json = nlohmann::json;
+std::string BakkesModInstallation::GetEpicVersion()
+{
+	TCHAR szPath[MAX_PATH];
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, szPath)))
+	{
+		
+		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / "Epic" / "EpicGamesLauncher" / "Data" / "Manifests";
+		LOG_LINE(INFO, "Checking Epic path " << manifestsPath.string());
+		if (std::filesystem::exists(manifestsPath))
+		{
+			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
+			{
+				//LOG_LINE(INFO, "Extension: " << p.path().extension().string())
+				if (p.path().extension().string().compare(".item") == 0)
+				{
+					json js;
+					bool requestFailed = false;
+					LOG_LINE(INFO, "FOUND MANIFEST " << p.path().string());
+					try
+					{
+
+						js = json::parse(std::ifstream(p));
+					}
+					catch (...)
+					{
+						requestFailed = true;
+					}
+					if (js.is_discarded())
+					{
+						requestFailed = true;
+					}
+					if (requestFailed)
+					{
+						LOG_LINE(INFO, "Parsing JSON failed (" << p.path().string() << ")")
+							continue;
+					}
+					else
+					{
+						if (js.value("MandatoryAppFolderName", "").compare("rocketleague") == 0 ||
+							js.value("LaunchExecutable", "").find("RocketLeague") != std::string::npos)
+							{
+								LOG_LINE(INFO, "This one is most likely RL manifest file");
+								if (auto found = js.find("AppVersionString"); found != js.end())
+								{
+									std::string versionNumber = found->get<std::string>();
+									LOG_LINE(INFO, "Found Epic version " << versionNumber);
+									if (!versionNumber.empty())
+									{
+										return versionNumber;
+									}
+								}
+							}
+					}
+				}
+				
+			}
+		}
+	}
+	return "";
+}
+
+bool BakkesModInstallation::IsSteamVersionInstalled()
+{
+	return !GetSteamVersion().empty();
+}
+
+bool BakkesModInstallation::IsEpicVersionInstalled()
+{
+	return !GetEpicVersion().empty();
+}
+
+bool BakkesModInstallation::IsSteamVersionReady(UpdateStatus currentVersion)
+{
+	{
+		std::string steamBuildId = GetSteamVersion();
+		LOG_LINE(INFO, "Test " << steamBuildId);
+		if (!steamBuildId.empty())
+		{
+			if (currentVersion.buildIds.size() > 0)
+			{
+				
+				for (std::string buildidz : currentVersion.buildIds)
+				{
+					LOG_LINE(INFO, "Comparing steam buildid " << steamBuildId << " to " << buildidz)
+						if (steamBuildId.compare(buildidz) == 0)
+							return true;
+				}
+			}
+		}
+		else
+		{
+			LOG_LINE(INFO, "Could not find a proper steam manifest!")
+				
+		}
+	}
+	return false;
+}
+
+bool BakkesModInstallation::IsEpicVersionReady(UpdateStatus currentVersion)
+{
+	{
+		LOG_LINE(INFO, "Checking Epic version");
+		std::string epicBuildId = GetEpicVersion();
+		if (!epicBuildId.empty())
+		{
+			LOG_LINE(INFO, "Found epic build ID " << epicBuildId);
+			if (currentVersion.egsBuildIds.size() > 0)
+			{
+				for (std::string buildidz : currentVersion.egsBuildIds)
+				{
+					LOG_LINE(INFO, "Comparing EGS buildid " << epicBuildId << " to " << buildidz)
+						if (epicBuildId == buildidz)
+							return true;
+				}
+			}
+		}
+	}
+	return false;
 }

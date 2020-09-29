@@ -259,6 +259,7 @@
     <ClInclude Include="BakkesModInstallation.h" />
     <ClInclude Include="DllInjector.h" />
     <ClInclude Include="Installer.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />

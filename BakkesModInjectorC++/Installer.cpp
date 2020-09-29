@@ -10,7 +10,7 @@ Installer::Installer(std::wstring updatePackageLocation, std::filesystem::path d
 {
 	updatePackage = updatePackageLocation;
 	extractDir = destination;
-	LOG_LINE(INFO, "Initialized installer, location=" << WindowsUtils::WStringToString(updatePackage) << ", destination=" << extractDir)
+	LOG_LINE(INFO, "Initialized installer, location=" << WindowsUtils::WStringToString(updatePackage) << ", destination=" << extractDir.string())
 }
 
 Installer::~Installer()
@@ -35,14 +35,15 @@ void Installer::Install()
 	//fileStream.close();
 	LOG_LINE(INFO, "Installing update2" << WindowsUtils::WStringToString(updatePackage) << " - " << std::to_string(fsize))
 	miniz_cpp::zip_file file(data);
-	LOG_LINE(INFO, "Installing update3")
+	LOG_LINE(INFO, "Installing update3" << extractDir.string())
 	WindowsUtils::CreateFolder(extractDir);
 	for (auto &member : file.infolist())
 	{
 		std::string fileName = member.filename;
 		auto fullPath = extractDir / member.filename;
 		LOG_LINE(INFO, "Extracting file " << member.filename)
-		if (fileName.substr(fileName.size() - std::string(".cfg").size()).compare(".cfg") == 0)
+		if (fileName.size() >= 4 //Incase filesystem is 3 chars or less lol
+			&& fileName.substr(fileName.size() - std::string(".cfg").size()).compare(".cfg") == 0) 
 		{
 			
 			if (WindowsUtils::FileExists(fullPath)) {//Don't overwrite default cfg files
