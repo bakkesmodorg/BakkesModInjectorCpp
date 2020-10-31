@@ -57,15 +57,20 @@ DWORD DllInjector::InjectDLL(std::wstring processName, std::filesystem::path pat
 	HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, false, processID);
 	if (h)
 	{
-		LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
-		LPVOID dereercomp = VirtualAllocEx(h, NULL, path.wstring().size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-		WriteProcessMemory(h, dereercomp, path.wstring().c_str(), path.wstring().size(), NULL);
+		LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
+		auto ws = path.wstring().c_str();
+		auto wslen = (std::wcslen(ws) + 1) * sizeof(WCHAR);
+		LPVOID dereercomp = VirtualAllocEx(h, NULL, wslen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		WriteProcessMemory(h, dereercomp, ws, wslen, NULL);
 		HANDLE asdc = CreateRemoteThread(h, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibAddr, dereercomp, 0, NULL);
 		WaitForSingleObject(asdc, INFINITE);
-		VirtualFreeEx(h, dereercomp, path.wstring().size(), MEM_RELEASE);
+		DWORD res = 0;
+		GetExitCodeThread(asdc, &res);
+		LOG_LINE(INFO, "GetExitCodeThread(): " << (int)res)
+		VirtualFreeEx(h, dereercomp, wslen, MEM_RELEASE);
 		CloseHandle(asdc);
 		CloseHandle(h);
-		return OK;
+		return res != 0 ? OK : NOPE;
 	}
 	return NOPE;
 }
@@ -230,4 +235,51 @@ DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)
 
 	CloseHandle(hProcess);
 	return NOPE;
+}
+
+GamePlatform DllInjector::GetPlatform(DWORD processID)
+{
+	HMODULE hMods[1024];
+	HANDLE hProcess;
+	DWORD cbNeeded;
+	unsigned int i;
+
+	// Get a handle to the process.
+
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+		PROCESS_VM_READ,
+		FALSE, processID);
+	if (NULL == hProcess)
+		return GamePlatform::UNKNOWN;
+
+	// Get a list of all the modules in this process.
+
+	if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
+	{
+		for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+		{
+			TCHAR szModName[MAX_PATH];
+
+			// Get the full path to the module's file.
+
+			if (GetModuleFileNameEx(hProcess, hMods[i], szModName,
+				sizeof(szModName) / sizeof(TCHAR)))
+			{
+				// Print the module name and handle value.
+				auto name = std::wstring(szModName);
+				if (name.find(L"steam_api64.dll") != std::string::npos || name.find(L"steamapps") != std::string::npos)
+				{
+					LOG_LINE(INFO, WindowsUtils::WStringToString(std::wstring(szModName)).c_str() << " || " << hMods[i]);
+					return GamePlatform::STEAM;
+				}
+				
+			}
+		}
+	}
+
+	// Release the handle to the process.
+
+	CloseHandle(hProcess);
+
+	return GamePlatform::EPIC;
 }

@@ -173,7 +173,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Starting...";
 		break;
 	case BAKKESMOD_IDLE:
-		status = "Uninjected, waiting for user to start Rocket League";
+		status = bakkesModIdleString;
 		break;
 	case WAITING_FOR_RL:
 		break;
@@ -328,6 +328,11 @@ void BakkesModInjectorCpp::TimerTimeout()
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
 		ui.actionDisable_warnings->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
+
+		bool betaEnabled = settingsManager.GetIntSetting(L"EnableBeta");
+		ui.actionOpt_in_to_beta_releases->setChecked(betaEnabled);
+		updater.SetEnableBeta(betaEnabled);
+		
 		bool runOnStartup = !settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty();
 		ui.actionRun_on_startup->setChecked(runOnStartup);
 		OnRunOnStartup();
@@ -452,7 +457,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 		outOfDateCounter++;
 		timer.setInterval(1000);
-		if (outOfDateCounter > 120)
+		if (outOfDateCounter > updater.latestUpdateInfo.backoff_seconds_outofdate)
 		{
 			LOG_LINE(INFO, "Checking if BakkesMod has updated yet")
 			updater.latestUpdateInfo = UpdateStatus();
@@ -596,10 +601,67 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 		timer.setInterval(3000);
 		static int intervalLoops = 0;
-		intervalLoops++;
-		if (intervalLoops > 200)
+		static std::chrono::steady_clock::time_point lastSync = std::chrono::steady_clock::now();
+		static std::chrono::steady_clock::time_point lastVersionCheck = std::chrono::steady_clock::now() - std::chrono::seconds(10000);
+		static std::chrono::steady_clock::time_point lastInstallationCheck = std::chrono::steady_clock::now() - std::chrono::seconds(10000);
+		auto now = std::chrono::steady_clock::now();
+		auto updateDiff = std::chrono::duration_cast<std::chrono::seconds>(now - lastSync).count();
+		auto versionCheckDiff = std::chrono::duration_cast<std::chrono::seconds>(now - lastVersionCheck).count();
+		auto lastInstallationDiff = std::chrono::duration_cast<std::chrono::seconds>(now - lastInstallationCheck).count();
+		if (updateDiff > updater.latestUpdateInfo.backoff_seconds)
 		{
-			intervalLoops = 10;
+			OnCheckForUpdates();
+			lastSync = now;
+		}
+
+		if (lastInstallationDiff > 30)
+		{
+			lastInstallationCheck = now;
+			auto hasSteamVersion = installation.IsSteamVersionInstalled();
+			auto hasEgsVersion = installation.IsEpicVersionInstalled();
+			if (!hasSteamVersion && !hasEgsVersion)
+			{
+				bakkesModIdleString = "No RL installation detected";
+			}
+			else
+			{
+				std::stringstream ss;
+				bool canInject = false;
+				if (hasSteamVersion)
+				{
+					if (installation.IsSteamVersionReady(updater.latestUpdateInfo))
+					{
+						ss << "Rocket League (Steam): up to date.\n";
+						canInject = true;
+					}
+					else
+					{
+						ss << "Rocket League (Steam): BM out of date.\n";
+					}
+				}
+				if (hasEgsVersion)
+				{
+					if (installation.IsEpicVersionReady(updater.latestUpdateInfo))
+					{
+						ss << "Rocket League (Epic Games): up to date.\n";
+						canInject = true;
+					}
+					else
+					{
+						ss << "Rocket League (Epic Games): BM out of date.\n";
+					}
+				}
+				if (canInject)
+				{
+					ss << "Uninjected, waiting for user to start Rocket League";
+				}
+				bakkesModIdleString = ss.str();
+			}
+		}
+		
+		if (versionCheckDiff > 200)
+		{
+			lastVersionCheck = now;
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date every X sec
 			{
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
@@ -637,7 +699,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 	case INJECT_DLL:
 	{
 		auto bmPath = installation.GetBakkesModFolder();
-		auto path = bmPath / "/dll/bakkesmod.dll";
+		auto path = bmPath / "dll" / "bakkesmod.dll";
+		LOG_LINE(INFO, "Trying to inject " << path.string())
 		if (!WindowsUtils::FileExists(path))
 		{
 			QMessageBox msgBox;
@@ -655,13 +718,53 @@ void BakkesModInjectorCpp::TimerTimeout()
 		}
 
 		DWORD alreadyInjected = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
+		LOG_LINE(INFO, "Already injected check: " <<(int)alreadyInjected)
 		if (alreadyInjected == OK)
 		{
 			SetState(INJECTED);
 			break;
 		}
 		
+		//GetPlatform
+		GamePlatform platform = dllInjector.GetPlatform(dllInjector.GetProcessID64(RL_PROCESS_NAME));
 
+		bool isSafeToInject = false;
+		switch (platform)
+		{
+			case GamePlatform::STEAM:
+				isSafeToInject = installation.IsSteamVersionReady(updater.latestUpdateInfo);
+				break;
+			case GamePlatform::EPIC:
+				isSafeToInject = installation.IsEpicVersionReady(updater.latestUpdateInfo);
+				break;
+			case GamePlatform::UNKNOWN:
+				isSafeToInject = installation.IsSafeToInject(updater.latestUpdateInfo);
+				break;
+		}
+		if (!isSafeToInject)
+		{
+			LOG_LINE(INFO, "Probably not safe to inject");
+			{
+				QMessageBox msgBox;
+				std::stringstream ss;
+				ss << "It seems like the mod is trying to inject in an unsupported version of Rocket League." << std::endl;
+				ss << "Would you like to try to inject anyway? This may cause instability issues and crashes";
+				msgBox.setText(ss.str().c_str());
+				msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+				msgBox.setDefaultButton(QMessageBox::Yes);
+				int ret = msgBox.exec();
+				if (ret == QMessageBox::Yes)
+				{
+					LOG_LINE(INFO, "User chooses to inject anyway")
+				}
+				else
+				{
+					LOG_LINE(INFO, "User denied injection")
+					SetState(OUT_OF_DATE);
+				}
+			}
+			
+		}
 		dllInjector.InjectDLL(RL_PROCESS_NAME, path);
 
 		DWORD injectionResult = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
@@ -815,7 +918,7 @@ void BakkesModInjectorCpp::OnReinstallClick()
 	int ret = msgBox.exec();
 	if (ret == QMessageBox::Yes)
 	{
-		if (WindowsUtils::DeleteDirectory(installation.GetBakkesModFolder().wstring()))
+		if (WindowsUtils::DeleteDirectory(installation.GetBakkesModFolder()) == 0)
 		{
 			LOG_LINE(INFO, "Could not remove BakkesMod folder")
 			QMessageBox msgBox2;
@@ -830,6 +933,7 @@ void BakkesModInjectorCpp::OnReinstallClick()
 			updater.latestUpdateInfo = UpdateStatus();
 			settingsManager.DeleteSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 			settingsManager.DeleteSetting(L"EnableSafeMode");
+			settingsManager.DeleteSetting(L"EnableBeta");
 			settingsManager.DeleteSetting(L"HideOnMinimize");
 			settingsManager.DeleteSetting(L"HideOnBoot");
 			settingsManager.DeleteSetting(L"DisableWarnings");
@@ -858,6 +962,34 @@ void BakkesModInjectorCpp::OnPythonInstallClick()
 void BakkesModInjectorCpp::OnPatreonClick()
 {
 	OpenWebsite("https://patreon.com/bakkesmod");
+}
+
+void BakkesModInjectorCpp::OnBetaChannelClick()
+{
+	bool newStatus = ui.actionOpt_in_to_beta_releases->isChecked();
+	if (newStatus)
+	{
+		QMessageBox msgBox2;
+		msgBox2.setText("The use of beta releases could make your game unstable, if you run into issues, please report them.");
+		msgBox2.setStandardButtons(QMessageBox::Ok);
+		msgBox2.setDefaultButton(QMessageBox::Ok);
+		int ret = msgBox2.exec();
+	}
+	settingsManager.SaveSetting(L"EnableBeta", (int)newStatus);
+	safeModeEnabled = newStatus;
+	updater.SetEnableBeta(newStatus);
+	std::filesystem::path versionFilePath = installation.GetBakkesModFolder() / "version.txt";
+	if (windowsUtils.FileExists(versionFilePath))
+	{
+		std::ofstream versionFile;
+		versionFile.open(versionFilePath);
+		int version = 1;
+		versionFile << version;
+		versionFile.close();
+		LOG_LINE(INFO, "Writing version " << version << " to " << versionFilePath.string());
+		OnCheckForUpdates();
+	}
+
 }
 
 void BakkesModInjectorCpp::OpenTwitter()

@@ -12,6 +12,7 @@ class Updater : public QObject
 private:
 	static std::string UPDATE_SERVER_URL;
 	bool useHostname = false;
+	bool enableBeta = false;
 	int lastVersionChecked = -1;
 	QNetworkAccessManager* networkManager;
 public:
@@ -19,8 +20,11 @@ public:
 	Updater();
 	~Updater();
 	void CheckForUpdates(int version);
+	void SetEnableBeta(bool enable);
 	private slots:
 	void OnUpdateInfoReceived(QNetworkReply* result);
 	void replyFinished(QNetworkReply* result);
 	void networkError(QNetworkReply::NetworkError code);
+
+
 };

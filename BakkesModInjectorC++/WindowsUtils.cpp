@@ -42,10 +42,11 @@ inline std::string trim(const std::string &s)
 	return (wsback <= wsfront ? std::string() : std::string(wsfront, wsback));
 }
 
-std::string WindowsUtils::GetSteamRocketLeagueDirFromLog()
+std::filesystem::path WindowsUtils::GetSteamRocketLeagueDirFromLog()
 {
 	static std::string LOG_LINE_MATCH = "directory:";
 	static std::string windowsPath = GetMyDocumentsFolder();
+	static std::filesystem::path cachedPath = "";
 	std::string logPath = windowsPath + "\\My Games\\Rocket League\\TAGame\\Logs\\";
 	std::string logFile = logPath + "Launch.log";
 	if (WindowsUtils::FileExists(logFile))
@@ -62,13 +63,16 @@ std::string WindowsUtils::GetSteamRocketLeagueDirFromLog()
 				LOG_LINE(INFO, "Found RL dir from log: " << logLine)
 
 				//Make sure its steam i guess lol
-				if(logLine.find("steamapps") != std::string::npos)
-					return logLine;
+				if (logLine.find("steamapps") != std::string::npos)
+				{
+					cachedPath = std::filesystem::path(logLine);
+					return cachedPath;
+				}
 			}
 
 		}
 	}
-	return std::string();
+	return cachedPath;
 }
 
 //bool WindowsUtils::FileExists(std::filesystem::path path)

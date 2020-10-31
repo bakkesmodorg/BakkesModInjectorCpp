@@ -11,7 +11,7 @@
 #include <QtWidgets/qsystemtrayicon.h>
 
 #define RL_PROCESS_NAME L"RocketLeague.exe"
-#define BAKKESMODINJECTOR_VERSION 15
+#define BAKKESMODINJECTOR_VERSION 16
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \
@@ -55,6 +55,7 @@ private:
 	QTimer timer;
 	QSystemTrayIcon* trayIcon;
 	int outOfDateCounter = 0;
+	std::string bakkesModIdleString = "Uninjected, waiting for user to start Rocket League";
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
 	void initialize();
@@ -78,6 +79,7 @@ public:
 	void OnReinstallClick();
 	void OnPythonInstallClick();
 	void OnPatreonClick();
+	void OnBetaChannelClick();
 
 	void OpenTwitter();
 	void OpenDiscord();

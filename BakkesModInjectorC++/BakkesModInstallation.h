@@ -24,6 +24,7 @@ public:
 	//Steam
 	bool ManifestFileExists();
 	std::filesystem::path DetectRocketLeagueFolder();
+	int GetBuildIDFromManifest(std::filesystem::path manifestPath);
 
 	std::filesystem::path GetSteamInstallLocation();
 	std::string GetSteamVersion();

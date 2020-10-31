@@ -34,6 +34,12 @@ void Updater::CheckForUpdates(int version)
 	latestUpdateInfo.networkRequestStatus = REQUESTED;
 }
 
+void Updater::SetEnableBeta(bool enable)
+{
+	LOG_LINE(INFO, "Set beta status to: " << (int)enable);
+	enableBeta = true;
+}
+
 void Updater::replyFinished(QNetworkReply * result)
 {
 	
@@ -109,8 +115,25 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 			latestUpdateInfo.egsBuildIds = split(egsbuildids, ',');
 
 		}
-
+		if (auto backoff = rootObj.find("backoff_seconds"); backoff != rootObj.end())
+		{
+			latestUpdateInfo.backoff_seconds = backoff->toInt();
+			LOG_LINE(INFO, "Set backoff to " << latestUpdateInfo.backoff_seconds << " seconds");
+		}
+		if (auto backoff = rootObj.find("backoff_seconds_outofdate"); backoff != rootObj.end())
+		{
+			latestUpdateInfo.backoff_seconds_outofdate = backoff->toInt();
+			LOG_LINE(INFO, "Set backoff (out of date) to " << latestUpdateInfo.backoff_seconds << " seconds");
+		}
+		
 		auto updateInfo = rootObj.find("update_info");
+		if (enableBeta)
+		{
+			if (auto tmp = rootObj.find("update_info_beta"); tmp != rootObj.end())
+			{
+				updateInfo = tmp;
+			}
+		}
 		if (updateInfo != rootObj.end())
 		{
 			auto test = updateInfo.value().toObject();

@@ -27,6 +27,8 @@ struct UpdateStatus
 	std::string publicationDate = "";
 	std::string updateMessage = "";
 	std::string downloadUrl = "";
+	int backoff_seconds = 60 * 5;
+	int backoff_seconds_outofdate = 60 * 2;
 	std::vector<std::string> buildIds;
 	std::vector<std::string> egsBuildIds;
 	bool updateRequest = false;

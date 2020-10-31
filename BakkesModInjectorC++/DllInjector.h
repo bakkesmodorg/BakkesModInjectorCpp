@@ -9,6 +9,12 @@ enum DllInjectionResult
 	OK = 1,
 	NOT_RUNNING = 2
 };
+enum class GamePlatform
+{
+	STEAM = 0,
+	EPIC = 1,
+	UNKNOWN = 2
+};
 
 struct InjectionParameters
 {
@@ -29,4 +35,6 @@ public:
 	DWORD GetProcessID64(std::wstring processName);
 	std::vector<DWORD> GetProcessIDS(std::wstring processName);
 	DWORD IsBakkesModDllInjected(std::wstring processName);
+	GamePlatform GetPlatform(DWORD processID);
+
 };

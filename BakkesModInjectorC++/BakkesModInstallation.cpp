@@ -33,7 +33,7 @@ std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 
 	if (bakkesModFolder.empty())
 	{
-		LOG_LINE(INFO, "Not BakkesModFolder set this run");
+		LOG_LINE(INFO, "No BakkesModFolder set this run");
 		PWSTR path_tmp;
 		auto get_folder_path_ret = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path_tmp);
 		/* Error check */
@@ -114,7 +114,7 @@ std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 
 	return bakkesModFolder;*/
 	}
-	return std::filesystem::path("");
+	return bakkesModFolder;
 }
 
 
@@ -137,7 +137,7 @@ bool BakkesModInstallation::IsInstalled()
 
 unsigned int BakkesModInstallation::GetVersion()
 {
-	std::filesystem::path versionFilePath = GetBakkesModFolder() / "\\version.txt";
+	std::filesystem::path versionFilePath = GetBakkesModFolder() / "version.txt";
 	if (!windowsUtils.FileExists(versionFilePath))
 		return 0;
 	std::ifstream versionFile;
@@ -167,7 +167,7 @@ bool BakkesModInstallation::IsSafeToInject(UpdateStatus currentVersion)
 
 bool BakkesModInstallation::ManifestFileExists()
 {
-	auto manifest = GetBakkesModFolder() / "..\\..\\..\\..\\..\\appmanifest_252950.acf";
+	auto manifest = GetBakkesModFolder() / ".." / ".." / ".." / ".." / ".." / "appmanifest_252950.acf";
 	return (WindowsUtils::FileExists(manifest));
 }
 
@@ -191,59 +191,93 @@ std::filesystem::path BakkesModInstallation::DetectRocketLeagueFolder()
 
 	std::filesystem::path installationPath = "";
 	int lastBuildId = -1;
+	{
+		auto manifestPath = path / "appmanifest_252950.acf";
+		auto executablePath = path / "common" / "rocketleague" / "Binaries" / "Win64";
+		auto executableLocation = executablePath / "RocketLeague.exe";
+		LOG_LINE(INFO, "Checking for manifest in " << path.string());
+		if (WindowsUtils::FileExists(manifestPath))
+		{
+			LOG_LINE(INFO, "Manifest exists");
+			if (!WindowsUtils::FileExists(executableLocation))
+			{
+				LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
+			}
+			else
+			{
+				lastBuildId = GetBuildIDFromManifest(manifestPath);
+				installationPath = executablePath;
+				LOG_LINE(INFO, "Set BuildID to " << lastBuildId);
+			}
+		}
+	}
+
 	for (auto child : root.attribs)
 	{
 		bool isPath = WindowsUtils::FileExists(child.second);
 		LOG_LINE(INFO, "Key " << child.first << " = " << child.second << ". is path=" << (isPath ? "true" : "false"));
 		if (isPath)
 		{
-			std::filesystem::path newPath = std::filesystem::path(child.second) / "\\steamapps\\";
+			std::filesystem::path newPath = std::filesystem::path(child.second) / "steamapps";
 			auto manifestPath = newPath / "appmanifest_252950.acf";
-			auto executablePath = newPath / "common\\rocketleague\\Binaries\\Win64\\";
+			auto executablePath = newPath / "common" / "rocketleague" / "Binaries" / "Win64";
 			auto executableLocation = executablePath / "RocketLeague.exe";
 			if (WindowsUtils::FileExists(manifestPath))
 			{
-				try
+				int buildIdInteger = GetBuildIDFromManifest(manifestPath);
+				if (buildIdInteger > lastBuildId)
 				{
-					LOG_LINE(INFO, "Path contains a manifest file");
-					std::ifstream manifestStream(manifestPath);
-					tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
-
-					if (manifestRoot.name.compare("AppState") == std::string::npos)
+					LOG_LINE(INFO, "Found buildid " << buildIdInteger << " (newest high)");
+					if (!WindowsUtils::FileExists(executableLocation))
 					{
-						LOG_LINE(INFO, "Manifest is invalid, skipping");
+						LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
 						continue;
 					}
-
-					if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
-					{
-						LOG_LINE(INFO, "Manifest does not contain a buildid");
-						continue;
-					}
-					std::string buildId = manifestRoot.attribs["buildid"];
-					int buildIdInteger = stoi(buildId);
-					if (buildIdInteger > lastBuildId)
-					{
-						LOG_LINE(INFO, "Found buildid " << buildIdInteger << " (newest high)");
-						if (!WindowsUtils::FileExists(executableLocation))
-						{
-							LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
-							continue;
-						}
-						lastBuildId = buildIdInteger;
-						installationPath = executablePath;
-						LOG_LINE(INFO, "Found RocketLeague.exe at " << installationPath);
-					}
-				}
-				catch (...)
-				{
-					LOG_LINE(INFO, "Error parsing manifest file, skipping this one")
+					lastBuildId = buildIdInteger;
+					installationPath = executablePath;
+					LOG_LINE(INFO, "Found RocketLeague.exe at " << installationPath);
 				}
 			}
+			else
+			{
+				LOG_LINE(INFO, "Manifest file at " << manifestPath.string() << " doesnt exist")
+			}
+			
 		}
 	}
 
 	return installationPath;
+}
+
+int BakkesModInstallation::GetBuildIDFromManifest(std::filesystem::path manifestPath)
+{
+	try
+	{
+		LOG_LINE(INFO, "Path contains a manifest file");
+		std::ifstream manifestStream(manifestPath);
+		tyti::vdf::object manifestRoot = tyti::vdf::read(manifestStream);
+
+		if (manifestRoot.name.compare("AppState") == std::string::npos)
+		{
+			LOG_LINE(INFO, "Manifest is invalid, skipping");
+			return 0;
+		}
+
+		if (manifestRoot.attribs.find("buildid") == manifestRoot.attribs.end())
+		{
+			LOG_LINE(INFO, "Manifest does not contain a buildid");
+			return 0;
+		}
+		std::string buildId = manifestRoot.attribs["buildid"];
+		int buildIdInteger = stoi(buildId);
+		return buildIdInteger;
+	}
+	catch (...)
+	{
+		LOG_LINE(INFO, "Error parsing manifest file, skipping this one")
+	}
+
+	return 0;
 }
 
 std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
@@ -261,6 +295,7 @@ std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
 	}
 	else
 	{
+		LOG_LINE(INFO, "Both paths empty? " << rlPath.string() << " || " << newDetectedFolder.string())
 		return std::filesystem::path("");
 	}
 	return rlPath;
@@ -268,7 +303,7 @@ std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
 
 std::string BakkesModInstallation::GetSteamVersion()
 {
-	std::filesystem::path manifest = GetSteamInstallLocation() / "..\\..\\..\\..\\" / "appmanifest_252950.acf";
+	std::filesystem::path manifest = GetSteamInstallLocation() / ".." / ".." / ".." / ".." / "appmanifest_252950.acf";
 	LOG_LINE(INFO, "Looking for steam manifest in " << manifest.string());
 	std::string buildId = "";
 	if (WindowsUtils::FileExists(manifest))

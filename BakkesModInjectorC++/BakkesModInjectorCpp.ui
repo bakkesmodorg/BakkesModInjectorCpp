@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
-    <height>85</height>
+    <width>337</width>
+    <height>110</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,7 +46,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>310</width>
+     <width>337</width>
      <height>21</height>
     </rect>
    </property>
@@ -86,6 +86,7 @@
     <addaction name="actionManually_select_BakkesMod_folder"/>
     <addaction name="actionSet_injection_timeout"/>
     <addaction name="actionDisable_warnings"/>
+    <addaction name="actionOpt_in_to_beta_releases"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuLinks"/>
@@ -204,6 +205,14 @@
   <action name="actionPatreon">
    <property name="text">
     <string>Patreon</string>
+   </property>
+  </action>
+  <action name="actionOpt_in_to_beta_releases">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Opt-in to beta releases</string>
    </property>
   </action>
  </widget>
@@ -500,6 +509,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionOpt_in_to_beta_releases</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnBetaChannelClick()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>168</x>
+     <y>54</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -519,5 +544,6 @@
   <slot>OnSetInjectionTimeout()</slot>
   <slot>OnDisableWarnings()</slot>
   <slot>OnCheckForUpdates()</slot>
+  <slot>OnBetaChannelClick()</slot>
  </slots>
 </ui>

@@ -44,6 +44,7 @@ public:
     QAction *actionDisable_warnings;
     QAction *actionCheck_for_updates;
     QAction *actionPatreon;
+    QAction *actionOpt_in_to_beta_releases;
     QWidget *centralWidget;
     QLabel *label;
     QProgressBar *progressBar;
@@ -59,7 +60,7 @@ public:
     {
         if (BakkesModInjectorCppClass->objectName().isEmpty())
             BakkesModInjectorCppClass->setObjectName(QString::fromUtf8("BakkesModInjectorCppClass"));
-        BakkesModInjectorCppClass->resize(310, 85);
+        BakkesModInjectorCppClass->resize(337, 110);
         actionOpen_BakkesMod_folder = new QAction(BakkesModInjectorCppClass);
         actionOpen_BakkesMod_folder->setObjectName(QString::fromUtf8("actionOpen_BakkesMod_folder"));
         actionInstall_Python_support = new QAction(BakkesModInjectorCppClass);
@@ -101,6 +102,9 @@ public:
         actionCheck_for_updates->setObjectName(QString::fromUtf8("actionCheck_for_updates"));
         actionPatreon = new QAction(BakkesModInjectorCppClass);
         actionPatreon->setObjectName(QString::fromUtf8("actionPatreon"));
+        actionOpt_in_to_beta_releases = new QAction(BakkesModInjectorCppClass);
+        actionOpt_in_to_beta_releases->setObjectName(QString::fromUtf8("actionOpt_in_to_beta_releases"));
+        actionOpt_in_to_beta_releases->setCheckable(true);
         centralWidget = new QWidget(BakkesModInjectorCppClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         label = new QLabel(centralWidget);
@@ -113,7 +117,7 @@ public:
         BakkesModInjectorCppClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(BakkesModInjectorCppClass);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 310, 21));
+        menuBar->setGeometry(QRect(0, 0, 337, 21));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
         menuLinks = new QMenu(menuBar);
@@ -151,6 +155,7 @@ public:
         menuSettings->addAction(actionManually_select_BakkesMod_folder);
         menuSettings->addAction(actionSet_injection_timeout);
         menuSettings->addAction(actionDisable_warnings);
+        menuSettings->addAction(actionOpt_in_to_beta_releases);
 
         retranslateUi(BakkesModInjectorCppClass);
         QObject::connect(actionOpen_BakkesMod_folder, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnOpenBakkesModFolderClicked()));
@@ -171,6 +176,7 @@ public:
         QObject::connect(actionDisable_warnings, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnDisableWarnings()));
         QObject::connect(actionCheck_for_updates, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckForUpdates()));
         QObject::connect(actionPatreon, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnPatreonClick()));
+        QObject::connect(actionOpt_in_to_beta_releases, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnBetaChannelClick()));
 
         QMetaObject::connectSlotsByName(BakkesModInjectorCppClass);
     } // setupUi
@@ -196,6 +202,7 @@ public:
         actionDisable_warnings->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Disable warnings", nullptr));
         actionCheck_for_updates->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Check for updates", nullptr));
         actionPatreon->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Patreon", nullptr));
+        actionOpt_in_to_beta_releases->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Opt-in to beta releases", nullptr));
         label->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Booting", nullptr));
         menuFile->setTitle(QCoreApplication::translate("BakkesModInjectorCppClass", "File", nullptr));
         menuLinks->setTitle(QCoreApplication::translate("BakkesModInjectorCppClass", "Links", nullptr));
