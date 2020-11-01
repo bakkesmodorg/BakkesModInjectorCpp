@@ -199,7 +199,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Injecting DLL";
 		break;
 	case INJECTED:
-		status = "Injected, press F2 ingame for options menu";
+		status = bakkesModInjectedString;
 		break;
 	case INJECTION_FAILED:
 		status = "Injection failed, please download vc_redist.x86.exe and restart your PC";
@@ -733,12 +733,15 @@ void BakkesModInjectorCpp::TimerTimeout()
 		switch (platform)
 		{
 			case GamePlatform::STEAM:
+				bakkesModInjectedString = "Injected, press F2 ingame for options menu (Steam version)";
 				isSafeToInject = installation.IsSteamVersionReady(updater.latestUpdateInfo);
 				break;
 			case GamePlatform::EPIC:
+				bakkesModInjectedString = "Injected, press F2 ingame for options menu (Epic Games version)";
 				isSafeToInject = installation.IsEpicVersionReady(updater.latestUpdateInfo);
 				break;
 			case GamePlatform::UNKNOWN:
+				bakkesModInjectedString = "Injected, press F2 ingame for options menu (Unknown)";
 				isSafeToInject = installation.IsSafeToInject(updater.latestUpdateInfo);
 				break;
 		}

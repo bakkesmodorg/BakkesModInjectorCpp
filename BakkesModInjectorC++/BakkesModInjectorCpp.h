@@ -56,6 +56,7 @@ private:
 	QSystemTrayIcon* trayIcon;
 	int outOfDateCounter = 0;
 	std::string bakkesModIdleString = "Uninjected, waiting for user to start Rocket League";
+	std::string bakkesModInjectedString = "Injected, press F2 ingame for options menu";
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
 	void initialize();
