@@ -386,6 +386,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 					}
 					LOG_LINE(INFO, "User denied injector update")
 				}
+				ui.actionOpt_in_to_beta_releases->setEnabled(updater.latestUpdateInfo.allowBetaAccess);
 				//out of date counter = 0 -> new run. >0 -> Checking for updates
 				if (updater.latestUpdateInfo.requiresUpdate)
 				{

@@ -126,6 +126,12 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 			LOG_LINE(INFO, "Set backoff (out of date) to " << latestUpdateInfo.backoff_seconds << " seconds");
 		}
 		
+		if (auto tmp = rootObj.find("allow_beta"); tmp != rootObj.end())
+		{
+			latestUpdateInfo.allowBetaAccess = tmp->toBool();
+		}
+
+
 		auto updateInfo = rootObj.find("update_info");
 		if (enableBeta)
 		{

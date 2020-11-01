@@ -32,4 +32,5 @@ struct UpdateStatus
 	std::vector<std::string> buildIds;
 	std::vector<std::string> egsBuildIds;
 	bool updateRequest = false;
+	bool allowBetaAccess = false;
 };
