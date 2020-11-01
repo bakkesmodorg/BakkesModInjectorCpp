@@ -54,6 +54,7 @@ std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 			bakkesModFolder = bmPath;
 			LOG_LINE(INFO, bakkesModFolder.string());
 			CoTaskMemFree(path_tmp);
+			settings.SaveSetting(L"BakkesModPath", bakkesModFolder.wstring(), RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 			return bakkesModFolder;
 		}
 		
