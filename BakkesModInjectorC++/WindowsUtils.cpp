@@ -165,3 +165,8 @@ std::wstring WindowsUtils::GetCurrentExecutablePath()
 	return path;
 }
 
+bool WindowsUtils::IsStandalone()
+{
+	return GetCurrentExecutablePath().find(L"Program Files") == std::string::npos;
+}
+

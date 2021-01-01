@@ -13,12 +13,16 @@ private:
 	static std::string UPDATE_SERVER_URL;
 	bool useHostname = false;
 	bool enableBeta = false;
+	bool accessibilityChanged = false;
+	bool networkAccessible = false;
 	int lastVersionChecked = -1;
 	QNetworkAccessManager* networkManager;
 public:
 	UpdateStatus latestUpdateInfo;
 	Updater();
 	~Updater();
+	bool checkForNetworkChange();
+	void accessibleChanged(QNetworkAccessManager::NetworkAccessibility* access);
 	void CheckForUpdates(int version);
 	void SetEnableBeta(bool enable);
 	private slots:

@@ -27,6 +27,8 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin)
 
 //#pragma comment(lib, "qtpcre.lib")
 //#pragma comment(lib, "libeay32.lib")
+//#pragma comment(lib, "ssleay32.lib")
+
 #pragma comment(lib, "Crypt32.lib")
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "qtfreetype.lib")

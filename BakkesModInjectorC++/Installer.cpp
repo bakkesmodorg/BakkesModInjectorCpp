@@ -5,7 +5,7 @@
 #include "zip_file.hpp"
 #include "WindowsUtils.h"
 #include "logger.h"
-
+#include <QtWidgets/qmessagebox.h>
 Installer::Installer(std::wstring updatePackageLocation, std::filesystem::path destination)
 {
 	updatePackage = updatePackageLocation;
@@ -34,37 +34,59 @@ void Installer::Install()
 	fileStream.seekg(0);
 	//fileStream.close();
 	LOG_LINE(INFO, "Installing update2" << WindowsUtils::WStringToString(updatePackage) << " - " << std::to_string(fsize))
-	miniz_cpp::zip_file file(data);
-	LOG_LINE(INFO, "Installing update3" << extractDir.string())
-	WindowsUtils::CreateFolder(extractDir);
-	for (auto &member : file.infolist())
+		try
 	{
-		std::string fileName = member.filename;
-		auto fullPath = extractDir / member.filename;
-		LOG_LINE(INFO, "Extracting file " << member.filename)
-		if (fileName.size() >= 4 //Incase filesystem is 3 chars or less lol
-			&& fileName.substr(fileName.size() - std::string(".cfg").size()).compare(".cfg") == 0) 
+		miniz_cpp::zip_file file(data);
+		LOG_LINE(INFO, "Installing update3" << extractDir.string())
+			WindowsUtils::CreateFolder(extractDir);
+		for (auto& member : file.infolist())
 		{
-			
-			if (WindowsUtils::FileExists(fullPath)) {//Don't overwrite default cfg files
-				LOG_LINE(INFO, "File (" << member.filename << ") is cfg file and it already exists, not overwriting!")
-				continue;
+			std::string fileName = member.filename;
+			auto fullPath = extractDir / member.filename;
+			LOG_LINE(INFO, "Extracting file " << member.filename)
+				if (fileName.size() >= 4 //Incase filesystem is 3 chars or less lol
+					&& fileName.substr(fileName.size() - std::string(".cfg").size()).compare(".cfg") == 0)
+				{
+
+					if (WindowsUtils::FileExists(fullPath))
+					{//Don't overwrite default cfg files
+						LOG_LINE(INFO, "File (" << member.filename << ") is cfg file and it already exists, not overwriting!")
+							continue;
+					}
+				}
+			if (member.filename.find(".") == std::string::npos) //It's a folder
+			{
+				LOG_LINE(INFO, "File " << member.filename << ") is folder, creating if not exists yet")
+					WindowsUtils::CreateFolder(fullPath);
 			}
+			else if (WindowsUtils::FileExists(fullPath))
+			{
+				int success = std::filesystem::remove(fullPath);
+				LOG_LINE(INFO, "File " << member.filename << " exists, deleting file result: " << success)
+			}
+
+			//TODO: maybe fix?
+			file.extract(member, extractDir.string().c_str());
+			LOG_LINE(INFO, "File extraction result: " << WindowsUtils::FileExists(fullPath))
+				//file.extract(member, "");
 		}
-		if (member.filename.find(".") == std::string::npos) //It's a folder
-		{
-			LOG_LINE(INFO, "File " << member.filename << ") is folder, creating if not exists yet")
-			WindowsUtils::CreateFolder(fullPath);
-		} else if (WindowsUtils::FileExists(fullPath))
-		{
-			int success = std::filesystem::remove(fullPath);
-			LOG_LINE(INFO, "File " << member.filename << " exists, deleting file result: " << success)
-		}
-		
-		//TODO: maybe fix?
-		file.extract(member, extractDir.string().c_str());
-		LOG_LINE(INFO, "File extraction result: " << WindowsUtils::FileExists(fullPath))
-		//file.extract(member, "");
+		file.printdir(LOG(INFO));
 	}
-	file.printdir(LOG(INFO));
+	catch (std::exception e)
+	{
+
+		LOG_LINE(INFO, "ERROR: " << e.what());
+		QMessageBox msgBox;
+		msgBox.setText("Error downloading update package. The update server might be offline, please try again later!");
+		msgBox.show();
+		int ret = msgBox.exec();
+	}
+	catch (...)
+	{
+		QMessageBox msgBox;
+		msgBox.setText("Error downloading update package. The update server might be offline, please try again later.");
+		msgBox.show();
+		int ret = msgBox.exec();
+	}
+	
 }

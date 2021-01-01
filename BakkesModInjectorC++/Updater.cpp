@@ -14,6 +14,8 @@ Updater::Updater()
 	connect(networkManager, SIGNAL(finished(QNetworkReply*)),
 		this, SLOT(OnUpdateInfoReceived(QNetworkReply*)));
 	connect(networkManager, SIGNAL(error(QNetworkReply::NetworkError)), SLOT(networkError(QNetworkReply::NetworkError)));
+	connect(networkManager, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)), this, SLOT(accessibleChanged(QNetworkAccessManager::NetworkAccessibility)));
+
 }
 
 
@@ -21,17 +23,41 @@ Updater::~Updater()
 {
 }
 
+bool Updater::checkForNetworkChange()
+{
+	bool isAccessibleNow = networkManager->networkAccessible() == QNetworkAccessManager::NetworkAccessibility::Accessible;
+
+	if (isAccessibleNow && !networkAccessible)
+	{
+		networkAccessible = true;
+		return true;
+	}
+	bool result = accessibilityChanged;
+	accessibilityChanged = false;
+	return result;
+}
+
+void Updater::accessibleChanged(QNetworkAccessManager::NetworkAccessibility* access)
+{
+	LOG_LINE(INFO, "Network accessibility changed")
+	accessibilityChanged = true;
+}
+
 void Updater::CheckForUpdates(int version)
 {
+	networkAccessible = networkManager->networkAccessible() == QNetworkAccessManager::NetworkAccessibility::Accessible;
 	lastVersionChecked = version;
+
 	std::string fullRequestUrl = UPDATE_SERVER_URL + std::to_string(version);// +"/";
+	latestUpdateInfo.networkRequestStatus = REQUESTED;
+	latestUpdateInfo.requestFinished = false;
 	QNetworkRequest networkRequest(QUrl(fullRequestUrl.c_str()));
 	networkRequest.setHeader(QNetworkRequest::UserAgentHeader, std::string("BakkesMod Updater CPP (" + std::to_string(BAKKESMODINJECTOR_VERSION) + ")").c_str());
 	networkRequest.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
 
 	auto reply = networkManager->get(networkRequest);
 	reply->setProperty("version", version);
-	latestUpdateInfo.networkRequestStatus = REQUESTED;
+	
 }
 
 void Updater::SetEnableBeta(bool enable)
@@ -88,9 +114,11 @@ void myReplace(std::string& str,
 #include <QtCore/qjsonobject.h>
 void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 {
+	
 	QJsonDocument json = QJsonDocument::fromJson(result->readAll());
 	QString strJson(json.toJson(QJsonDocument::Compact));
 	latestUpdateInfo.jsonData = strJson.toStdString();
+	LOG(INFO, "Got data from server: " << latestUpdateInfo.jsonData);
 	QJsonObject rootObj = json.object();
 	if (!rootObj.empty())
 	{
@@ -101,6 +129,7 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 			auto test = injectorInfo.value().toObject();
 			latestUpdateInfo.injectorUrl = test["injectorurl"].toString().toStdString();
 			latestUpdateInfo.injectorVersion = test["injectorversion"].toString().toStdString();
+			latestUpdateInfo.injectorSetupUrl = test["injectorsetupurl"].toString().toStdString();
 		}
 
 		auto gameInfo = rootObj.find("gameinfo");
@@ -160,16 +189,24 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 		latestUpdateInfo.networkRequestStatus = FINISHED_SUCCESS;
 	}
 	else {
-		if (useHostname) 
+		if (useHostname) //Already using hostname
 		{
+			LOG_LINE(INFO, "Two fails");
 			latestUpdateInfo.requestFinished = true;
 			latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
+
+			result->deleteLater();
+			return;
 		}
+		LOG_LINE(INFO, "Checking again but with hostname this time");
 		UPDATE_SERVER_URL = "http://updater.bakkesmod.com/updater/";
 		useHostname = true;
+
 		CheckForUpdates(lastVersionChecked);
+		return;
 	}
 
 	latestUpdateInfo.requestFinished = true;
+	LOG_LINE(INFO, "Allow network result to be freed");
 	result->deleteLater();
 }

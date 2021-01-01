@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>337</width>
-    <height>110</height>
+    <width>349</width>
+    <height>119</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>251</width>
-      <height>41</height>
+      <width>341</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="text">
@@ -30,8 +30,8 @@
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>10</y>
+      <x>120</x>
+      <y>20</y>
       <width>211</width>
       <height>23</height>
      </rect>
@@ -46,7 +46,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>337</width>
+     <width>349</width>
      <height>21</height>
     </rect>
    </property>
@@ -74,6 +74,7 @@
     </property>
     <addaction name="actionCheck_injection"/>
     <addaction name="actionTroubleshooting"/>
+    <addaction name="actionShow_version_info"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -213,6 +214,11 @@
    </property>
    <property name="text">
     <string>Opt-in to beta releases</string>
+   </property>
+  </action>
+  <action name="actionShow_version_info">
+   <property name="text">
+    <string>Show version info</string>
    </property>
   </action>
  </widget>
@@ -525,6 +531,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionShow_version_info</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnShowVersionInfo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>168</x>
+     <y>54</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -545,5 +567,6 @@
   <slot>OnDisableWarnings()</slot>
   <slot>OnCheckForUpdates()</slot>
   <slot>OnBetaChannelClick()</slot>
+  <slot>OnShowVersionInfo()</slot>
  </slots>
 </ui>

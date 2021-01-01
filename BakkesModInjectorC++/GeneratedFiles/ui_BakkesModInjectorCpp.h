@@ -45,6 +45,7 @@ public:
     QAction *actionCheck_for_updates;
     QAction *actionPatreon;
     QAction *actionOpt_in_to_beta_releases;
+    QAction *actionShow_version_info;
     QWidget *centralWidget;
     QLabel *label;
     QProgressBar *progressBar;
@@ -60,7 +61,7 @@ public:
     {
         if (BakkesModInjectorCppClass->objectName().isEmpty())
             BakkesModInjectorCppClass->setObjectName(QString::fromUtf8("BakkesModInjectorCppClass"));
-        BakkesModInjectorCppClass->resize(337, 110);
+        BakkesModInjectorCppClass->resize(349, 119);
         actionOpen_BakkesMod_folder = new QAction(BakkesModInjectorCppClass);
         actionOpen_BakkesMod_folder->setObjectName(QString::fromUtf8("actionOpen_BakkesMod_folder"));
         actionInstall_Python_support = new QAction(BakkesModInjectorCppClass);
@@ -105,19 +106,21 @@ public:
         actionOpt_in_to_beta_releases = new QAction(BakkesModInjectorCppClass);
         actionOpt_in_to_beta_releases->setObjectName(QString::fromUtf8("actionOpt_in_to_beta_releases"));
         actionOpt_in_to_beta_releases->setCheckable(true);
+        actionShow_version_info = new QAction(BakkesModInjectorCppClass);
+        actionShow_version_info->setObjectName(QString::fromUtf8("actionShow_version_info"));
         centralWidget = new QWidget(BakkesModInjectorCppClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         label = new QLabel(centralWidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(10, 0, 251, 41));
+        label->setGeometry(QRect(10, 0, 341, 61));
         progressBar = new QProgressBar(centralWidget);
         progressBar->setObjectName(QString::fromUtf8("progressBar"));
-        progressBar->setGeometry(QRect(100, 10, 211, 23));
+        progressBar->setGeometry(QRect(120, 20, 211, 23));
         progressBar->setValue(0);
         BakkesModInjectorCppClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(BakkesModInjectorCppClass);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 337, 21));
+        menuBar->setGeometry(QRect(0, 0, 349, 21));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
         menuLinks = new QMenu(menuBar);
@@ -148,6 +151,7 @@ public:
         menuLinks->addAction(actionPatreon);
         menuHelp->addAction(actionCheck_injection);
         menuHelp->addAction(actionTroubleshooting);
+        menuHelp->addAction(actionShow_version_info);
         menuSettings->addAction(actionEnable_safe_mode);
         menuSettings->addAction(actionRun_on_startup);
         menuSettings->addAction(actionHide_when_minimized);
@@ -177,6 +181,7 @@ public:
         QObject::connect(actionCheck_for_updates, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnCheckForUpdates()));
         QObject::connect(actionPatreon, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnPatreonClick()));
         QObject::connect(actionOpt_in_to_beta_releases, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnBetaChannelClick()));
+        QObject::connect(actionShow_version_info, SIGNAL(triggered()), BakkesModInjectorCppClass, SLOT(OnShowVersionInfo()));
 
         QMetaObject::connectSlotsByName(BakkesModInjectorCppClass);
     } // setupUi
@@ -203,6 +208,7 @@ public:
         actionCheck_for_updates->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Check for updates", nullptr));
         actionPatreon->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Patreon", nullptr));
         actionOpt_in_to_beta_releases->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Opt-in to beta releases", nullptr));
+        actionShow_version_info->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Show version info", nullptr));
         label->setText(QCoreApplication::translate("BakkesModInjectorCppClass", "Booting", nullptr));
         menuFile->setTitle(QCoreApplication::translate("BakkesModInjectorCppClass", "File", nullptr));
         menuLinks->setTitle(QCoreApplication::translate("BakkesModInjectorCppClass", "Links", nullptr));

@@ -15,6 +15,7 @@ public:
 	static std::string overrideBakkesModFolder;
 	BakkesModInstallation();
 	~BakkesModInstallation();
+	void CreateAppDataFolderIfDoesntExist();
 	std::filesystem::path GetBakkesModFolder();
 	std::filesystem::path GetOldBakkesModFolder();
 	bool IsInstalled();
@@ -28,7 +29,8 @@ public:
 
 	std::filesystem::path GetSteamInstallLocation();
 	std::string GetSteamVersion();
-	std::string GetEpicVersion();
+	std::string GetHighestEpicVersion();
+	std::vector<std::string> GetEpicVersion();
 
 	bool IsSteamVersionInstalled();
 	bool IsEpicVersionInstalled();

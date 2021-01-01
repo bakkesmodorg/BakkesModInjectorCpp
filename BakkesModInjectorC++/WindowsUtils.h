@@ -10,6 +10,7 @@ public:
 	static std::string GetMyDocumentsFolder();
 	std::filesystem::path GetSteamRocketLeagueDirFromLog();
 	std::string GetRocketLeagueBuildID();
+
 	//static bool FileExists(std::string path);
 	static bool FileExists(std::filesystem::path path);
 	static void OpenFolder(std::filesystem::path path);
@@ -18,6 +19,7 @@ public:
 	static std::wstring StringToWString(const std::string& s);
 	static std::string WStringToString(const std::wstring& s);
 	static std::wstring GetCurrentExecutablePath();
+	static bool IsStandalone();
 	static uintmax_t DeleteDirectory(std::filesystem::path loc);
 };
 

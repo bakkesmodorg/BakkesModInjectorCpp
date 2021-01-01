@@ -26,6 +26,38 @@ BakkesModInstallation::~BakkesModInstallation()
 {
 }
 
+void BakkesModInstallation::CreateAppDataFolderIfDoesntExist()
+{
+	PWSTR path_tmp;
+	auto get_folder_path_ret = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path_tmp);
+	/* Error check */
+	LOG_LINE(INFO, "Checking if folder in appdata exists");
+	if (get_folder_path_ret != S_OK)
+	{
+		LOG_LINE(INFO, "SHGetKnownFolderPath failed somehow? " << get_folder_path_ret);
+		CoTaskMemFree(path_tmp);
+		//SHOULD NEVER REACH
+
+	}
+	else if(std::filesystem::exists(path_tmp))
+	{
+
+		/* Convert the Windows path type to a C++ path */
+		
+		std::filesystem::path bmPath = path_tmp;
+		bmPath = bmPath / "bakkesmod";
+		if (!std::filesystem::exists(bmPath))
+		{
+			LOG_LINE(INFO, bmPath << " doesn't exist, creating");
+			std::filesystem::create_directories(bmPath);
+		}
+		else
+		{
+			LOG_LINE(INFO, bmPath << " exists");
+		}
+	}
+}
+
 std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 {
 	//if (!overrideBakkesModFolder.empty())
@@ -51,6 +83,11 @@ std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 			LOG_LINE(INFO, "Converting path to filesystem path");
 			std::filesystem::path bmPath = path_tmp;
 			bmPath = bmPath / "bakkesmod" / "bakkesmod";
+			if (bmPath.string().back() != '/' && bmPath.string().back() != '\\')
+			{
+				bmPath += "/";
+			}
+
 			bakkesModFolder = bmPath;
 			LOG_LINE(INFO, bakkesModFolder.string());
 			CoTaskMemFree(path_tmp);
@@ -372,15 +409,31 @@ std::string BakkesModInstallation::GetSteamVersion()
 	return buildId;
 }
 
+std::string BakkesModInstallation::GetHighestEpicVersion()
+{
+	auto versions = GetEpicVersion();
+	std::string highestString = "";
+	for (auto v : versions)
+	{
+		if (v > highestString)
+		{
+			highestString = v;
+		}
+	}
+	return highestString;
+}
+
 using json = nlohmann::json;
-std::string BakkesModInstallation::GetEpicVersion()
+std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 {
 	TCHAR szPath[MAX_PATH];
+	std::vector<std::string> epicVersions;
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, szPath)))
 	{
 		
 		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / "Epic" / "EpicGamesLauncher" / "Data" / "Manifests";
 		LOG_LINE(INFO, "Checking Epic path " << manifestsPath.string());
+		
 		if (std::filesystem::exists(manifestsPath))
 		{
 			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
@@ -421,7 +474,8 @@ std::string BakkesModInstallation::GetEpicVersion()
 									LOG_LINE(INFO, "Found Epic version " << versionNumber);
 									if (!versionNumber.empty())
 									{
-										return versionNumber;
+										epicVersions.push_back(versionNumber);
+										//return versionNumber;
 									}
 								}
 							}
@@ -430,8 +484,9 @@ std::string BakkesModInstallation::GetEpicVersion()
 				
 			}
 		}
+		
 	}
-	return "";
+	return epicVersions;
 }
 
 bool BakkesModInstallation::IsSteamVersionInstalled()
@@ -441,7 +496,7 @@ bool BakkesModInstallation::IsSteamVersionInstalled()
 
 bool BakkesModInstallation::IsEpicVersionInstalled()
 {
-	return !GetEpicVersion().empty();
+	return GetEpicVersion().size() > 0;
 }
 
 bool BakkesModInstallation::IsSteamVersionReady(UpdateStatus currentVersion)
@@ -475,17 +530,20 @@ bool BakkesModInstallation::IsEpicVersionReady(UpdateStatus currentVersion)
 {
 	{
 		LOG_LINE(INFO, "Checking Epic version");
-		std::string epicBuildId = GetEpicVersion();
-		if (!epicBuildId.empty())
+		std::vector<std::string> epicBuildIds = GetEpicVersion();
+		for (auto epicBuildId : epicBuildIds)
 		{
-			LOG_LINE(INFO, "Found epic build ID " << epicBuildId);
-			if (currentVersion.egsBuildIds.size() > 0)
+			if (!epicBuildId.empty())
 			{
-				for (std::string buildidz : currentVersion.egsBuildIds)
+				LOG_LINE(INFO, "Found epic build ID " << epicBuildId);
+				if (currentVersion.egsBuildIds.size() > 0)
 				{
-					LOG_LINE(INFO, "Comparing EGS buildid " << epicBuildId << " to " << buildidz)
-						if (epicBuildId == buildidz)
-							return true;
+					for (std::string buildidz : currentVersion.egsBuildIds)
+					{
+						LOG_LINE(INFO, "Comparing EGS buildid " << epicBuildId << " to " << buildidz)
+							if (epicBuildId == buildidz)
+								return true;
+					}
 				}
 			}
 		}
