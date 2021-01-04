@@ -10,7 +10,7 @@ Installer::Installer(std::wstring updatePackageLocation, std::filesystem::path d
 {
 	updatePackage = updatePackageLocation;
 	extractDir = destination;
-	LOG_LINE(INFO, "Initialized installer, location=" << WindowsUtils::WStringToString(updatePackage) << ", destination=" << extractDir.string())
+	LOG_LINE_W(INFO, L"Initialized installer, location=" << updatePackage << L", destination=" << extractDir.wstring())
 }
 
 Installer::~Installer()
@@ -37,7 +37,7 @@ void Installer::Install()
 		try
 	{
 		miniz_cpp::zip_file file(data);
-		LOG_LINE(INFO, "Installing update3" << extractDir.string())
+		LOG_LINE_W(INFO, L"Installing update3" << extractDir.wstring())
 			WindowsUtils::CreateFolder(extractDir);
 		for (auto& member : file.infolist())
 		{
@@ -66,11 +66,11 @@ void Installer::Install()
 			}
 
 			//TODO: maybe fix?
-			file.extract(member, extractDir.string().c_str());
+			file.extract(member, extractDir);
 			LOG_LINE(INFO, "File extraction result: " << WindowsUtils::FileExists(fullPath))
 				//file.extract(member, "");
 		}
-		file.printdir(LOG(INFO));
+		//file.printdir(LOG(INFO));
 	}
 	catch (std::exception e)
 	{

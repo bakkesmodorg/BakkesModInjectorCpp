@@ -73,7 +73,7 @@ void Updater::replyFinished(QNetworkReply * result)
 
 void Updater::networkError(QNetworkReply::NetworkError code)
 {
-	LOG(INFO, Q_FUNC_INFO << "Error" << code);
+	LOG_LINE(INFO, "Error" << (int)code);
 	
 	if (useHostname) {
 		latestUpdateInfo.requestFinished = true;
@@ -118,7 +118,7 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 	QJsonDocument json = QJsonDocument::fromJson(result->readAll());
 	QString strJson(json.toJson(QJsonDocument::Compact));
 	latestUpdateInfo.jsonData = strJson.toStdString();
-	LOG(INFO, "Got data from server: " << latestUpdateInfo.jsonData);
+	LOG_LINE(INFO, "Got data from server: " << std::string(latestUpdateInfo.jsonData));
 	QJsonObject rootObj = json.object();
 	if (!rootObj.empty())
 	{
@@ -182,7 +182,7 @@ void Updater::OnUpdateInfoReceived(QNetworkReply* result)
 			{
 				//latestUpdateInfo.downloadUrl = latestUpdateInfo.downloadUrl
 				myReplace(latestUpdateInfo.downloadUrl, "149.210.150.107", "updater.bakkesmod.com");
-				LOG(INFO, "Set update url to " << latestUpdateInfo.downloadUrl);
+				LOG_LINE(INFO, "Set update url to " << latestUpdateInfo.downloadUrl);
 			}
 		}
 		latestUpdateInfo.requiresUpdate = version < latestUpdateInfo.newestTrainerVersion;

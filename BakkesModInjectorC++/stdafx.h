@@ -1,6 +1,21 @@
 #pragma once
 #include "logger.h"
-#define LOG_LINE(sev, msg) LOG(sev) << msg << std::endl;
+#include <sstream>
+
+#define LOG_LINE(sev, msg) \
+	{\
+		std::stringstream ss;\
+		ss << msg << std::endl;\
+		LOG(sev) << ss.str();\
+	}	
+
+#define LOG_LINE_W(sev, msg) \
+	{\
+		std::wstringstream ss;\
+		ss << msg << std::endl;\
+		LOG(sev) << WindowsUtils::WStringToString(ss.str());\
+	}	
+//LOG(sev) << msg << std::endl;
 
 enum NetworkRequestStatus
 {

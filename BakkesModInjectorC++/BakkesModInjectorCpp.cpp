@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "BakkesModInjectorCpp.h"
 #include <QtWidgets/qmessagebox.h>
 #include <sstream>
@@ -21,12 +21,9 @@ DWORD WINAPI SubscriptionCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pCon
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
-	std::wstring TempPath;
-	wchar_t wcharPath[MAX_PATH];
-	if (GetTempPathW(MAX_PATH, wcharPath))
-		TempPath = wcharPath;
-	AixLog::Log::init<AixLog::SinkFile>(AixLog::Severity::trace, AixLog::Type::all, WindowsUtils::WStringToString(TempPath) + "\\injectorlog.log");
-	LOG_LINE(INFO, "Initialized logger")
+
+	
+	
 	LOG_LINE(INFO, "BakkesMod injector version " << BAKKESMODINJECTOR_VERSION << ". Compiled at " __DATE__ " " __TIME__)
 	ui.setupUi(this);
 	LOG_LINE(INFO, "Set up UI")
@@ -35,7 +32,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	if(qApp->arguments().contains("icon"))
 	{
 		icon = QIcon(qApp->arguments().at(qApp->arguments().indexOf("icon")));
-		LOG(INFO, "Custom icon " << qApp->arguments().at(qApp->arguments().indexOf("icon")));
+		//LOG_LINE(INFO, "Custom icon " << qApp->arguments().at(qApp->arguments().indexOf("icon")));
 	}
 	else {
 		icon = QIcon(":/BakkesModInjectorCpp/mainicon");
@@ -267,22 +264,23 @@ void BakkesModInjectorCpp::TimerTimeout()
 			installation.CreateAppDataFolderIfDoesntExist();
 			auto oldInstall = installation.GetOldBakkesModFolder();
 			auto newInstall = installation.GetBakkesModFolder();
-			LOG_LINE(INFO, "OLD " << oldInstall.string());
-			LOG_LINE(INFO, "NEW " << newInstall.string());
-			if (oldInstall.string().size() > 0)
+			LOG_LINE_W(INFO, L"OLD " << oldInstall.wstring());
+
+			LOG_LINE_W(INFO, L"NEW " << newInstall.wstring());
+			if (oldInstall.wstring().size() > 0)
 			{
-				LOG_LINE(INFO, "OLD INSTALL DETECTED " << oldInstall.string());
+				LOG_LINE_W(INFO, L"OLD INSTALL DETECTED " << oldInstall.wstring());
 				if (!std::filesystem::exists(newInstall))
 				{
 					if (std::filesystem::exists(oldInstall))
 					{
 						try
 						{
-							LOG_LINE(INFO, "Creating directory " << newInstall.string());
+							LOG_LINE_W(INFO, "Creating directory " << newInstall.wstring());
 							std::filesystem::create_directories(newInstall);
-							LOG_LINE(INFO, "Copying directory " << oldInstall.string() << "->" << newInstall.string());
+							LOG_LINE_W(INFO, "Copying directory " << oldInstall.wstring() << "->" << newInstall.wstring());
 							std::filesystem::copy(oldInstall, newInstall, std::filesystem::copy_options::recursive);
-							LOG_LINE(INFO, "Removing old directory " << oldInstall.string());
+							LOG_LINE_W(INFO, "Removing old directory " << oldInstall.wstring());
 							std::filesystem::remove_all(oldInstall);
 						}
 						catch (std::exception& e)
@@ -755,7 +753,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 		auto bmPath = installation.GetBakkesModFolder();
 		auto path = bmPath / "dll" / "bakkesmod.dll";
-		LOG_LINE(INFO, "Trying to inject " << path.string())
+		LOG_LINE_W(INFO, L"Trying to inject " << path.wstring())
 		if (!WindowsUtils::FileExists(path))
 		{
 			QMessageBox msgBox;
@@ -1049,7 +1047,7 @@ void BakkesModInjectorCpp::OnBetaChannelClick()
 		int version = 1;
 		versionFile << version;
 		versionFile.close();
-		LOG_LINE(INFO, "Writing version " << version << " to " << versionFilePath.string());
+		LOG_LINE_W(INFO, "Writing version " << version << " to " << versionFilePath.wstring());
 		OnCheckForUpdates();
 	}
 

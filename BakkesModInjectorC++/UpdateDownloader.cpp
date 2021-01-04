@@ -40,7 +40,7 @@ std::future<std::wstring> downloadZip(std::string url, std::filesystem::path dow
 					myProgFunction(ProgressCallback);
 				
 				const std::filesystem::path filename = download_folder / outUrl;// download_folder / (random_string(12) + ".zip");
-				LOG_LINE(INFO, "Downloading to " << filename.string())
+				LOG_LINE_W(INFO, L"Downloading to " << filename.wstring())
 				if (CreateDirectoryW(download_folder.c_str(), NULL) ||
 					ERROR_ALREADY_EXISTS == GetLastError())
 				{

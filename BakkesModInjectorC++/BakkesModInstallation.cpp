@@ -30,8 +30,9 @@ void BakkesModInstallation::CreateAppDataFolderIfDoesntExist()
 {
 	PWSTR path_tmp;
 	auto get_folder_path_ret = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &path_tmp);
+	std::filesystem::path path_tmp_fs = std::filesystem::path(path_tmp);
 	/* Error check */
-	LOG_LINE(INFO, "Checking if folder in appdata exists");
+	LOG_LINE(INFO, "Checking if folder in appdata exists ");
 	if (get_folder_path_ret != S_OK)
 	{
 		LOG_LINE(INFO, "SHGetKnownFolderPath failed somehow? " << get_folder_path_ret);
@@ -39,21 +40,27 @@ void BakkesModInstallation::CreateAppDataFolderIfDoesntExist()
 		//SHOULD NEVER REACH
 
 	}
-	else if(std::filesystem::exists(path_tmp))
+	else if(std::filesystem::exists(path_tmp_fs))
 	{
 
 		/* Convert the Windows path type to a C++ path */
 		
-		std::filesystem::path bmPath = path_tmp;
-		bmPath = bmPath / "bakkesmod";
+		std::filesystem::path bmPath = path_tmp_fs / "bakkesmod";
+		for (const auto& entry : std::filesystem::directory_iterator(bmPath))
+		{
+			LOG_LINE(INFO, "Logging path")
+				LOG_LINE_W(INFO, entry)
+		}
 		if (!std::filesystem::exists(bmPath))
 		{
-			LOG_LINE(INFO, bmPath << " doesn't exist, creating");
 			std::filesystem::create_directories(bmPath);
+			LOG_LINE(INFO, " doesn't exist, creating");
+			LOG_LINE(INFO, bmPath.c_str())
 		}
 		else
 		{
-			LOG_LINE(INFO, bmPath << " exists");
+			LOG_LINE(INFO, " exists");
+			LOG_LINE(INFO, bmPath.c_str())
 		}
 	}
 }
@@ -82,14 +89,22 @@ std::filesystem::path BakkesModInstallation::GetBakkesModFolder()
 			/* Convert the Windows path type to a C++ path */
 			LOG_LINE(INFO, "Converting path to filesystem path");
 			std::filesystem::path bmPath = path_tmp;
+
+			/*for (const auto& entry : std::filesystem::directory_iterator(bmPath / "bakkesmod"))
+			{
+				LOG_LINE(INFO, "Logging path2")
+					LOG_LINE_W(INFO, entry)
+					return entry;
+			}*/
+
 			bmPath = bmPath / "bakkesmod" / "bakkesmod";
-			if (bmPath.string().back() != '/' && bmPath.string().back() != '\\')
+			if (bmPath.wstring().back() != '/' && bmPath.wstring().back() != '\\')
 			{
 				bmPath += "/";
 			}
 
 			bakkesModFolder = bmPath;
-			LOG_LINE(INFO, bakkesModFolder.string());
+			LOG_LINE_W(INFO, bakkesModFolder.wstring());
 			CoTaskMemFree(path_tmp);
 			settings.SaveSetting(L"BakkesModPath", bakkesModFolder.wstring(), RegisterySettingsManager::REGISTRY_DIR_APPPATH);
 			return bakkesModFolder;
@@ -233,13 +248,13 @@ std::filesystem::path BakkesModInstallation::DetectRocketLeagueFolder()
 		auto manifestPath = path / "appmanifest_252950.acf";
 		auto executablePath = path / "common" / "rocketleague" / "Binaries" / "Win64";
 		auto executableLocation = executablePath / "RocketLeague.exe";
-		LOG_LINE(INFO, "Checking for manifest in " << path.string());
+		LOG_LINE_W(INFO, L"Checking for manifest in " << path.wstring());
 		if (WindowsUtils::FileExists(manifestPath))
 		{
 			LOG_LINE(INFO, "Manifest exists");
 			if (!WindowsUtils::FileExists(executableLocation))
 			{
-				LOG_LINE(INFO, "Could not find RocketLeague.exe at " << executableLocation);
+				LOG_LINE_W(INFO, "Could not find RocketLeague.exe at " << executableLocation.wstring());
 			}
 			else
 			{
@@ -278,7 +293,7 @@ std::filesystem::path BakkesModInstallation::DetectRocketLeagueFolder()
 			}
 			else
 			{
-				LOG_LINE(INFO, "Manifest file at " << manifestPath.string() << " doesnt exist")
+				LOG_LINE_W(INFO, L"Manifest file at " << manifestPath.wstring() << L" doesnt exist")
 			}
 			
 		}
@@ -322,7 +337,7 @@ std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
 {
 	std::filesystem::path newDetectedFolder = DetectRocketLeagueFolder();
 	std::filesystem::path rlPath = windowsUtils.GetSteamRocketLeagueDirFromLog();
-	if (!rlPath.string().empty() && WindowsUtils::FileExists(rlPath / "RocketLeague.exe"))
+	if (!rlPath.wstring().empty() && WindowsUtils::FileExists(rlPath / "RocketLeague.exe"))
 	{
 		LOG_LINE(INFO, "Automatically detected Rocket League path using log: " << rlPath)
 	}
@@ -333,7 +348,7 @@ std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
 	}
 	else
 	{
-		LOG_LINE(INFO, "Both paths empty? " << rlPath.string() << " || " << newDetectedFolder.string())
+		LOG_LINE_W(INFO, L"Both paths empty? " << rlPath.wstring() << L" || " << newDetectedFolder.wstring())
 		return std::filesystem::path("");
 	}
 	return rlPath;
@@ -342,7 +357,7 @@ std::filesystem::path BakkesModInstallation::GetSteamInstallLocation()
 std::string BakkesModInstallation::GetSteamVersion()
 {
 	std::filesystem::path manifest = GetSteamInstallLocation() / ".." / ".." / ".." / ".." / "appmanifest_252950.acf";
-	LOG_LINE(INFO, "Looking for steam manifest in " << manifest.string());
+	LOG_LINE_W(INFO, L"Looking for steam manifest in " << manifest.wstring());
 	std::string buildId = "";
 	if (WindowsUtils::FileExists(manifest))
 	{
@@ -432,18 +447,18 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 	{
 		
 		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / "Epic" / "EpicGamesLauncher" / "Data" / "Manifests";
-		LOG_LINE(INFO, "Checking Epic path " << manifestsPath.string());
+		LOG_LINE_W(INFO, L"Checking Epic path " << manifestsPath.wstring());
 		
 		if (std::filesystem::exists(manifestsPath))
 		{
 			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
 			{
-				//LOG_LINE(INFO, "Extension: " << p.path().extension().string())
+				//LOG_LINE(INFO, "Extension: " << p.path().extension().wstring())
 				if (p.path().extension().string().compare(".item") == 0)
 				{
 					json js;
 					bool requestFailed = false;
-					LOG_LINE(INFO, "FOUND MANIFEST " << p.path().string());
+					LOG_LINE_W(INFO, L"FOUND MANIFEST " << p.path().wstring());
 					try
 					{
 
@@ -459,7 +474,7 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 					}
 					if (requestFailed)
 					{
-						LOG_LINE(INFO, "Parsing JSON failed (" << p.path().string() << ")")
+						LOG_LINE_W(INFO, L"Parsing JSON failed (" << p.path().wstring() << L")")
 							continue;
 					}
 					else

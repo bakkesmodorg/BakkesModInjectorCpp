@@ -46,13 +46,55 @@ Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin)
 #pragma comment(lib, "libssl_static.lib")
 #pragma comment(lib, "libcrypto_static.lib")
 #endif
+#include <QtCore/QLoggingCategory>
+#include <QtCore/qglobal.h>
+void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+	switch (type)
+	{
+		case QtDebugMsg:
+			LOG_LINE(INFO, "QTDebug: " << msg.toStdString());
+			break;
+		case QtWarningMsg:
+			LOG_LINE(INFO, "QTWarning: " << msg.toStdString());
+			//fprintf(stderr, "Warning: %s\n", msg);
+			break;
+		case QtCriticalMsg:
+			LOG_LINE(INFO, "QTCritical: " << msg.toStdString());
+			//fprintf(stderr, "Critical: %s\n", msg);
+			break;
+		case QtFatalMsg:
+			LOG_LINE(INFO, "QTFatal: " << msg.toStdString());
+			//fprintf(stderr, "Fatal: %s\n", msg);
+			//abort();
+			break;
+	}
+}
 
 int main(int argc, char *argv[])
 {
+	std::wstring TempPath;
+	wchar_t wcharPath[MAX_PATH];
+	if (GetTempPathW(MAX_PATH, wcharPath))
+		TempPath = wcharPath;
+	AixLog::Log::init<AixLog::SinkFile>(AixLog::Severity::trace, WindowsUtils::WStringToString(TempPath) + "\\injectorlog.log");
+	LOG_LINE(INFO, "Initialized logger for " << BAKKESMODINJECTOR_VERSION);
+
+	if (argc >= 2 && std::string(argv[1]) == "qt")
+	{
+		qInstallMessageHandler(myMessageOutput);
+		QLoggingCategory::setFilterRules("*.debug=true");
+	}
+
 	QApplication a(argc, argv);
+	LOG_LINE(INFO, "Initialized QApplication")
 	BakkesModInjectorCpp w;
+	LOG_LINE(INFO, "Constructed BakkesModInjectorCpp")
 	a.setStyle(QStyleFactory::create("windowsvista"));
+	LOG_LINE(INFO, "Set style")
 	w.initialize();
+	LOG_LINE(INFO, "Initialized injector")
 	w.show();
+	LOG_LINE(INFO, "Shown injector")
 	return a.exec();
 }

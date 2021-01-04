@@ -66,7 +66,8 @@ DWORD DllInjector::InjectDLL(std::wstring processName, std::filesystem::path pat
 		WaitForSingleObject(asdc, INFINITE);
 		DWORD res = 0;
 		GetExitCodeThread(asdc, &res);
-		LOG_LINE(INFO, "GetExitCodeThread(): " << (int)res)
+		LOG_LINE(INFO, "GetExitCodeThread(): " << (int)res);
+			LOG_LINE(INFO, "Last error: " << GetLastError());
 		VirtualFreeEx(h, dereercomp, wslen, MEM_RELEASE);
 		CloseHandle(asdc);
 		CloseHandle(h);
