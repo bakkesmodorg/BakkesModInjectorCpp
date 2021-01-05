@@ -581,7 +581,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 					LOG_LINE(INFO, "Result " << GetLastError());//For now, I guess we do nothing if launching new process didn't work
 					auto waited = WaitForSingleObject(pi.hProcess, 15000);
 					LOG_LINE(INFO, "Done waiting " << waited << ", " << GetLastError());//For now, I guess we do nothing if launching new process didn't work
-
+					SetState(BAKKESMOD_IDLE);
 				}
 			
 		}

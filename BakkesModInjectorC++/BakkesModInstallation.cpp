@@ -46,11 +46,11 @@ void BakkesModInstallation::CreateAppDataFolderIfDoesntExist()
 		/* Convert the Windows path type to a C++ path */
 		
 		std::filesystem::path bmPath = path_tmp_fs / "bakkesmod";
-		for (const auto& entry : std::filesystem::directory_iterator(bmPath))
+		/*for (const auto& entry : std::filesystem::directory_iterator(bmPath))
 		{
 			LOG_LINE(INFO, "Logging path")
 				LOG_LINE_W(INFO, entry)
-		}
+		}*/
 		if (!std::filesystem::exists(bmPath))
 		{
 			std::filesystem::create_directories(bmPath);
