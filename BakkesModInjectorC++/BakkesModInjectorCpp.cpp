@@ -392,11 +392,11 @@ void BakkesModInjectorCpp::TimerTimeout()
 						SetState(UPDATING_INJECTOR);
 						if (windowsUtils.IsStandalone())
 						{
-							updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorUrl, "newinjector.exe");
+							updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorUrl, "newbakkesmod.exe");
 						}
 						else
 						{
-							updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorSetupUrl, "newinjectorsetup.exe");
+							updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorSetupUrl, "newbakkesmodsetup.exe");
 						}
 						
 						updateDownloader->StartDownload();
