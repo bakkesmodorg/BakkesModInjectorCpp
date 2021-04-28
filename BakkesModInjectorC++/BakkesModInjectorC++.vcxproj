@@ -200,8 +200,7 @@
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <Optimization>Full</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <AdditionalOptions>/p:VcpkgEnabled=false </AdditionalOptions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

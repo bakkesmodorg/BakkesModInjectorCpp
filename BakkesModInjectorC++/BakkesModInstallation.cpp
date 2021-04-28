@@ -234,9 +234,9 @@ std::filesystem::path BakkesModInstallation::DetectRocketLeagueFolder()
 		LOG_LINE(INFO, "Could not find steamapps folder, detected " << vdfFile.c_str());
 		return "";
 	}
-	std::ifstream vdfStream(vdfFile);
-	tyti::vdf::object root = tyti::vdf::read(vdfStream);
-	if (root.name.compare("LibraryFolders") == std::string::npos)
+	std::wifstream vdfStream(vdfFile);
+	tyti::vdf::wobject root = tyti::vdf::read(vdfStream);
+	if (root.name.compare(L"LibraryFolders") == std::string::npos)
 	{
 		LOG_LINE(INFO, "File root is not LibraryFolders, but " << root.name.c_str());
 		return "";
@@ -268,7 +268,10 @@ std::filesystem::path BakkesModInstallation::DetectRocketLeagueFolder()
 	for (auto child : root.attribs)
 	{
 		bool isPath = WindowsUtils::FileExists(child.second);
-		LOG_LINE(INFO, "Key " << child.first << " = " << child.second << ". is path=" << (isPath ? "true" : "false"));
+
+		//child.second
+		
+		LOG_LINE(INFO, "Key " << WindowsUtils::WStringToString(child.first) << " = " << WindowsUtils::WStringToString(child.second) << ". is path=" << (isPath ? "true" : "false"));
 		if (isPath)
 		{
 			std::filesystem::path newPath = std::filesystem::path(child.second) / "steamapps";

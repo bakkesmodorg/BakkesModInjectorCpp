@@ -107,6 +107,7 @@ DWORD DllInjector::GetProcessID64(std::wstring processName)
 				//LOG_LINE(INFO, "Rocket league process ID is " << processInfo.th32ProcessID << " | " << " has the WOW factor: " << iswow64);
 				if (!iswow64)
 				{
+					CloseHandle(hProcess);
 					CloseHandle(processesSnapshot);
 					return processInfo.th32ProcessID;
 				}
@@ -137,6 +138,7 @@ DWORD DllInjector::GetProcessID64(std::wstring processName)
 					//LOG_LINE(INFO, "Rocket league process ID is " << processInfo.th32ProcessID << " | " << " has the WOW factor: " << iswow64);
 					if (!iswow64)
 					{
+						CloseHandle(hProcess);
 						CloseHandle(processesSnapshot);
 						return processInfo.th32ProcessID;
 					}
@@ -226,6 +228,7 @@ DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)
 				std::wstring dllName = std::wstring(szModName);
 				if (dllName.find(L"bakkesmod.dll") != std::string::npos)
 				{
+					CloseHandle(hProcess);
 					return OK;
 				}
 			}
@@ -271,6 +274,7 @@ GamePlatform DllInjector::GetPlatform(DWORD processID)
 				if (name.find(L"steam_api64.dll") != std::string::npos || name.find(L"steamapps") != std::string::npos)
 				{
 					LOG_LINE(INFO, WindowsUtils::WStringToString(std::wstring(szModName)).c_str() << " || " << hMods[i]);
+					CloseHandle(hProcess);
 					return GamePlatform::STEAM;
 				}
 				
