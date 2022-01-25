@@ -5,7 +5,7 @@
 #include "BakkesModInjectorCpp.h"
 
 //http://updater.bakkesmod.com/static/versions/bakkesmod_57.zip
-std::string Updater::UPDATE_SERVER_URL = "https://updater2.bakkesmod.com/updater/";// "http://149.210.150.107/updater/"; //
+std::string Updater::UPDATE_SERVER_URL = "https://updater.bakkesmod.com/updater/";// "http://149.210.150.107/updater/"; //
 
 
 Updater::Updater()
