@@ -10,8 +10,9 @@ class Updater : public QObject
 {
 	Q_OBJECT
 private:
-	static std::string UPDATE_SERVER_URL;
-	bool useHostname = false;
+	static const std::vector<std::string> UPDATE_SERVER_URLS;
+	int currentServerUrlIdx = 0;
+	//bool useHostname = false;
 	bool enableBeta = false;
 	bool accessibilityChanged = false;
 	bool networkAccessible = false;
@@ -21,14 +22,16 @@ public:
 	UpdateStatus latestUpdateInfo;
 	Updater();
 	~Updater();
+	std::string GetUpdaterUrl();
+	void OnUpdateInfoReceived(std::string result);
 	bool checkForNetworkChange();
 	void accessibleChanged(QNetworkAccessManager::NetworkAccessibility* access);
 	void CheckForUpdates(int version);
 	void SetEnableBeta(bool enable);
 	private slots:
-	void OnUpdateInfoReceived(QNetworkReply* result);
+	/*void OnUpdateInfoReceived(QNetworkReply* result);
 	void replyFinished(QNetworkReply* result);
-	void networkError(QNetworkReply::NetworkError code);
+	void networkError(QNetworkReply::NetworkError code);*/
 
 
 };
