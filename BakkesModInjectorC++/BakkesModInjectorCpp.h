@@ -11,7 +11,7 @@
 #include <QtWidgets/qsystemtrayicon.h>
 
 #define RL_PROCESS_NAME L"RocketLeague.exe"
-#define BAKKESMODINJECTOR_VERSION 28
+#define BAKKESMODINJECTOR_VERSION 30
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \

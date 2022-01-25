@@ -5,7 +5,7 @@
 #include "BakkesModInjectorCpp.h"
 
 //http://updater.bakkesmod.com/static/versions/bakkesmod_57.zip
-std::string Updater::UPDATE_SERVER_URL = "http://149.210.150.107/updater/"; //
+std::string Updater::UPDATE_SERVER_URL = "https://updater2.bakkesmod.com/updater/";// "http://149.210.150.107/updater/"; //
 
 
 Updater::Updater()
@@ -79,7 +79,9 @@ void Updater::networkError(QNetworkReply::NetworkError code)
 		latestUpdateInfo.requestFinished = true;
 		latestUpdateInfo.networkRequestStatus = FINISHED_ERROR;
 	}
-	UPDATE_SERVER_URL = "http://updater.bakkesmod.com/updater/";
+
+	//Some (German?) ISPs don't like the bakkesmod dowmain for some reason so we'd have to use a http fallback with direct IP :/
+	UPDATE_SERVER_URL = "http://149.210.150.107/updater/";
 	useHostname = true;
 	CheckForUpdates(lastVersionChecked);
 }
