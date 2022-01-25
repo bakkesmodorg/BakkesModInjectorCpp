@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "BakkesMod"
-#define MyAppVersion "2.0"
+#define MyAppVersion "3.0"
 #define MyAppPublisher "BakkesMod"
 #define MyAppURL "https://www.bakkesmod.com"
 #define MyAppExeName "BakkesMod.exe"
@@ -10,58 +10,140 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{B403F070-A36E-4C55-B80B-9C782F5AB315}
-AppName={#MyAppName}
-AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
+AllowNoIcons=yes
+AppId={{BF029534-4334-4CFC-B771-50B7EE54346F}
+AppMutex=BakkesModMutex
+AppName={#MyAppName}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+AppVersion={#MyAppVersion}
+ArchitecturesInstallIn64BitMode=x64
+Compression=bzip
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
-; Uncomment the following line to run in non administrative install mode (install for current user only.)
-;PrivilegesRequired=lowest
-OutputBaseFilename=bakkesmod_setup
-SetupIconFile=G:\C\source\repos\BakkesModInjectorC++\BakkesModInjectorC++\BakkesModInjectorC.ico
-Compression=lzma
+DisableStartupPrompt=yes
+MinVersion=10.0
+OutputBaseFilename=BakkesModSetup
+;-{#MyAppVersion}
+PrivilegesRequired=admin
+SetupIconFile=.\BakkesModInjectorC.ico
 SolidCompression=yes
 WizardStyle=modern
-AppMutex=BakkesModMutex
+
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; 
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}";
 
 [Files]
-Source: "G:\C\source\repos\BakkesModInjectorC++\Win32\Release\BakkesMod.exe"; DestDir: "{app}"; Flags: ignoreversion
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+Source: ".\compile_assets\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs;
+
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall; Check: ShouldRunAfter();
 
 [Registry]
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "HideOnMinimize"; Flags: dontcreatekey uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "HideOnBoot"; Flags: dontcreatekey uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "EnableSafeMode"; Flags: dontcreatekey uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "DisableWarnings"; Flags: dontcreatekey uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "InjectionTimeout"; Flags: dontcreatekey uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "InstallPath"; Flags: uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod\AppPath"; ValueName: "BakkesModPath"; Flags: dontcreatekey uninsdeletevalue
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod\AppPath"; ValueName: "AppPath"; Flags: dontcreatekey uninsdeletekey 
-Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "BakkesMod"; Flags: dontcreatekey uninsdeletekey 
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "HideOnMinimize"; ValueData: 1; ValueType: dword; Flags: dontcreatekey uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "HideOnBoot"; ValueData: 0; ValueType: dword; Flags: dontcreatekey uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "EnableSafeMode"; ValueData: 1; ValueType: dword; Flags: dontcreatekey uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "DisableWarnings"; ValueData: 0; ValueType: dword; Flags: dontcreatekey uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "InjectionTimeout"; ValueData: 2500; ValueType: dword; Flags: dontcreatekey uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "InstallPath"; ValueData: "{app}"; ValueType: string; Flags: createvalueifdoesntexist uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod\AppPath"; ValueName: "BakkesModPath"; ValueType: string; Flags: dontcreatekey uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod\AppPath"; ValueName: "AppPath"; ValueData: "{app}"; Flags: createvalueifdoesntexist uninsdeletekey 
+Root: HKCU; Subkey: "SOFTWARE\BakkesMod"; ValueName: "BakkesMod"; Flags: createvalueifdoesntexist uninsdeletekey 
 Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueName: "BakkesMod"; Flags: dontcreatekey uninsdeletevalue
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{userappdata}\bakkesmod"
+
+[Code]
+var
+  AntiVirusPage: TOutputMsgWizardPage;
+
+procedure InitializeWizard;
+begin
+  
+  
+
+end;
+
+
+function ShouldRunAfter(): Boolean;
+begin;
+  Result := ExpandConstant('{param:simpleupdater|false}') = 'false' 
+end;
+
+procedure TaskKill(FileName: String);
+var
+  ResultCode: Integer;
+begin
+    Exec(ExpandConstant('taskkill.exe'), '/f /im ' + '"' + FileName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+function InitializeSetup(): Boolean;
+begin
+  Result := False;
+  if ExpandConstant('{param:installfromdll|false}') = 'true' then
+  begin;
+    Result := True
+    TaskKill('BakkesMod.exe');
+    exit;
+  end;
+
+  // Ask the user a Yes/No question, defaulting to No
+  if MsgBox('To continue, this installer will close any open instances of Rocket League and BakkesMod.'#13#10''#13#10'Is this OK?', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+  begin
+    Result := True;
+    TaskKill('RocketLeague.exe');
+    TaskKill('BakkesMod.exe');
+  end;
+  if Result = False then
+  begin
+    MsgBox('Setup has been canceled', mbInformation, MB_OK)
+    exit;
+  end;
+end;
+procedure CurStepChanged(CurStep: TSetupStep);
+var 
+  ErrCode: integer;
+begin
+  if ExpandConstant('{param:installfromdll|false}') = 'false' then
+  begin;
+    if CurStep = ssPostInstall then
+    begin;
+      if MsgBox('BakkesMod is now installed! If you are running into issues, you may need to whitelist it in your AntiVirus.' + #13#10 + #13#10 + 'Do you want to view the documentation on whitelisting?', mbConfirmation, MB_YESNO) = IDYES
+      then begin
+        ShellExec('open', 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLd3OucDGczgvFDa_D4I72MYNVhskJMe-pA8Bi5eFBuCADixLR1QleIE-X8eE_4L-AlLNhIm6A7fTK/pubhtml',
+          '', '', SW_SHOW, ewNoWait, ErrCode);
+      end;
+    end;
+  end;
+end;
 
 
 [Code]
-procedure MyAfterInstall();
+function InitializeUninstall(): Boolean;
+  var ErrorCode: Integer;
 begin
-     RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\BakkesMod',
-    'InstallPath', ExpandConstant('{app}'));
+  Result := False;
+  if MsgBox('To continue uninstalling, this uninstaller will close any open instances of Rocket League and BakkesMod.'#13#10''#13#10'Is this OK?', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+  begin
+    Result := True;
+    TaskKill('RocketLeague.exe');
+    TaskKill('BakkesMod.exe');
+  end;
+  if Result = False then
+  begin
+    MsgBox('Uninstall has been canceled', mbInformation, MB_OK)
+    exit;
+  end;
 end;
