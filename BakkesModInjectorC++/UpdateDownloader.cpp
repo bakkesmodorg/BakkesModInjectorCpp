@@ -64,8 +64,8 @@ std::future<std::wstring> downloadZip(std::string url, std::filesystem::path dow
 					header.push_back(std::string("BakkesMod Updater CPP "));
 					request.setOpt(new curlpp::options::HttpHeader(header));
 					request.setOpt(new curlpp::options::FollowLocation(true));
-					request.setOpt(new curlpp::options::SslVerifyHost(false));
-					request.setOpt(new curlpp::options::SslVerifyPeer(false));
+					//request.setOpt(new curlpp::options::SslVerifyHost(false));
+					//request.setOpt(new curlpp::options::SslVerifyPeer(false));
 					request.setOpt(new curlpp::options::NoProgress(false));
 					request.setOpt(myFunction);
 					request.setOpt(myProgFunction);
