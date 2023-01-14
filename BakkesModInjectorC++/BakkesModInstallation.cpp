@@ -504,6 +504,46 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 		}
 		
 	}
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, 0, szPath)))
+	{
+		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / ".config" / "legendary" / "manifests";
+		LOG_LINE_W(INFO, L"Checking Epic path (Legendary)" << manifestsPath.wstring());
+		if (std::filesystem::exists(manifestsPath))
+		{
+			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
+			{
+				std:string fname = p.path().string();
+				if (fname.substr(0,14) == "Sugar_Windows_" && 
+					p.path().extension().string().compare(".manifest") == 0)
+				{
+					try
+					{
+						std::size_t found = fname.find('.manifest');
+						if (found != std::string::npos)
+						{
+							std::string versionNumber = fname.substr(14, found - 14);
+							LOG_LINE(INFO, "Found Epic version " << versionNumber);
+							if (!versionNumber.empty())
+							{
+								epicVersions.push_back(versionNumber);
+							}
+						}
+						
+					}
+					catch (...)
+					{
+						requestFailed = true;
+					}
+					if (requestFailed)
+					{
+						LOG_LINE_W(INFO, L"Parsing Legendary manifest filename failed (" << p.path().wstring() << L")")
+							continue;
+					}
+				}
+				
+			}
+		}
+	}
 	return epicVersions;
 }
 
