@@ -504,6 +504,63 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 		}
 		
 	}
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, 0, szPath)))
+	{
+		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / ".config" / "legendary";
+		LOG_LINE_W(INFO, L"Checking Epic path (Legendary)" << manifestsPath.wstring());
+		if (std::filesystem::exists(manifestsPath))
+		{
+			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
+			{
+				if (p.path().stem().string().compare("installed") == 0 && 
+					p.path().extension().string().compare(".json") == 0)
+				{
+					json js;
+					bool requestFailed = false;
+					LOG_LINE_W(INFO, L"FOUND MANIFEST (Legendary) " << p.path().wstring());
+					try
+					{
+						js = json::parse(std::ifstream(p));
+					}
+					catch (...)
+					{
+						requestFailed = true;
+					}
+					if (js.is_discarded())
+					{
+						requestFailed = true;
+					}
+					if (requestFailed)
+					{
+						LOG_LINE_W(INFO, L"Parsing JSON failed (Legendary) (" << p.path().wstring() << L")");
+						continue;
+					}
+					else
+					{
+						try
+						{
+							std::string versionNumber = js["Sugar"]["version"].As<json::String>().Value();
+							LOG_LINE(INFO, "Found Epic version " << versionNumber);
+							if (!versionNumber.empty())
+							{
+								epicVersions.push_back(versionNumber);
+							}
+						}						
+						catch (...)
+						{
+							requestFailed = true;
+						}
+						if (requestFailed)
+						{
+							LOG_LINE_W(INFO, L"Failed checking installed version from JSON (Legendary) (" << p.path().wstring() << L")")
+							continue;
+						}
+					}
+				}
+				
+			}
+		}
+	}
 	return epicVersions;
 }
 
