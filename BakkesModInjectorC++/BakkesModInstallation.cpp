@@ -539,12 +539,18 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 					{
 						try
 						{
-							std::string versionNumber = js["Sugar"]["version"].As<json::String>().Value();
-							LOG_LINE(INFO, "Found Epic version " << versionNumber);
-							if (!versionNumber.empty())
+							if (auto sugar = js.find("Sugar"); sugar != js.end())
 							{
-								epicVersions.push_back(versionNumber);
+								auto& sugarValue = sugar.value();
+								std::string versionNumber = sugarValue.value("version", "");
+								LOG_LINE(INFO, "Found Epic version " << versionNumber);
+
+								if (!versionNumber.empty())
+								{
+									epicVersions.push_back(versionNumber);
+								}
 							}
+							
 						}						
 						catch (...)
 						{
