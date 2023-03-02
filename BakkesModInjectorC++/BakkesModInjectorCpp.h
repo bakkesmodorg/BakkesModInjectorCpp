@@ -65,6 +65,7 @@ public:
 	void changeEvent(QEvent* e);
 	void OpenWebsite(std::string url);
 	void SetState(BakkesModStatus newState);
+	DWORD FindProcessId(const std::wstring& processName);
 
 	bool PopupRLRunningTillClosed();
 
@@ -76,6 +77,7 @@ public:
 	void OnMinimizeOnStart();
 	void OnHideOnMinimize();
 	void OnRunOnStartup();
+	void OnRunOnLaunch();
 	void OnDisableWarnings();
 	void OnExitClick();
 	void OnReinstallClick();
