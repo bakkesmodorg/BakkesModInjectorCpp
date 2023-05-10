@@ -1,6 +1,5 @@
 {
     "githubPullRequests.ignoredPullRequestBranches": [
         "master"
-    ],
-    "C_Cpp.errorSquiggles": "disabled"
+    ]
 }
