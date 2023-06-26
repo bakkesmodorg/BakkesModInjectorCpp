@@ -81,8 +81,10 @@
      <string>Settings</string>
     </property>
     <addaction name="actionEnable_safe_mode"/>
-    <addaction name="actionRun_on_startup"/>
-    <addaction name="actionHide_when_minimized"/>
+    <addaction name="actionLaunch_with_RL"/>
+     <addaction name="actionRun_on_startup"/>
+
+     <addaction name="actionHide_when_minimized"/>
     <addaction name="actionMinimize_on_start"/>
     <addaction name="actionManually_select_BakkesMod_folder"/>
     <addaction name="actionSet_injection_timeout"/>
@@ -152,11 +154,19 @@
    </property>
   </action>
   <action name="actionRun_on_startup">
+    <property name="checkable">
+      <bool>true</bool>
+    </property>
+    <property name="text">
+      <string>Run on startup</string>
+    </property>
+  </action>
+  <action name="actionLaunch_with_RL">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Run on startup</string>
+    <string>Launch RL, Close with RL</string>
    </property>
   </action>
   <action name="actionHide_when_minimized">
@@ -275,11 +285,27 @@
     </hint>
    </hints>
   </connection>
+   <connection>
+     <sender>actionRun_on_startup</sender>
+     <signal>triggered()</signal>
+     <receiver>BakkesModInjectorCppClass</receiver>
+     <slot>OnRunOnStartup()</slot>
+     <hints>
+       <hint type="sourcelabel">
+         <x>-1</x>
+         <y>-1</y>
+       </hint>
+       <hint type="destinationlabel">
+         <x>154</x>
+         <y>42</y>
+       </hint>
+     </hints>
+   </connection>
   <connection>
-   <sender>actionRun_on_startup</sender>
+   <sender>actionLaunch_with_RL</sender>
    <signal>triggered()</signal>
    <receiver>BakkesModInjectorCppClass</receiver>
-   <slot>OnRunOnStartup()</slot>
+   <slot>OnRunOnLaunch()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -552,7 +578,8 @@
   <slot>OnOpenBakkesModFolderClicked()</slot>
   <slot>OnCheckInjection()</slot>
   <slot>OnCheckSafeMode()</slot>
-  <slot>OnRunOnStartup()</slot>
+   <slot>OnRunOnStartup()</slot>
+  <slot>OnRunOnLaunch()</slot>
   <slot>OnMinimizeOnStart()</slot>
   <slot>OnHideOnMinimize()</slot>
   <slot>OnExitClick()</slot>
