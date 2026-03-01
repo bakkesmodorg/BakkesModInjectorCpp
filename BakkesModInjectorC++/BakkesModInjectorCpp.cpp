@@ -1,21 +1,18 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "BakkesModInjectorCpp.h"
-#include "qmessagebox.h"
+#include <QtWidgets/qmessagebox.h>
 #include <sstream>
 #include "updatedownloader.h"
 #include <tlhelp32.h>
 #include "Installer.h"
 #include <direct.h>
-#include <tchar.h>
-#include <qshortcut.h>
+#include <QtWidgets/qshortcut.h>
 #include <fstream>
 #include "logger.h"
+#define INJECTION_TIMEOUT_DEFAULT 2500
 #include <sddl.h>
 #include <stdio.h>
 #include <winevt.h>
-#include <Windows.h>
-
-#define INJECTION_TIMEOUT_DEFAULT 2500
 
 
 #pragma comment(lib, "wevtapi.lib")
@@ -24,12 +21,9 @@ DWORD WINAPI SubscriptionCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pCon
 BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	: QMainWindow(parent)
 {
-	std::wstring TempPath;
-	wchar_t wcharPath[MAX_PATH];
-	if (GetTempPathW(MAX_PATH, wcharPath))
-		TempPath = wcharPath;
-	AixLog::Log::init<AixLog::SinkFile>(AixLog::Severity::trace, AixLog::Type::all, WindowsUtils::WStringToString(TempPath) + "\\injectorlog.log");
-	LOG_LINE(INFO, "Initialized logger")
+
+	
+	
 	LOG_LINE(INFO, "BakkesMod injector version " << BAKKESMODINJECTOR_VERSION << ". Compiled at " __DATE__ " " __TIME__)
 	ui.setupUi(this);
 	LOG_LINE(INFO, "Set up UI")
@@ -38,7 +32,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	if(qApp->arguments().contains("icon"))
 	{
 		icon = QIcon(qApp->arguments().at(qApp->arguments().indexOf("icon")));
-		LOG(INFO, "Custom icon " << qApp->arguments().at(qApp->arguments().indexOf("icon")));
+		//LOG_LINE(INFO, "Custom icon " << qApp->arguments().at(qApp->arguments().indexOf("icon")));
 	}
 	else {
 		icon = QIcon(":/BakkesModInjectorCpp/mainicon");
@@ -51,7 +45,7 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 	LOG_LINE(INFO, "Time: " << conv.count())
 	//Create tray icon
 	trayIcon = new QSystemTrayIcon(icon, this);
-
+	
 	QMenu* menu = new QMenu();
 	QAction* openAction = new QAction("Open", menu);
 	QAction* closeAction = new QAction("Exit", menu);
@@ -75,6 +69,9 @@ BakkesModInjectorCpp::BakkesModInjectorCpp(QWidget *parent)
 void BakkesModInjectorCpp::initialize()
 {
 	timer.start(500);
+
+	//installation.GetEpicInstallLocation();
+
 	QApplication::setQuitOnLastWindowClosed(false);
 	ui.progressBar->hide();
 	LOG_LINE(INFO, "Checking if hideonboot is on")
@@ -106,7 +103,7 @@ void BakkesModInjectorCpp::initialize()
 		else {
 			LOG_LINE(INFO, "Removed file successfully")
 		}
-
+		
 	}
 	else
 	{
@@ -138,7 +135,7 @@ void BakkesModInjectorCpp::changeEvent(QEvent* e)
 	{
 		if (this->windowState() & Qt::WindowMinimized)
 		{
-			if (settingsManager.GetIntSetting(L"HideOnMinimize"))
+			if (settingsManager.GetIntSetting(L"HideOnMinimize")) 
 			{
 				QApplication::setQuitOnLastWindowClosed(false);
 				QTimer::singleShot(50, this, SLOT(hide()));
@@ -164,35 +161,6 @@ void BakkesModInjectorCpp::SetState(BakkesModStatus newState)
 	bakkesModState = newState;
 }
 
-DWORD BakkesModInjectorCpp::FindProcessId(const std::wstring& processName)
-{
-	PROCESSENTRY32 processInfo;
-	processInfo.dwSize = sizeof(processInfo);
-
-	HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-	if (processesSnapshot == INVALID_HANDLE_VALUE)
-		return 0;
-
-	Process32First(processesSnapshot, &processInfo);
-	if (!processName.compare(processInfo.szExeFile))
-	{
-		CloseHandle(processesSnapshot);
-		return processInfo.th32ProcessID;
-	}
-
-	while (Process32Next(processesSnapshot, &processInfo))
-	{
-		if (!processName.compare(processInfo.szExeFile))
-		{
-			CloseHandle(processesSnapshot);
-			return processInfo.th32ProcessID;
-		}
-	}
-
-	CloseHandle(processesSnapshot);
-	return 0;
-}
-
 std::string BakkesModInjectorCpp::GetStatusString()
 {
 	std::string status = "";
@@ -202,7 +170,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Starting...";
 		break;
 	case BAKKESMOD_IDLE:
-		status = "Uninjected, waiting for user to start Rocket League";
+		status = bakkesModIdleString;
 		break;
 	case WAITING_FOR_RL:
 		break;
@@ -210,7 +178,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Out of date";
 		break;
 	case OUT_OF_DATE_SAFEMODE_ENABLED:
-		status = "Mod is out of date, waiting for an update";
+		status = bakkesModOutOfDateSafeModeEnabledString;
 		break;
 	case CHECKING_FOR_UPDATES:
 		status = "Checking for updates";
@@ -228,7 +196,7 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		status = "Injecting DLL";
 		break;
 	case INJECTED:
-		status = "Injected, press F2 ingame for options menu";
+		status = bakkesModInjectedString;
 		break;
 	case INJECTION_FAILED:
 		status = "Injection failed, please download vc_redist.x86.exe and restart your PC";
@@ -249,11 +217,11 @@ std::string BakkesModInjectorCpp::GetStatusString()
 	return status;
 }
 
-void BakkesModInjectorCpp::OnCheckInjection()
+void BakkesModInjectorCpp::OnCheckInjection() 
 {
 	DWORD injectionResult = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
 	QMessageBox msgBox;
-
+	
 	if (injectionResult == NOT_RUNNING)
 	{
 		msgBox.setText("Rocket League is not running");
@@ -277,33 +245,102 @@ void BakkesModInjectorCpp::OnCheckInjection()
 
 void BakkesModInjectorCpp::TimerTimeout()
 {
+
 	static UpdateDownloader* updateDownloader = NULL;
+	static std::chrono::steady_clock::time_point lastSync = std::chrono::steady_clock::now();
+	static std::chrono::steady_clock::time_point lastVersionCheck = std::chrono::steady_clock::now() - std::chrono::seconds(10000);
+	static std::chrono::steady_clock::time_point lastInstallationCheck = std::chrono::steady_clock::now() - std::chrono::seconds(10000);
 	//LOG_LINE(INFO, GetStateName(bakkesModState))
 	switch (bakkesModState)
 	{
 	case BOOTING:
 	{
+
+		
+
 		LOG_LINE(INFO, "Booting")
+
+		{
+			installation.CreateAppDataFolderIfDoesntExist();
+			auto oldInstall = installation.GetOldBakkesModFolder();
+			auto newInstall = installation.GetBakkesModFolder();
+			LOG_LINE_W(INFO, L"OLD " << oldInstall.wstring());
+
+			LOG_LINE_W(INFO, L"NEW " << newInstall.wstring());
+			if (oldInstall.wstring().size() > 0)
+			{
+				LOG_LINE_W(INFO, L"OLD INSTALL DETECTED " << oldInstall.wstring());
+				if (!std::filesystem::exists(newInstall))
+				{
+					if (std::filesystem::exists(oldInstall))
+					{
+						try
+						{
+							LOG_LINE_W(INFO, "Creating directory " << newInstall.wstring());
+							std::filesystem::create_directories(newInstall);
+							LOG_LINE_W(INFO, "Copying directory " << oldInstall.wstring() << "->" << newInstall.wstring());
+							std::filesystem::copy(oldInstall, newInstall, std::filesystem::copy_options::recursive);
+							LOG_LINE_W(INFO, "Removing old directory " << oldInstall.wstring());
+							std::filesystem::remove_all(oldInstall);
+						}
+						catch (std::exception& e)
+						{
+							LOG_LINE(INFO, "Something went wrong on migration: " << e.what())
+						}
+					}
+				}
+			}
+		}
+
 		if (!installation.IsInstalled())
 		{
 			LOG_LINE(INFO, "Not installed, setting default values")
-			settingsManager.SaveSetting(L"EnableSafeMode", 1);
+				settingsManager.SaveSetting(L"EnableSafeMode", 1);
 			settingsManager.SaveSetting(L"HideOnMinimize", 1);
 			settingsManager.SaveSetting(L"HideOnBoot", 0);
 			settingsManager.SaveSetting(L"DisableWarnings", 0);
-			settingsManager.SaveSetting(L"LaunchWithRL", 0);
 			settingsManager.SaveSetting(L"BakkesMod", L"-", RegisterySettingsManager::REGISTRY_DIR_RUN);
 			LOG_LINE(INFO, "Default settings set")
-			//settingsManager.SaveSetting(L"InjectionTimeout", 70);
+				//settingsManager.SaveSetting(L"InjectionTimeout", 70);
+		}
+		
+		{
+			auto currentPid = ::getpid();
+			auto ids = dllInjector.GetProcessIDS(L"bakkesmod.exe");
+			{
+				auto ids2 = dllInjector.GetProcessIDS(L"bakkesmodinjector.exe");
+				ids.insert(ids.end(), ids2.begin(), ids2.end());
+			}
+			for (auto id : ids)
+			{
+				if (id == currentPid)
+					continue;
+				LOG_LINE(INFO, "Found existing BM process " << id);
+				LOG_LINE(INFO, "Found existing BM process, PID: " << id << ". Currently on try 1");
+				HANDLE rlHandle;
+				rlHandle = OpenProcess(PROCESS_ALL_ACCESS, false, id);
+				LOG_LINE(INFO, "Sending terminate");
+				TerminateProcess(rlHandle, 1);
+				LOG_LINE(INFO, "Waiting for Single Object (timeout=1000ms)");
+				WaitForSingleObject(rlHandle, 1000);
+				LOG_LINE(INFO, "Done waiting");
+				CloseHandle(rlHandle);
+				LOG_LINE(INFO, "Closed handle");
+				
+			}
 		}
 
 		ui.actionEnable_safe_mode->setChecked(settingsManager.GetIntSetting(L"EnableSafeMode"));
 		safeModeEnabled = ui.actionEnable_safe_mode->isChecked();
 		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"HideOnMinimize"));
-		ui.actionHide_when_minimized->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
-		ui.actionLaunch_with_RL->setChecked(settingsManager.GetIntSetting(L"LaunchWithRL"));
-		OnRunOnLaunch();
-		ui.actionRun_on_startup->setChecked(!settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty());
+		ui.actionDisable_warnings->setChecked(settingsManager.GetIntSetting(L"DisableWarnings"));
+
+		bool betaEnabled = settingsManager.GetIntSetting(L"EnableBeta");
+		ui.actionOpt_in_to_beta_releases->setChecked(betaEnabled);
+		updater.SetEnableBeta(betaEnabled);
+		
+		bool runOnStartup = !settingsManager.GetStringSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN).empty();
+		ui.actionRun_on_startup->setChecked(runOnStartup);
 		OnRunOnStartup();
 		int version = installation.GetVersion();
 		updater.CheckForUpdates(version);
@@ -314,6 +351,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case CHECKING_FOR_UPDATES:
 	{
+		lastInstallationCheck = std::chrono::steady_clock::now() - std::chrono::seconds(10000);
 		if (updater.latestUpdateInfo.requestFinished)
 		{
 			LOG_LINE(INFO, "Request finished")
@@ -321,16 +359,20 @@ void BakkesModInjectorCpp::TimerTimeout()
 			{
 				LOG_LINE(WARNING, "Error connecting to update server")
 				SetState(BAKKESMOD_IDLE);
-				QMessageBox msgBox2;
+
+				bakkesModIdleString = "Error connecting to update server,\nwill retry in a few minutes";
+				bakkesModOutOfDateSafeModeEnabledString = "Error connecting to update server,\nwill retry in a few minutes";
+				/*QMessageBox msgBox2;
 				std::stringstream ss;
 				msgBox2.setText("Could not connect to update server, running in offline mode");
 				msgBox2.setStandardButtons(QMessageBox::Ok);
 				msgBox2.setDefaultButton(QMessageBox::Ok);
-				int ret = msgBox2.exec();
+				int ret = msgBox2.exec();*/
 				return;
 			}
 			else
 			{
+				bakkesModOutOfDateSafeModeEnabledString = "Mod is out of date, waiting for an update";
 				LOG_LINE(INFO, "Successfully received response from BakkesMod update server")
 				if (std::stoi(updater.latestUpdateInfo.injectorVersion) > BAKKESMODINJECTOR_VERSION)
 				{
@@ -348,17 +390,26 @@ void BakkesModInjectorCpp::TimerTimeout()
 					{
 						LOG_LINE(INFO, "User accepted injector update")
 						SetState(UPDATING_INJECTOR);
-						updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorUrl, "newinjector.exe");
+						if (windowsUtils.IsStandalone())
+						{
+							updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorUrl, "newbakkesmod.exe");
+						}
+						else
+						{
+							updateDownloader = new UpdateDownloader(updater.latestUpdateInfo.injectorSetupUrl, "newbakkesmodsetup.exe");
+						}
+						
 						updateDownloader->StartDownload();
 						ui.progressBar->setMaximum(100);
 						return;
 					}
 					LOG_LINE(INFO, "User denied injector update")
 				}
+				ui.actionOpt_in_to_beta_releases->setEnabled(updater.latestUpdateInfo.allowBetaAccess);
 				//out of date counter = 0 -> new run. >0 -> Checking for updates
 				if (updater.latestUpdateInfo.requiresUpdate)
 				{
-					if (outOfDateCounter == 0 || dllInjector.GetProcessID(RL_PROCESS_NAME) == 0)
+					if (outOfDateCounter == 0 || dllInjector.GetProcessID64(RL_PROCESS_NAME) == 0)
 					{
 						LOG_LINE(INFO, "BakkesMod update available, version " << updater.latestUpdateInfo.newestTrainerVersion)
 							QMessageBox msgBox;
@@ -408,7 +459,8 @@ void BakkesModInjectorCpp::TimerTimeout()
 					SetState(CHECK_D3D9);
 				}
 			}
-
+			LOG_LINE(INFO, "Safe mode status: " << safeModeEnabled);
+			
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date
 			{
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
@@ -425,7 +477,14 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 		outOfDateCounter++;
 		timer.setInterval(1000);
-		if (outOfDateCounter > 120)
+		if (updater.checkForNetworkChange())
+		{
+			LOG_LINE(INFO, "Detected change in internet accessibility")
+			updater.latestUpdateInfo = UpdateStatus();
+			SetState(BOOTING);
+			outOfDateCounter = 1;
+		}
+		else if (outOfDateCounter > updater.latestUpdateInfo.backoff_seconds_outofdate)
 		{
 			LOG_LINE(INFO, "Checking if BakkesMod has updated yet")
 			updater.latestUpdateInfo = UpdateStatus();
@@ -453,48 +512,82 @@ void BakkesModInjectorCpp::TimerTimeout()
 			size_t loc = currentName.find_last_of('\\') + 1;
 			auto newOldName = currentName.substr(0, loc) + L"bakkesmod_old.exe";
 			LOG_LINE(INFO, "Renaming current injector to " << WindowsUtils::WStringToString(newOldName).c_str())
+				LOG_LINE(INFO, "Is standalone " << windowsUtils.IsStandalone());
+				if (windowsUtils.IsStandalone())
+				{
+					if (MoveFile(currentName.c_str(), newOldName.c_str()) != 0)
+					{
+						LOG_LINE(INFO, "Successfully renamed current executable to bakkesmod_old.exe");
+						if (MoveFile(updateDownloader->packageUrl.c_str(), currentName.c_str()) != 0)
+						{
+							LOG_LINE(INFO, "Moved new injector from " << WindowsUtils::WStringToString(updateDownloader->packageUrl) << " to " << WindowsUtils::WStringToString(currentName));
 
-			if (MoveFile(currentName.c_str(), newOldName.c_str()) == 0)
-			{
-				LOG_LINE(INFO, "Successfully renamed current executable to bakkesmod_old.exe");
-				MoveFile(updateDownloader->packageUrl.c_str(), currentName.c_str());
+							STARTUPINFO si;
+							PROCESS_INFORMATION pi;
+							ZeroMemory(&si, sizeof(si)); //Use default startup info
+							ZeroMemory(&pi, sizeof(pi));
+							LPWSTR commandLine = L""; //No command line arguments
+							CreateProcess(currentName.c_str(),
+								commandLine,
+								NULL,
+								NULL,
+								FALSE,
+								CREATE_BREAKAWAY_FROM_JOB, //Actually launch new process since we close this one on the next line
+								NULL,
+								NULL,
+								&si,
+								&pi
+							);
 
-
-				STARTUPINFO si;
-				PROCESS_INFORMATION pi;
-				ZeroMemory(&si, sizeof(si)); //Use default startup info
-				ZeroMemory(&pi, sizeof(pi));
-				LPWSTR commandLine = L""; //No command line arguments
-				CreateProcess(currentName.c_str(),
-					commandLine,
-					NULL,
-					NULL,
-					FALSE,
-					CREATE_BREAKAWAY_FROM_JOB, //Actually launch new process since we close this one on the next line
-					NULL,
-					NULL,
-					&si,
-					&pi
+							LOG_LINE(INFO, "Result " << GetLastError());//For now, I guess we do nothing if launching new process didn't work
+							//system(WindowsUtils::WStringToString(currentName).c_str());
+							QCoreApplication::quit();
+						}
+						else
+						{
+							LOG_LINE(INFO, "Failed to rename old file to current: " << GetLastError())
+						}
+					}
+					else
+					{
+						LOG_LINE(INFO, "Unable to rename current executable to bakkesmod_old.exe, displaying error to user");
+						QMessageBox msgBox;
+						msgBox.setText("Could not update BakkesMod injector, no permissions to rename file, sorry! Try downloading it manually from the website");
+						msgBox.setStandardButtons(QMessageBox::Ok);
+						msgBox.setDefaultButton(QMessageBox::Ok);
+						int ret = msgBox.exec();
+						SetState(BAKKESMOD_IDLE);
+					}
+				}
+				else
+				{
+					STARTUPINFO si;
+					PROCESS_INFORMATION pi;
+					ZeroMemory(&si, sizeof(si)); //Use default startup info
+					ZeroMemory(&pi, sizeof(pi));
+					LPWSTR commandLine = L" /installfromdll=true /VERYSILENT"; //No command line arguments
+					auto created = CreateProcess(updateDownloader->packageUrl.c_str(),
+						commandLine,
+						NULL,
+						NULL,
+						FALSE,
+						NULL, //Actually launch new process since we close this one on the next line
+						NULL,
+						NULL,
+						&si,
+						&pi
 					);
 
-				//LOG_LINE(INFO, "Result " << GetLastError())//For now, I guess we do nothing if launching new process didn't work
-				//system(WindowsUtils::WStringToString(currentName).c_str());
-				QCoreApplication::quit();
-			}
-			else
-			{
-				LOG_LINE(INFO, "Unable to rename current executable to bakkesmod_old.exe, displaying error to user");
-				QMessageBox msgBox;
-				msgBox.setText("Could not update BakkesMod injector, no permissions to rename file, sorry! Try downloading it manually from the website");
-				msgBox.setStandardButtons(QMessageBox::Ok);
-				msgBox.setDefaultButton(QMessageBox::Ok);
-				int ret = msgBox.exec();
-				SetState(BAKKESMOD_IDLE);
-			}
+					LOG_LINE(INFO, "Result " << GetLastError());//For now, I guess we do nothing if launching new process didn't work
+					auto waited = WaitForSingleObject(pi.hProcess, 15000);
+					LOG_LINE(INFO, "Done waiting " << waited << ", " << GetLastError());//For now, I guess we do nothing if launching new process didn't work
+					SetState(BAKKESMOD_IDLE);
+				}
+			
 		}
 		else {
 			ui.progressBar->show();
-			ui.progressBar->setValue(updateDownloader->percentComplete);
+			ui.progressBar->setValue(UpdateDownloader::percentComplete);
 
 		}
 	}
@@ -502,6 +595,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 	case UPDATING_BAKKESMOD:
 		if (!updateDownloader)
 			return;
+
 		if (updateDownloader->completed)
 		{
 			LOG_LINE(INFO, "Downloaded BakkesMod update file")
@@ -509,16 +603,17 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(BAKKESMOD_INSTALLING);
 		}
 		else {
+			timer.setInterval(100);
 			ui.progressBar->show();
-			LOG_LINE(INFO, "Update progress: " << updateDownloader->percentComplete << "%")
-			ui.progressBar->setValue(updateDownloader->percentComplete);
+			LOG_LINE(INFO, "[MainLoop] Update progress: " << UpdateDownloader::percentComplete << "%")
+			ui.progressBar->setValue(UpdateDownloader::percentComplete);
 
 		}
 	break;
 	case WAIT_FOR_RL_CLOSE:
 	{
 		timer.setInterval(2500);
-		DWORD processId = dllInjector.GetProcessID(RL_PROCESS_NAME);
+		DWORD processId = dllInjector.GetProcessID64(RL_PROCESS_NAME);
 		if (processId == 0)
 		{
 			SetState(BAKKESMOD_INSTALLING);
@@ -542,9 +637,17 @@ void BakkesModInjectorCpp::TimerTimeout()
 		Installer i(updateDownloader->packageUrl, installation.GetBakkesModFolder());
 		i.Install();
 
-		std::ofstream out(installation.GetBakkesModFolder() + "injectorversion.txt");
-		out << BAKKESMODINJECTOR_VERSION;
-		out.close();
+		{
+			std::ofstream out(installation.GetBakkesModFolder() / "injectorversion.txt");
+			out << BAKKESMODINJECTOR_VERSION;
+			out.close();
+		}
+		
+		{
+			std::ofstream out(installation.GetBakkesModFolder() / "updaterinfo.txt");
+			out << updater.latestUpdateInfo.jsonData;
+			out.close();
+		}
 		LOG_LINE(INFO, "Writing " << BAKKESMODINJECTOR_VERSION << " to injectorversion.txt")
 		SetState(CHECK_D3D9);
 	}
@@ -553,16 +656,71 @@ void BakkesModInjectorCpp::TimerTimeout()
 	{
 		timer.setInterval(3000);
 		static int intervalLoops = 0;
-		intervalLoops++;
-		if (intervalLoops > 200)
+
+		auto now = std::chrono::steady_clock::now();
+		auto updateDiff = std::chrono::duration_cast<std::chrono::seconds>(now - lastSync).count();
+		auto versionCheckDiff = std::chrono::duration_cast<std::chrono::seconds>(now - lastVersionCheck).count();
+		auto lastInstallationDiff = std::chrono::duration_cast<std::chrono::seconds>(now - lastInstallationCheck).count();
+		if (updateDiff > updater.latestUpdateInfo.backoff_seconds)
 		{
-			intervalLoops = 10;
+			OnCheckForUpdates();
+			lastSync = now;
+		}
+
+		if (lastInstallationDiff > 30)
+		{
+			lastInstallationCheck = now;
+			auto hasSteamVersion = installation.IsSteamVersionInstalled();
+			auto hasEgsVersion = installation.IsEpicVersionInstalled();
+			if (!hasSteamVersion && !hasEgsVersion)
+			{
+				bakkesModIdleString = "No RL installation detected";
+			}
+			else
+			{
+				std::stringstream ss;
+				bool canInject = false;
+				if (hasSteamVersion)
+				{
+					if (installation.IsSteamVersionReady(updater.latestUpdateInfo))
+					{
+						ss << "Rocket League (Steam): up to date.\n";
+						canInject = true;
+					}
+					else
+					{
+						ss << "Rocket League (Steam): BM out of date.\n";
+					}
+				}
+				if (hasEgsVersion)
+				{
+					if (installation.IsEpicVersionReady(updater.latestUpdateInfo))
+					{
+						ss << "Rocket League (Epic Games): up to date.\n";
+						canInject = true;
+					}
+					else
+					{
+						ss << "Rocket League (Epic Games): BM out of date.\n";
+					}
+				}
+				if (canInject)
+				{
+					ss << "Uninjected, waiting for user to start Rocket League";
+				}
+				bakkesModIdleString = ss.str();
+			}
+		}
+		
+		if (versionCheckDiff > 200)
+		{
+			lastVersionCheck = now;
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if out of date every X sec
 			{
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
 			}
 		}
-		else if (dllInjector.GetProcessID(RL_PROCESS_NAME))
+		else if (dllInjector.GetProcessID64(RL_PROCESS_NAME))
 		{
 			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if safe to inject right before injecting
 			{
@@ -570,7 +728,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			}
 			else
 			{
-				LOG_LINE(INFO, "Rocket league process ID is " << dllInjector.GetProcessID(RL_PROCESS_NAME))
+				LOG_LINE(INFO, "Rocket league process ID is " << dllInjector.GetProcessID64(RL_PROCESS_NAME))
 				SetState(INJECT_DLL);
 				int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
 				if (timeout == 0)
@@ -593,8 +751,9 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case INJECT_DLL:
 	{
-		std::string bmPath = installation.GetBakkesModFolder();
-		std::string path = bmPath + "bakkesmod.dll";
+		auto bmPath = installation.GetBakkesModFolder();
+		auto path = bmPath / "dll" / "bakkesmod.dll";
+		LOG_LINE_W(INFO, L"Trying to inject " << path.wstring())
 		if (!WindowsUtils::FileExists(path))
 		{
 			QMessageBox msgBox;
@@ -605,6 +764,65 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(INSTALLATION_CORRUPT);
 			return;
 		}
+		{
+			std::ofstream out(installation.GetBakkesModFolder() / "updaterinfo.txt");
+			out << updater.latestUpdateInfo.jsonData;
+			out.close();
+		}
+
+		DWORD alreadyInjected = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
+		LOG_LINE(INFO, "Already injected check: " <<(int)alreadyInjected)
+		if (alreadyInjected == OK)
+		{
+			SetState(INJECTED);
+			break;
+		}
+		
+		//GetPlatform
+		GamePlatform platform = dllInjector.GetPlatform(dllInjector.GetProcessID64(RL_PROCESS_NAME));
+
+		bool isSafeToInject = false;
+		switch (platform)
+		{
+			case GamePlatform::STEAM:
+				bakkesModInjectedString = "Injected, press F2 ingame for options menu (Steam version)";
+				isSafeToInject = installation.IsSteamVersionReady(updater.latestUpdateInfo);
+				break;
+			case GamePlatform::EPIC:
+				bakkesModInjectedString = "Injected, press F2 ingame for options menu (Epic Games version)";
+				isSafeToInject = installation.IsEpicVersionReady(updater.latestUpdateInfo);
+				break;
+			case GamePlatform::UNKNOWN:
+				bakkesModInjectedString = "Injected, press F2 ingame for options menu (Unknown)";
+				isSafeToInject = installation.IsSafeToInject(updater.latestUpdateInfo);
+				break;
+		}
+		if (!isSafeToInject)
+		{
+			LOG_LINE(INFO, "Probably not safe to inject");
+			{
+				QMessageBox msgBox;
+				std::stringstream ss;
+				ss << "It seems like the mod is trying to inject in an unsupported version of Rocket League." << std::endl;
+				ss << "Would you like to try to inject anyway? This may cause instability issues and crashes";
+				msgBox.setText(ss.str().c_str());
+				msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+				msgBox.setDefaultButton(QMessageBox::Yes);
+				int ret = msgBox.exec();
+				if (ret == QMessageBox::Yes)
+				{
+					LOG_LINE(INFO, "User chooses to inject anyway")
+				}
+				else
+				{
+					LOG_LINE(INFO, "User denied injection")
+					SetState(INJECTED);
+					bakkesModInjectedString = "User denied injection. Restart the game to try again";
+					return;
+				}
+			}
+			
+		}
 		dllInjector.InjectDLL(RL_PROCESS_NAME, path);
 
 		DWORD injectionResult = dllInjector.IsBakkesModDllInjected(RL_PROCESS_NAME);
@@ -613,7 +831,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			SetState(INJECTION_FAILED);
 			QMessageBox msgBox;
 			std::stringstream ss;
-			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency (vc_redist.x86.exe). Please download it from http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
+			ss << "It looks like injection was unsuccessful, this probably means you're missing a dependency (vc_redist.x64.exe). Please download it from http://bakkesmod.wikia.com/wiki/Troubleshooting" << std::endl;
 			ss << "Would you like to open it now?";
 			msgBox.setText(ss.str().c_str());
 			msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -621,7 +839,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			if (ret == QMessageBox::Yes)
 			{
-
+				OpenWebsite("http://bakkesmod.wikia.com/wiki/Troubleshooting");
 			}
 		}
 		else
@@ -632,17 +850,14 @@ void BakkesModInjectorCpp::TimerTimeout()
 		break;
 	case INJECTED:
 		timer.setInterval(1000);
-		if (!dllInjector.GetProcessID(RL_PROCESS_NAME))
+		if (!dllInjector.GetProcessID64(RL_PROCESS_NAME))
 		{
 			SetState(BAKKESMOD_IDLE);
-			if (ui.actionLaunch_with_RL->isChecked()) {
-				OnExitClick();
-			}
 		}
 		break;
 	case CHECK_D3D9:
 	{
-		if (settingsManager.GetIntSetting(L"DisableWarnings") == 0 && WindowsUtils::FileExists(installation.GetBakkesModFolder() + "../d3d9.dll"))
+		if (settingsManager.GetIntSetting(L"DisableWarnings") == 0 && WindowsUtils::FileExists(installation.GetBakkesModFolder() / "../d3d9.dll"))
 		{
 			QMessageBox msgBox;
 			LOG_LINE(INFO, "found a d3d9.dll")
@@ -654,7 +869,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			if (ret == QMessageBox::Yes)
 			{
-				if (remove((installation.GetBakkesModFolder() + "../d3d9.dll").c_str()) != 0)
+				if (std::filesystem::remove((installation.GetBakkesModFolder() / "../d3d9.dll").c_str()) != 0) 
 				{
 					QMessageBox msgBox2;
 					LOG_LINE(INFO, "Could not remove d3d9.dll")
@@ -678,7 +893,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 				}
 			}
 		}
-		if (!installation.ManifestFileExists() && ui.actionEnable_safe_mode->isChecked())
+		/*if (!installation.ManifestFileExists() && ui.actionEnable_safe_mode->isChecked())
 		{
 			QMessageBox msgBox;
 			LOG_LINE(INFO, "Could not find manifest file")
@@ -690,7 +905,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 			int ret = msgBox.exec();
 			ui.actionEnable_safe_mode->setChecked(false);
 			OnCheckSafeMode();
-		}
+		}*/
 		SetState(BAKKESMOD_IDLE);
 	}
 		break;
@@ -725,7 +940,7 @@ void BakkesModInjectorCpp::OnHideOnMinimize()
 void BakkesModInjectorCpp::OnRunOnStartup()
 {
 	bool newStatus = ui.actionRun_on_startup->isChecked();
-
+	
 	if (newStatus)
 	{
 		std::wostringstream w;
@@ -736,36 +951,6 @@ void BakkesModInjectorCpp::OnRunOnStartup()
 	{
 		settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
 	}
-}
-
-void BakkesModInjectorCpp::OnRunOnLaunch()
-{
-	bool newStatus = ui.actionLaunch_with_RL->isChecked();
-
-	if (newStatus)
-	{
-		if (!FindProcessId(L"RocketLeague.exe")) {
-			LPTSTR szCmdline = _tcsdup(TEXT("\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\rocketleague\\Binaries\\Win32\\RocketLeague\""));
-			STARTUPINFO si;
-			PROCESS_INFORMATION pi;
-			ZeroMemory(&si, sizeof(si)); //Use default startup info
-			ZeroMemory(&pi, sizeof(pi));
-			CreateProcess(NULL,
-				szCmdline,
-				NULL,
-				NULL,
-				FALSE,
-				CREATE_BREAKAWAY_FROM_JOB,
-				NULL,
-				NULL,
-				&si,
-				&pi
-			);
-		}
-
-	}
-	settingsManager.SaveSetting(L"LaunchWithRL", (int)newStatus);
-	
 }
 
 void BakkesModInjectorCpp::OnDisableWarnings()
@@ -791,20 +976,29 @@ void BakkesModInjectorCpp::OnReinstallClick()
 	int ret = msgBox.exec();
 	if (ret == QMessageBox::Yes)
 	{
-		if (WindowsUtils::DeleteDirectory(WindowsUtils::StringToWString(installation.GetBakkesModFolder())))
+		if (std::filesystem::exists(installation.GetBakkesModFolder()))
 		{
-			LOG_LINE(INFO, "Could not remove BakkesMod folder")
-			QMessageBox msgBox2;
-			msgBox2.setText("Could not remove BakkesMod folder, no rights or a file is already in use.");
-			msgBox2.setStandardButtons(QMessageBox::Ok);
-			msgBox2.setDefaultButton(QMessageBox::Ok);
-			int ret = msgBox2.exec();
+			if (WindowsUtils::DeleteDirectory(installation.GetBakkesModFolder()) == 0)
+			{
+				LOG_LINE(INFO, "Could not remove BakkesMod folder")
+					QMessageBox msgBox2;
+				msgBox2.setText("Could not remove BakkesMod folder, no rights or a file is already in use.\nAborting reinstallation.");
+				msgBox2.setStandardButtons(QMessageBox::Ok);
+				msgBox2.setDefaultButton(QMessageBox::Ok);
+				int ret = msgBox2.exec();
+				return;
+			}
 		}
-		else
 		{
 			LOG_LINE(INFO, "Reinstalling BakkesMod")
 			updater.latestUpdateInfo = UpdateStatus();
 			settingsManager.DeleteSetting(L"BakkesModPath", RegisterySettingsManager::REGISTRY_DIR_APPPATH);
+			settingsManager.DeleteSetting(L"EnableSafeMode");
+			settingsManager.DeleteSetting(L"EnableBeta");
+			settingsManager.DeleteSetting(L"HideOnMinimize");
+			settingsManager.DeleteSetting(L"HideOnBoot");
+			settingsManager.DeleteSetting(L"DisableWarnings");
+			settingsManager.DeleteSetting(L"BakkesMod", RegisterySettingsManager::REGISTRY_DIR_RUN);
 			installation.resetBMFolder();
 			SetState(BOOTING);
 		}
@@ -826,6 +1020,39 @@ void BakkesModInjectorCpp::OnPythonInstallClick()
 	int ret = msgBox.exec();
 }
 
+void BakkesModInjectorCpp::OnPatreonClick()
+{
+	OpenWebsite("https://patreon.com/bakkesmod");
+}
+
+void BakkesModInjectorCpp::OnBetaChannelClick()
+{
+	bool newStatus = ui.actionOpt_in_to_beta_releases->isChecked();
+	if (newStatus)
+	{
+		QMessageBox msgBox2;
+		msgBox2.setText("The use of beta releases could make your game unstable, if you run into issues, please report them.");
+		msgBox2.setStandardButtons(QMessageBox::Ok);
+		msgBox2.setDefaultButton(QMessageBox::Ok);
+		int ret = msgBox2.exec();
+	}
+	settingsManager.SaveSetting(L"EnableBeta", (int)newStatus);
+	safeModeEnabled = newStatus;
+	updater.SetEnableBeta(newStatus);
+	std::filesystem::path versionFilePath = installation.GetBakkesModFolder() / "version.txt";
+	if (windowsUtils.FileExists(versionFilePath))
+	{
+		std::ofstream versionFile;
+		versionFile.open(versionFilePath);
+		int version = 1;
+		versionFile << version;
+		versionFile.close();
+		LOG_LINE_W(INFO, "Writing version " << version << " to " << versionFilePath.wstring());
+		OnCheckForUpdates();
+	}
+
+}
+
 void BakkesModInjectorCpp::OpenTwitter()
 {
 	OpenWebsite("https://twitter.com/bakkesmod");
@@ -843,7 +1070,7 @@ void BakkesModInjectorCpp::OpenWebsite()
 
 void BakkesModInjectorCpp::OpenTroubleshootPage()
 {
-
+	
 	OpenWebsite("http://bakkesmod.wikia.com/wiki/Troubleshooting");
 }
 
@@ -851,7 +1078,7 @@ void BakkesModInjectorCpp::OpenTroubleshootPage()
 void BakkesModInjectorCpp::trayClicked(QSystemTrayIcon::ActivationReason e)
 {
 	if (e == QSystemTrayIcon::Trigger) {
-		if (this->isVisible())
+		if (this->isVisible()) 
 			this->hide();
 		else {
 			setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
@@ -874,7 +1101,7 @@ void BakkesModInjectorCpp::TrayCloseAction()
 {
 	QApplication::exit();
 }
-#include <qfiledialog.h>
+#include <QtWidgets/qfiledialog.h>
 void BakkesModInjectorCpp::OnSelectBakkesModFolder()
 {
 	QString path = QFileDialog::getOpenFileName(this,
@@ -889,7 +1116,7 @@ void BakkesModInjectorCpp::OnCheckForUpdates()
 	SetState(BOOTING);
 }
 
-#include <qinputdialog.h>
+#include <QtWidgets/qinputdialog.h>
 void BakkesModInjectorCpp::OnSetInjectionTimeout()
 {
 	bool ok;
@@ -899,7 +1126,7 @@ void BakkesModInjectorCpp::OnSetInjectionTimeout()
 		timeout = INJECTION_TIMEOUT_DEFAULT;
 	}
 	QString text = QInputDialog::getText(this, "Set injection timeout",
-		QString(std::string("Set the injection timeout (" + std::to_string(INJECTION_TIMEOUT_DEFAULT) + " = default). Set it to a higher value if you're experiencing crashes during launch.").c_str()),
+		QString(std::string("Set the injection timeout (" + std::to_string(INJECTION_TIMEOUT_DEFAULT) + " = default). Set it to a higher value if you're experiencing crashes during launch.").c_str()), 
 		QLineEdit::Normal, QString(std::to_string(timeout).c_str()), &ok);
 	if (ok && !text.isEmpty()) {
 		std::string test = text.toStdString();
@@ -910,9 +1137,37 @@ void BakkesModInjectorCpp::OnSetInjectionTimeout()
 	}
 }
 
+void BakkesModInjectorCpp::OnShowVersionInfo()
+{
+	std::stringstream ss;
+	ss << "Injector version: " << BAKKESMODINJECTOR_VERSION << "\n";
+	ss << "BakkesMod version: " << installation.GetVersion() << "\n";
+	ss << "Installed Steam version: " << installation.GetSteamVersion() << "\n";
+	ss << "Installed Epic version: " << installation.GetHighestEpicVersion() << "\n";
+
+	ss << "\nBakkesMod supported versions:\n";
+	ss << "Steam: ";
+	for (auto bid : updater.latestUpdateInfo.buildIds)
+	{
+		ss << bid << ", ";
+	}
+	ss << "\n";
+	ss << "Epic: ";
+	for (auto bid : updater.latestUpdateInfo.egsBuildIds)
+	{
+		ss << bid << ", ";
+	}
+	ss << "\n";
+	QMessageBox msgBox;
+	msgBox.setText(QString(ss.str().c_str()));
+	msgBox.setStandardButtons(QMessageBox::Ok);
+	msgBox.setDefaultButton(QMessageBox::Ok);
+	int ret = msgBox.exec();
+}
+
 void BakkesModInjectorCpp::ReleaseDLL()
 {
-	BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Release\\";
+	//BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Release\\";
 	QMessageBox msgBox;
 	msgBox.setText("Changed to release folder");
 	msgBox.setStandardButtons(QMessageBox::Ok);
@@ -922,7 +1177,7 @@ void BakkesModInjectorCpp::ReleaseDLL()
 
 void BakkesModInjectorCpp::DebugDLL()
 {
-	BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Debug\\";
+	//BakkesModInstallation::overrideBakkesModFolder = "F:\\Bakkesmod\\development\\BakkesMod-rewrite\\Debug\\";
 	QMessageBox msgBox;
 	msgBox.setText("Changed to debug folder");
 	msgBox.setStandardButtons(QMessageBox::Ok);
@@ -932,7 +1187,7 @@ void BakkesModInjectorCpp::DebugDLL()
 
 bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 {
-	DWORD processId = dllInjector.GetProcessID(RL_PROCESS_NAME);
+	DWORD processId = dllInjector.GetProcessID64(RL_PROCESS_NAME);
 	LOG_LINE(INFO, "Rocket League process id is " << processId)
 	if (processId > 0)
 	{
@@ -946,22 +1201,33 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 		int ret = msgBox.exec();
 		if (ret == QMessageBox::Yes)
 		{
-			LOG_LINE(INFO, "User accepted RL close")
-			processId = dllInjector.GetProcessID(RL_PROCESS_NAME); //User might close process themselves in the mean time
-			if (processId == 0) {
-				LOG_LINE(INFO, "User closed RL by themselves, returning true");
-				return true;
+			LOG_LINE(INFO, "User accepted RL close");
+			int tries = 0;
+			while (tries < 10)
+			{
+				LOG_LINE(INFO, "Found RocketLeague executable open, PID: " << dllInjector.GetProcessID64(RL_PROCESS_NAME) << ". Currently on try " << tries);
+				processId = dllInjector.GetProcessID64(RL_PROCESS_NAME); //User might close process themselves in the mean time
+				if (processId == 0) {
+					LOG_LINE(INFO, "All instances of RL are now closed");
+					return true;
+				}
+				HANDLE rlHandle;
+				rlHandle = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
+				LOG_LINE(INFO, "Sending terminate");
+				TerminateProcess(rlHandle, 1);
+				LOG_LINE(INFO, "Waiting for Single Object (timeout=1000ms)");
+				WaitForSingleObject(rlHandle, 1000);
+				LOG_LINE(INFO, "Done waiting");
+				CloseHandle(rlHandle);
+				LOG_LINE(INFO, "Closed handle");
+				tries++;
+				
 			}
-			HANDLE explorer;
-			explorer = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
-			TerminateProcess(explorer, 1);
-			CloseHandle(explorer);
-			LOG_LINE(INFO, "Force closed rl, new process id should be 0: " << dllInjector.GetProcessID(RL_PROCESS_NAME))
-			return true;
+			return false;
 		}
 		else {
 			LOG_LINE(INFO, "User denied RL close")
-			processId = dllInjector.GetProcessID(RL_PROCESS_NAME); //User might close process themselves in the mean time
+			processId = dllInjector.GetProcessID64(RL_PROCESS_NAME); //User might close process themselves in the mean time
 			if (processId == 0) {
 				LOG_LINE(INFO, "User closed RL by themselves, returning true");
 				return true;
@@ -973,10 +1239,9 @@ bool BakkesModInjectorCpp::PopupRLRunningTillClosed()
 	return true;
 }
 
-
 void BakkesModInjectorCpp::OnOpenBakkesModFolderClicked()
 {
-	std::string rlPath = installation.GetBakkesModFolder();
+	auto rlPath = installation.GetBakkesModFolder();
 	if (rlPath.empty())
 	{
 		QMessageBox msgBox;

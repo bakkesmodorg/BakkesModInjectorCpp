@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
-    <height>85</height>
+    <width>349</width>
+    <height>119</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>251</width>
-      <height>41</height>
+      <width>341</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="text">
@@ -30,8 +30,8 @@
    <widget class="QProgressBar" name="progressBar">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>10</y>
+      <x>120</x>
+      <y>20</y>
       <width>211</width>
       <height>23</height>
      </rect>
@@ -46,7 +46,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>310</width>
+     <width>349</width>
      <height>21</height>
     </rect>
    </property>
@@ -66,6 +66,7 @@
     <addaction name="actionBakkesMod_com"/>
     <addaction name="actionBakkesMod_Twitter"/>
     <addaction name="actionBakkesMod_Discord"/>
+    <addaction name="actionPatreon"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -73,6 +74,7 @@
     </property>
     <addaction name="actionCheck_injection"/>
     <addaction name="actionTroubleshooting"/>
+    <addaction name="actionShow_version_info"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -87,6 +89,7 @@
     <addaction name="actionManually_select_BakkesMod_folder"/>
     <addaction name="actionSet_injection_timeout"/>
     <addaction name="actionDisable_warnings"/>
+    <addaction name="actionOpt_in_to_beta_releases"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuLinks"/>
@@ -208,6 +211,24 @@
   <action name="actionCheck_for_updates">
    <property name="text">
     <string>Check for updates</string>
+   </property>
+  </action>
+  <action name="actionPatreon">
+   <property name="text">
+    <string>Patreon</string>
+   </property>
+  </action>
+  <action name="actionOpt_in_to_beta_releases">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Opt-in to beta releases</string>
+   </property>
+  </action>
+  <action name="actionShow_version_info">
+   <property name="text">
+    <string>Show version info</string>
    </property>
   </action>
  </widget>
@@ -504,6 +525,54 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionPatreon</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnPatreonClick()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>154</x>
+     <y>42</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpt_in_to_beta_releases</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnBetaChannelClick()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>168</x>
+     <y>54</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionShow_version_info</sender>
+   <signal>triggered()</signal>
+   <receiver>BakkesModInjectorCppClass</receiver>
+   <slot>OnShowVersionInfo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>168</x>
+     <y>54</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnOpenBakkesModFolderClicked()</slot>
@@ -524,5 +593,7 @@
   <slot>OnSetInjectionTimeout()</slot>
   <slot>OnDisableWarnings()</slot>
   <slot>OnCheckForUpdates()</slot>
+  <slot>OnBetaChannelClick()</slot>
+  <slot>OnShowVersionInfo()</slot>
  </slots>
 </ui>

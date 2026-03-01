@@ -48,29 +48,35 @@ void DllInjector::SetInjectionParameters(InjectionParameters ip)
 }
 
 
-DWORD DllInjector::InjectDLL(std::wstring processName, std::string path)
+DWORD DllInjector::InjectDLL(std::wstring processName, std::filesystem::path path)
 {
-	DWORD processID = GetProcessID(processName);
+	DWORD processID = GetProcessID64(processName);
 	if (processID == 0)
 		return NOT_RUNNING;
 
 	HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, false, processID);
 	if (h)
 	{
-		LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
-		LPVOID dereercomp = VirtualAllocEx(h, NULL, path.size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-		WriteProcessMemory(h, dereercomp, path.c_str(), path.size(), NULL);
+		LPVOID LoadLibAddr = (LPVOID)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
+		auto ws = path.wstring().c_str();
+		auto wslen = (std::wcslen(ws) + 1) * sizeof(WCHAR);
+		LPVOID dereercomp = VirtualAllocEx(h, NULL, wslen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		WriteProcessMemory(h, dereercomp, ws, wslen, NULL);
 		HANDLE asdc = CreateRemoteThread(h, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibAddr, dereercomp, 0, NULL);
 		WaitForSingleObject(asdc, INFINITE);
-		VirtualFreeEx(h, dereercomp, path.size(), MEM_RELEASE);
+		DWORD res = 0;
+		GetExitCodeThread(asdc, &res);
+		LOG_LINE(INFO, "GetExitCodeThread(): " << (int)res);
+			LOG_LINE(INFO, "Last error: " << GetLastError());
+		VirtualFreeEx(h, dereercomp, wslen, MEM_RELEASE);
 		CloseHandle(asdc);
 		CloseHandle(h);
-		return OK;
+		return res != 0 ? OK : NOPE;
 	}
 	return NOPE;
 }
 
-DWORD DllInjector::GetProcessID(std::wstring processName)
+DWORD DllInjector::GetProcessID64(std::wstring processName)
 {
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -82,16 +88,67 @@ DWORD DllInjector::GetProcessID(std::wstring processName)
 	Process32First(processesSnapshot, &processInfo);
 	if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
 	{
-		CloseHandle(processesSnapshot);
-		return processInfo.th32ProcessID;
+		
+		BOOL iswow64 = FALSE;
+		//https://stackoverflow.com/questions/14184137/how-can-i-determine-whether-a-process-is-32-or-64-bit
+		//If IsWow64Process() reports true, the process is 32-bit running on a 64-bit OS
+		//So we want it to return false (32 bit on 32 bit os, or 64 bit on 64 bit OS, since we build x64 the first condition will never satisfy since they can't run this exe)
+		
+		auto hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processInfo.th32ProcessID);
+		if (hProcess == NULL)
+		{
+			LOG_LINE(INFO, "Error on OpenProcess to check bitness");
+		}
+		else
+		{
+
+			if (IsWow64Process(hProcess, &iswow64))
+			{
+				//LOG_LINE(INFO, "Rocket league process ID is " << processInfo.th32ProcessID << " | " << " has the WOW factor: " << iswow64);
+				if (!iswow64)
+				{
+					CloseHandle(hProcess);
+					CloseHandle(processesSnapshot);
+					return processInfo.th32ProcessID;
+				}
+			}
+			else
+			{
+				LOG_LINE(INFO, "IsWow64Process failed bruv " << GetLastError());
+			}
+			CloseHandle(hProcess);
+		}
 	}
 
 	while (Process32Next(processesSnapshot, &processInfo))
 	{
 		if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
 		{
-			CloseHandle(processesSnapshot);
-			return processInfo.th32ProcessID;
+			BOOL iswow64 = FALSE;
+			auto hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processInfo.th32ProcessID);
+			if (hProcess == NULL)
+			{
+				LOG_LINE(INFO, "Error on OpenProcess to check bitness");
+			}
+			else
+			{
+
+				if (IsWow64Process(hProcess, &iswow64))
+				{
+					//LOG_LINE(INFO, "Rocket league process ID is " << processInfo.th32ProcessID << " | " << " has the WOW factor: " << iswow64);
+					if (!iswow64)
+					{
+						CloseHandle(hProcess);
+						CloseHandle(processesSnapshot);
+						return processInfo.th32ProcessID;
+					}
+				}
+				else
+				{
+					LOG_LINE(INFO, "IsWow64Process failed bruv " << GetLastError());
+				}
+				CloseHandle(hProcess);
+			}
 		}
 		//CloseHandle(processesSnapshot);
 	}
@@ -101,13 +158,47 @@ DWORD DllInjector::GetProcessID(std::wstring processName)
 
 }
 
+std::vector<DWORD> DllInjector::GetProcessIDS(std::wstring processName)
+{
+	std::vector<DWORD> ids;
+	PROCESSENTRY32 processInfo;
+	processInfo.dwSize = sizeof(processInfo);
+
+	HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	if (processesSnapshot == INVALID_HANDLE_VALUE)
+		return { };
+
+	Process32First(processesSnapshot, &processInfo);
+	if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
+	{
+
+		BOOL iswow64 = FALSE;
+		//https://stackoverflow.com/questions/14184137/how-can-i-determine-whether-a-process-is-32-or-64-bit
+		//If IsWow64Process() reports true, the process is 32-bit running on a 64-bit OS
+		//So we want it to return false (32 bit on 32 bit os, or 64 bit on 64 bit OS, since we build x64 the first condition will never satisfy since they can't run this exe)
+
+		ids.push_back(processInfo.th32ProcessID);
+	}
+
+	while (Process32Next(processesSnapshot, &processInfo))
+	{
+		if (_wcsicmp(processName.c_str(), processInfo.szExeFile) == 0)
+		{
+			ids.push_back(processInfo.th32ProcessID);
+		}
+	}
+
+	CloseHandle(processesSnapshot);
+	return ids;
+}
+
 DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)
 {
 	HMODULE hMods[1024];
 	HANDLE hProcess;
 	DWORD cbNeeded;
 	unsigned int i;
-	DWORD processID = GetProcessID(processName);
+	DWORD processID = GetProcessID64(processName);
 	if (processID == 0)
 		return NOT_RUNNING;
 
@@ -137,6 +228,7 @@ DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)
 				std::wstring dllName = std::wstring(szModName);
 				if (dllName.find(L"bakkesmod.dll") != std::string::npos)
 				{
+					CloseHandle(hProcess);
 					return OK;
 				}
 			}
@@ -147,4 +239,52 @@ DWORD DllInjector::IsBakkesModDllInjected(std::wstring processName)
 
 	CloseHandle(hProcess);
 	return NOPE;
+}
+
+GamePlatform DllInjector::GetPlatform(DWORD processID)
+{
+	HMODULE hMods[1024];
+	HANDLE hProcess;
+	DWORD cbNeeded;
+	unsigned int i;
+
+	// Get a handle to the process.
+
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+		PROCESS_VM_READ,
+		FALSE, processID);
+	if (NULL == hProcess)
+		return GamePlatform::UNKNOWN;
+
+	// Get a list of all the modules in this process.
+
+	if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
+	{
+		for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+		{
+			TCHAR szModName[MAX_PATH];
+
+			// Get the full path to the module's file.
+
+			if (GetModuleFileNameEx(hProcess, hMods[i], szModName,
+				sizeof(szModName) / sizeof(TCHAR)))
+			{
+				// Print the module name and handle value.
+				auto name = std::wstring(szModName);
+				if (name.find(L"steam_api64.dll") != std::string::npos || name.find(L"steamapps") != std::string::npos)
+				{
+					LOG_LINE(INFO, WindowsUtils::WStringToString(std::wstring(szModName)).c_str() << " || " << hMods[i]);
+					CloseHandle(hProcess);
+					return GamePlatform::STEAM;
+				}
+				
+			}
+		}
+	}
+
+	// Release the handle to the process.
+
+	CloseHandle(hProcess);
+
+	return GamePlatform::EPIC;
 }

@@ -4,14 +4,14 @@
 #include "ui_BakkesModInjectorCpp.h"
 #include "WindowsUtils.h"
 #include "DllInjector.h"
-#include "qtimer.h"
+#include <QtCore/qtimer.h>
 #include "BakkesModInstallation.h"
 #include "SettingsManager.h"
 #include "Updater.h"
-#include <qsystemtrayicon.h>
+#include <QtWidgets/qsystemtrayicon.h>
 
 #define RL_PROCESS_NAME L"RocketLeague.exe"
-#define BAKKESMODINJECTOR_VERSION 13
+#define BAKKESMODINJECTOR_VERSION 31
 
 #define BAKKESMOD_STATES \
 	X(BOOTING, "BOOTING") \
@@ -55,6 +55,9 @@ private:
 	QTimer timer;
 	QSystemTrayIcon* trayIcon;
 	int outOfDateCounter = 0;
+	std::string bakkesModIdleString = "Uninjected, waiting for user to start Rocket League";
+	std::string bakkesModOutOfDateSafeModeEnabledString = "Mod is out of date, waiting for an update";
+	std::string bakkesModInjectedString = "Injected, press F2 ingame for options menu";
 public:
 	BakkesModInjectorCpp(QWidget *parent = Q_NULLPTR);
 	void initialize();
@@ -79,6 +82,8 @@ public:
 	void OnExitClick();
 	void OnReinstallClick();
 	void OnPythonInstallClick();
+	void OnPatreonClick();
+	void OnBetaChannelClick();
 
 	void OpenTwitter();
 	void OpenDiscord();
@@ -92,6 +97,7 @@ public:
 	void OnSelectBakkesModFolder();
 	void OnCheckForUpdates();
 	void OnSetInjectionTimeout();
+	void OnShowVersionInfo();
 
 	void ReleaseDLL();
 	void DebugDLL();
