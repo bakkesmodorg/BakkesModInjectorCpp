@@ -1,0 +1,17 @@
+{
+  "name": "bakkesmodinjectorcpp",
+  "version-string": "0.1.0",
+  "dependencies": [
+    {
+      "name": "qt5-base",
+      "default-features": false,
+      "features": [
+        "openssl"
+      ]
+    },
+    "curlpp",
+    "miniz",
+    "openssl"
+  ],
+  "builtin-baseline": "45584838600443249a4fdf1de5f87df867eaba8e"
+}

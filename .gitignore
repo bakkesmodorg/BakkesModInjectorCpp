@@ -249,3 +249,9 @@ _Pvt_Extensions
 *.sln.iml
 
 BakkesMod Rewrite.VC.db
+
+# vcpkg manifest-mode local install dir
+vcpkg_installed/
+
+# Built executables
+*.exe

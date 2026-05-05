@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+    <VcpkgConfiguration>Release</VcpkgConfiguration>
+    <VcpkgInstalledDir>$(RepoRoot)vcpkg_installed\</VcpkgInstalledDir>
+
+    <QtVsProjectSettings>true</QtVsProjectSettings>
+    <QtInstall>$(VcpkgInstalledDir)$(VcpkgTriplet)\tools\qt5</QtInstall>
+  </PropertyGroup>
+</Project>
