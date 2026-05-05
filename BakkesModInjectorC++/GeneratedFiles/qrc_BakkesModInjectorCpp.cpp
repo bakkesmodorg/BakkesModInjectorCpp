@@ -1,13 +1,13 @@
 /****************************************************************************
 ** Resource object code
 **
-** Created by: The Resource Compiler for Qt version 5.14.1
+** Created by: The Resource Compiler for Qt version 5.14.2
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
 static const unsigned char qt_resource_data[] = {
-  // G:/C/source/repos/BakkesModInjectorC++/BakkesModInjectorC++/BakkesModInjectorC.ico
+  // C:/Users/Bakkes/Documents/repositories/BakkesModInjectorCpp/BakkesModInjectorC++/BakkesModInjectorC.ico
   0x0,0x2,0x84,0xce,
   0x0,
   0x0,0x1,0x0,0x6,0x0,0x10,0x10,0x0,0x0,0x1,0x0,0x20,0x0,0x68,0x4,0x0,

@@ -526,7 +526,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 							PROCESS_INFORMATION pi;
 							ZeroMemory(&si, sizeof(si)); //Use default startup info
 							ZeroMemory(&pi, sizeof(pi));
-							LPWSTR commandLine = L""; //No command line arguments
+							wchar_t commandLine[] = L""; //No command line arguments
 							CreateProcess(currentName.c_str(),
 								commandLine,
 								NULL,
@@ -565,7 +565,7 @@ void BakkesModInjectorCpp::TimerTimeout()
 					PROCESS_INFORMATION pi;
 					ZeroMemory(&si, sizeof(si)); //Use default startup info
 					ZeroMemory(&pi, sizeof(pi));
-					LPWSTR commandLine = L" /installfromdll=true /VERYSILENT"; //No command line arguments
+					wchar_t commandLine[] = L" /installfromdll=true /VERYSILENT"; //No command line arguments
 					auto created = CreateProcess(updateDownloader->packageUrl.c_str(),
 						commandLine,
 						NULL,

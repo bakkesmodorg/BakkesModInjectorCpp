@@ -66,7 +66,7 @@ void Installer::Install()
 			}
 
 			//TODO: maybe fix?
-			file.extract(member, extractDir);
+			file.extract(member, extractDir.string());
 			LOG_LINE(INFO, "File extraction result: " << WindowsUtils::FileExists(fullPath))
 				//file.extract(member, "");
 		}

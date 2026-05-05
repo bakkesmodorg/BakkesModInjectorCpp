@@ -465,7 +465,7 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 					try
 					{
 
-						js = json::parse(std::ifstream(p));
+						js = json::parse(std::ifstream(p.path()));
 					}
 					catch (...)
 					{
@@ -520,7 +520,7 @@ std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 					LOG_LINE_W(INFO, L"FOUND MANIFEST (Legendary) " << p.path().wstring());
 					try
 					{
-						js = json::parse(std::ifstream(p));
+						js = json::parse(std::ifstream(p.path()));
 					}
 					catch (...)
 					{

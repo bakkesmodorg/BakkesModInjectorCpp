@@ -4,12 +4,12 @@
 
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "Ws2_32.lib")
-#pragma comment(lib, "libssl_static.lib")
-#pragma comment(lib, "libcrypto_static.lib")
+#pragma comment(lib, "libssl.lib")
+#pragma comment(lib, "libcrypto.lib")
 #pragma comment(lib, "Wldap32.lib")
 #pragma comment(lib, "Normaliz.lib")
 #pragma comment(lib, "libcurl.lib")
-#pragma comment(lib, "curlpp.lib")
+#pragma comment(lib, "libcurlpp.lib")
 //#include "curlpp/curlpp.cpp"
 #include "curlpp/cURLpp.hpp"
 #include "curlpp/Easy.hpp"
