@@ -13,6 +13,10 @@
 #include <sddl.h>
 #include <stdio.h>
 #include <winevt.h>
+#include <winternl.h>
+#include <algorithm>
+#include <cwctype>
+#include <vector>
 
 
 #pragma comment(lib, "wevtapi.lib")
@@ -161,6 +165,94 @@ void BakkesModInjectorCpp::SetState(BakkesModStatus newState)
 	bakkesModState = newState;
 }
 
+// Returns true when RL appears to be running under Easy Anti-Cheat.
+// Two independent signals, either is sufficient:
+//   1. Parent process name. When EAC is active, RL is spawned by
+//      EasyAntiCheat_EOS.exe. The match is case-insensitive.
+//   2. OpenProcess probe. We try the exact access mask injection requires;
+//      if it fails with ACCESS_DENIED we treat the process as protected.
+bool BakkesModInjectorCpp::IsProcessProtectedByAntiCheat(DWORD pid)
+{
+	if (pid == 0)
+		return false;
+
+	// Walk the process snapshot once: capture target's parent PID, then on
+	// a second pass look up the parent's executable name.
+	DWORD parentPid = 0;
+	std::wstring parentExe;
+	{
+		HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+		if (snap != INVALID_HANDLE_VALUE)
+		{
+			PROCESSENTRY32W pe = {};
+			pe.dwSize = sizeof(pe);
+			if (Process32FirstW(snap, &pe))
+			{
+				do {
+					if (pe.th32ProcessID == pid)
+					{
+						parentPid = pe.th32ParentProcessID;
+						break;
+					}
+				} while (Process32NextW(snap, &pe));
+			}
+			if (parentPid != 0)
+			{
+				// Re-scan from the beginning for the parent's entry.
+				PROCESSENTRY32W pe2 = {};
+				pe2.dwSize = sizeof(pe2);
+				if (Process32FirstW(snap, &pe2))
+				{
+					do {
+						if (pe2.th32ProcessID == parentPid)
+						{
+							parentExe = pe2.szExeFile;
+							break;
+						}
+					} while (Process32NextW(snap, &pe2));
+				}
+			}
+			CloseHandle(snap);
+		}
+	}
+
+	if (!parentExe.empty())
+	{
+		std::wstring parentExeLower = parentExe;
+		std::transform(parentExeLower.begin(), parentExeLower.end(), parentExeLower.begin(),
+			[](wchar_t c) { return static_cast<wchar_t>(std::towlower(c)); });
+
+		LOG_LINE(INFO, "PID " << pid << " parent (PID " << parentPid << ") = " << WindowsUtils::WStringToString(parentExe))
+
+		// Match any known EAC launcher variant:
+		//   "EasyAntiCheat.exe", "EasyAntiCheat_EOS.exe", "RocketLeague_EAC.exe", ...
+		const bool parentLooksLikeEac =
+			parentExeLower.find(L"easyanticheat") != std::wstring::npos ||
+			parentExeLower.find(L"_eac.exe") != std::wstring::npos;
+
+		if (parentLooksLikeEac)
+		{
+			LOG_LINE(INFO, "Parent is an EAC launcher; treating as EAC active")
+			return true;
+		}
+	}
+
+	// Fallback: try OpenProcess with the access mask injection actually needs.
+	constexpr DWORD injectionAccess = PROCESS_VM_OPERATION | PROCESS_VM_WRITE
+		| PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION;
+
+	HANDLE h = OpenProcess(injectionAccess, FALSE, pid);
+	if (h != NULL)
+	{
+		CloseHandle(h);
+		return false;
+	}
+
+	const DWORD err = GetLastError();
+	LOG_LINE(INFO, "OpenProcess injection-access probe on PID " << pid << " failed with error " << err)
+	return err == ERROR_ACCESS_DENIED;
+}
+
 std::string BakkesModInjectorCpp::GetStatusString()
 {
 	std::string status = "";
@@ -212,6 +304,9 @@ std::string BakkesModInjectorCpp::GetStatusString()
 		break;
 	case WAIT_FOR_RL_CLOSE:
 		status = "Postponing update until RL is closed...";
+		break;
+	case RL_RUNNING_WITH_EAC:
+		status = "Game is launched with EAC enabled, run without EAC to use BakkesMod";
 		break;
 	}
 	return status;
@@ -720,15 +815,21 @@ void BakkesModInjectorCpp::TimerTimeout()
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
 			}
 		}
-		else if (dllInjector.GetProcessID64(RL_PROCESS_NAME))
+		else if (DWORD rlPid = dllInjector.GetProcessID64(RL_PROCESS_NAME); rlPid != 0)
 		{
-			if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if safe to inject right before injecting
+			if (IsProcessProtectedByAntiCheat(rlPid))
+			{
+				LOG_LINE(INFO, "RL PID " << rlPid << " appears to be EAC-protected; injection is not possible")
+				eacGuardedPid = rlPid;
+				SetState(RL_RUNNING_WITH_EAC);
+			}
+			else if (safeModeEnabled && !installation.IsSafeToInject(updater.latestUpdateInfo)) //Check if safe to inject right before injecting
 			{
 				SetState(OUT_OF_DATE_SAFEMODE_ENABLED);
 			}
 			else
 			{
-				LOG_LINE(INFO, "Rocket league process ID is " << dllInjector.GetProcessID64(RL_PROCESS_NAME))
+				LOG_LINE(INFO, "Rocket league process ID is " << rlPid)
 				SetState(INJECT_DLL);
 				int timeout = settingsManager.GetIntSetting(L"InjectionTimeout");
 				if (timeout == 0)
@@ -747,6 +848,33 @@ void BakkesModInjectorCpp::TimerTimeout()
 			}
 
 		}
+	}
+		break;
+	case RL_RUNNING_WITH_EAC:
+	{
+		// Re-poll often enough to feel responsive when the user closes RL
+		// and relaunches it without EAC, but not so often that we burn CPU.
+		timer.setInterval(1500);
+
+		DWORD currentPid = dllInjector.GetProcessID64(RL_PROCESS_NAME);
+		if (currentPid == 0)
+		{
+			// User closed RL — go back to waiting and let BAKKESMOD_IDLE
+			// re-probe whatever they launch next.
+			LOG_LINE(INFO, "RL no longer running; clearing EAC guard")
+			eacGuardedPid = 0;
+			SetState(BAKKESMOD_IDLE);
+		}
+		else if (currentPid != eacGuardedPid)
+		{
+			// Different PID -> user relaunched RL. Could be with EAC off now;
+			// drop back to IDLE so the next tick re-runs the OpenProcess probe.
+			LOG_LINE(INFO, "RL PID changed " << eacGuardedPid << " -> " << currentPid << "; re-evaluating EAC state")
+			eacGuardedPid = 0;
+			SetState(BAKKESMOD_IDLE);
+		}
+		// Same PID still running: EAC protection can't be removed at runtime,
+		// so no point re-probing. Just keep idling here until the PID changes.
 	}
 		break;
 	case INJECT_DLL:

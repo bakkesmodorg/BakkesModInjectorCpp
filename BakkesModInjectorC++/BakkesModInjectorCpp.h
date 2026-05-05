@@ -30,7 +30,8 @@
 	X(REINSTALL, "REINSTALL") \
 	X(INSTALLATION_CORRUPT, "INSTALLATION_CORRUPT") \
 	X(CHECK_D3D9, "CHECKING_D3D9") \
-	X(WAIT_FOR_RL_CLOSE, "WAIT_FOR_RL_CLOSE")
+	X(WAIT_FOR_RL_CLOSE, "WAIT_FOR_RL_CLOSE") \
+	X(RL_RUNNING_WITH_EAC, "RL_RUNNING_WITH_EAC")
 
 #define X(state, name) state,
 enum BakkesModStatus : size_t
@@ -55,6 +56,7 @@ private:
 	QTimer timer;
 	QSystemTrayIcon* trayIcon;
 	int outOfDateCounter = 0;
+	DWORD eacGuardedPid = 0;
 	std::string bakkesModIdleString = "Uninjected, waiting for user to start Rocket League";
 	std::string bakkesModOutOfDateSafeModeEnabledString = "Mod is out of date, waiting for an update";
 	std::string bakkesModInjectedString = "Injected, press F2 ingame for options menu";
@@ -67,6 +69,7 @@ public:
 	void SetState(BakkesModStatus newState);
 
 	bool PopupRLRunningTillClosed();
+	bool IsProcessProtectedByAntiCheat(DWORD pid);
 
 	public slots:
 	void OnOpenBakkesModFolderClicked();
