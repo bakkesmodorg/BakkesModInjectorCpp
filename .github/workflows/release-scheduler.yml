@@ -1,0 +1,103 @@
+name: Publish scheduled releases
+
+# Polls every 15 minutes for draft releases whose front-matter ship_at has
+# passed, and publishes them. Operator workflow: create a draft with a
+# ship_at timestamp and walk away.
+#
+# GitHub Actions' schedule cron drifts by 5-15 minutes during busy periods;
+# treat ship_at as "publish on or shortly after this time", not an exact clock.
+
+on:
+  # IMPORTANT: when copying to the production release repo, add the schedule
+  # trigger back so drafts auto-publish on the cron. Production is a public
+  # repo so Actions minutes are unlimited; the test repo omits it to stay
+  # within the private-repo free tier.
+  #
+  # The "3, 18, 33, 48" offset is chosen so that releases scheduled for the
+  # top of the hour (the common case) get picked up by the run that fires
+  # ~3 minutes later, with three more chances per hour as a backstop.
+  #
+  schedule:
+    - cron: '3,18,33,48 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PyYAML
+        run: pip install --user pyyaml
+
+      - name: Publish drafts whose ship_at has passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'PY'
+          import json, os, re, subprocess
+          from datetime import datetime, timezone
+          import yaml
+
+          repo = os.environ['REPO']
+
+          out = subprocess.check_output(
+              ['gh', 'api', f'/repos/{repo}/releases', '--paginate'],
+              text=True,
+          )
+          releases = json.loads(out)
+          drafts = [r for r in releases if r.get('draft')]
+          print(f"found {len(drafts)} draft(s)")
+
+          now = datetime.now(timezone.utc)
+          published = []
+
+          for r in drafts:
+              tag = r.get('tag_name') or '(no tag)'
+              body = r.get('body') or ''
+              m = re.match(r'\s*<!--\s*\n?(.*?)\n?\s*-->\s*', body, re.DOTALL)
+              if not m:
+                  print(f"skip {tag}: no front-matter")
+                  continue
+              try:
+                  fm = yaml.safe_load(m.group(1)) or {}
+              except yaml.YAMLError as e:
+                  print(f"skip {tag}: invalid front-matter ({e})")
+                  continue
+
+              ship_at = fm.get('ship_at')
+              if ship_at is None:
+                  print(f"skip {tag}: no ship_at")
+                  continue
+
+              if isinstance(ship_at, datetime):
+                  ship_at_dt = ship_at if ship_at.tzinfo else ship_at.replace(tzinfo=timezone.utc)
+              elif isinstance(ship_at, str):
+                  try:
+                      ship_at_dt = datetime.fromisoformat(ship_at.replace('Z', '+00:00'))
+                  except ValueError as e:
+                      print(f"skip {tag}: bad ship_at ({e})")
+                      continue
+              else:
+                  print(f"skip {tag}: ship_at not a timestamp ({type(ship_at).__name__})")
+                  continue
+
+              if ship_at_dt > now:
+                  print(f"skip {tag}: not yet (ship_at={ship_at_dt.isoformat()})")
+                  continue
+
+              print(f"publishing {tag} (ship_at={ship_at_dt.isoformat()})")
+              subprocess.check_call([
+                  'gh', 'api', '--method', 'PATCH',
+                  f"/repos/{repo}/releases/{r['id']}",
+                  '-F', 'draft=false',
+              ])
+              published.append(tag)
+
+          if published:
+              print(f"published: {published}")
+          else:
+              print("nothing to publish")
+          PY

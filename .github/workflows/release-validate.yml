@@ -1,0 +1,98 @@
+name: Validate release metadata
+
+# Fires whenever a release (including a draft) is created or edited. Surfaces
+# typos in the front-matter or tag immediately, instead of silently failing
+# at ship_at time.
+
+on:
+  release:
+    types: [created, edited]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PyYAML
+        run: pip install --user pyyaml
+
+      - name: Validate tag and front-matter
+        env:
+          REL_TAG: ${{ github.event.release.tag_name }}
+          REL_BODY: ${{ github.event.release.body }}
+          REL_DRAFT: ${{ github.event.release.draft }}
+        run: |
+          python3 << 'PY'
+          import os, re, sys
+          from datetime import datetime
+          import yaml
+
+          tag = os.environ.get('REL_TAG', '') or ''
+          body = os.environ.get('REL_BODY', '') or ''
+          draft = os.environ.get('REL_DRAFT', '') == 'true'
+
+          errors = []
+
+          m = re.match(r'\s*<!--\s*\n?(.*?)\n?\s*-->\s*', body, re.DOTALL)
+          if not m:
+              errors.append("release body must begin with an <!-- ... --> front-matter block")
+              fm = {}
+          else:
+              try:
+                  fm = yaml.safe_load(m.group(1)) or {}
+              except yaml.YAMLError as e:
+                  errors.append(f"front-matter is not valid YAML: {e}")
+                  fm = {}
+
+          missing = {'bakkesmod_version', 'rocketleague_version', 'gameinfo'} - set(fm)
+          if missing:
+              errors.append(f"front-matter missing required field(s): {sorted(missing)}")
+
+          bm = fm.get('bakkesmod_version')
+          if bm is not None and not isinstance(bm, int):
+              errors.append(f"bakkesmod_version must be an integer, got {type(bm).__name__}")
+
+          rl = fm.get('rocketleague_version')
+          if rl is not None and not isinstance(rl, str):
+              errors.append(f"rocketleague_version must be a string, got {type(rl).__name__}")
+
+          um = fm.get('update_mandatory')
+          if um is not None and not isinstance(um, bool):
+              errors.append(f"update_mandatory must be true/false, got {type(um).__name__}")
+
+          gi = fm.get('gameinfo')
+          if gi is not None:
+              if not isinstance(gi, dict):
+                  errors.append(f"gameinfo must be a mapping, got {type(gi).__name__}")
+              else:
+                  for k in ('buildids', 'egsbuildids'):
+                      if k not in gi:
+                          errors.append(f"gameinfo missing required field: {k}")
+                      elif not isinstance(gi[k], str):
+                          errors.append(f"gameinfo.{k} must be a string, got {type(gi[k]).__name__}")
+                  bids = gi.get('buildids')
+                  if isinstance(bids, str):
+                      parts = [p.strip() for p in bids.split(',') if p.strip()]
+                      if not parts:
+                          errors.append("gameinfo.buildids must contain at least one value")
+                      else:
+                          bad = [p for p in parts if not p.isdigit()]
+                          if bad:
+                              errors.append(f"gameinfo.buildids must be comma-separated integers; bad: {bad}")
+
+          ship_at = fm.get('ship_at')
+          if ship_at is not None and not isinstance(ship_at, datetime):
+              if isinstance(ship_at, str):
+                  try:
+                      datetime.fromisoformat(ship_at.replace('Z', '+00:00'))
+                  except ValueError as e:
+                      errors.append(f"ship_at is not a valid ISO timestamp: {e}")
+              else:
+                  errors.append(f"ship_at must be a timestamp, got {type(ship_at).__name__}")
+
+          if errors:
+              print("Release metadata validation failed:")
+              for e in errors:
+                  print(f"  - {e}")
+              sys.exit(1)
+          print(f"OK: tag={tag} draft={draft} bakkesmod_version={bm} rocketleague_version={rl}")
+          PY
