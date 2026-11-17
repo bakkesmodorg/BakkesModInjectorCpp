@@ -1,24 +1,6 @@
-name: Publish scheduled releases
-
-# Polls every 15 minutes for draft releases whose front-matter ship_at has
-# passed, and publishes them. Operator workflow: create a draft with a
-# ship_at timestamp and walk away.
-#
-# GitHub Actions' schedule cron drifts by 5-15 minutes during busy periods;
-# treat ship_at as "publish on or shortly after this time", not an exact clock.
+name: Publish releases
 
 on:
-  # IMPORTANT: when copying to the production release repo, add the schedule
-  # trigger back so drafts auto-publish on the cron. Production is a public
-  # repo so Actions minutes are unlimited; the test repo omits it to stay
-  # within the private-repo free tier.
-  #
-  # The "3, 18, 33, 48" offset is chosen so that releases scheduled for the
-  # top of the hour (the common case) get picked up by the run that fires
-  # ~3 minutes later, with three more chances per hour as a backstop.
-  #
-  schedule:
-    - cron: '3,18,33,48 * * * *'
   workflow_dispatch:
 
 permissions:
