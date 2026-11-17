@@ -9,7 +9,7 @@
 #include "vdf_parser.h"
 #include <fstream>
 #include <shlobj_core.h>
-#include "json.hpp"
+#include "EpicVersionReader.h"
 //std::string BakkesModInstallation::overrideBakkesModFolder = "";
 
 void BakkesModInstallation::resetBMFolder()
@@ -441,133 +441,21 @@ std::string BakkesModInstallation::GetHighestEpicVersion()
 	return highestString;
 }
 
-using json = nlohmann::json;
 std::vector<std::string> BakkesModInstallation::GetEpicVersion()
 {
 	TCHAR szPath[MAX_PATH];
-	std::vector<std::string> epicVersions;
+	std::filesystem::path installations, manifests, legendary;
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, szPath)))
+		installations = std::filesystem::path(szPath) / "com.epicgames.eglv2" / "installations.jsonl";
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, szPath)))
-	{
-		
-		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / "Epic" / "EpicGamesLauncher" / "Data" / "Manifests";
-		LOG_LINE_W(INFO, L"Checking Epic path " << manifestsPath.wstring());
-		
-		if (std::filesystem::exists(manifestsPath))
-		{
-			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
-			{
-				//LOG_LINE(INFO, "Extension: " << p.path().extension().wstring())
-				if (p.path().extension().string().compare(".item") == 0)
-				{
-					json js;
-					bool requestFailed = false;
-					LOG_LINE_W(INFO, L"FOUND MANIFEST " << p.path().wstring());
-					try
-					{
-
-						js = json::parse(std::ifstream(p.path()));
-					}
-					catch (...)
-					{
-						requestFailed = true;
-					}
-					if (js.is_discarded())
-					{
-						requestFailed = true;
-					}
-					if (requestFailed)
-					{
-						LOG_LINE_W(INFO, L"Parsing JSON failed (" << p.path().wstring() << L")")
-							continue;
-					}
-					else
-					{
-						if (js.value("MandatoryAppFolderName", "").compare("rocketleague") == 0 ||
-							js.value("LaunchExecutable", "").find("RocketLeague") != std::string::npos)
-							{
-								LOG_LINE(INFO, "This one is most likely RL manifest file");
-								if (auto found = js.find("AppVersionString"); found != js.end())
-								{
-									std::string versionNumber = found->get<std::string>();
-									LOG_LINE(INFO, "Found Epic version " << versionNumber);
-									if (!versionNumber.empty())
-									{
-										epicVersions.push_back(versionNumber);
-										//return versionNumber;
-									}
-								}
-							}
-					}
-				}
-				
-			}
-		}
-		
-	}
+		manifests = std::filesystem::path(szPath) / "Epic" / "EpicGamesLauncher" / "Data" / "Manifests";
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROFILE, NULL, 0, szPath)))
-	{
-		std::filesystem::path manifestsPath = std::filesystem::path(szPath) / ".config" / "legendary";
-		LOG_LINE_W(INFO, L"Checking Epic path (Legendary)" << manifestsPath.wstring());
-		if (std::filesystem::exists(manifestsPath))
-		{
-			for (auto& p : std::filesystem::directory_iterator(manifestsPath))
-			{
-				if (p.path().stem().string().compare("installed") == 0 && 
-					p.path().extension().string().compare(".json") == 0)
-				{
-					json js;
-					bool requestFailed = false;
-					LOG_LINE_W(INFO, L"FOUND MANIFEST (Legendary) " << p.path().wstring());
-					try
-					{
-						js = json::parse(std::ifstream(p.path()));
-					}
-					catch (...)
-					{
-						requestFailed = true;
-					}
-					if (js.is_discarded())
-					{
-						requestFailed = true;
-					}
-					if (requestFailed)
-					{
-						LOG_LINE_W(INFO, L"Parsing JSON failed (Legendary) (" << p.path().wstring() << L")");
-						continue;
-					}
-					else
-					{
-						try
-						{
-							if (auto sugar = js.find("Sugar"); sugar != js.end())
-							{
-								auto& sugarValue = sugar.value();
-								std::string versionNumber = sugarValue.value("version", "");
-								LOG_LINE(INFO, "Found Epic version " << versionNumber);
+		legendary = std::filesystem::path(szPath) / ".config" / "legendary" / "installed.json";
 
-								if (!versionNumber.empty())
-								{
-									epicVersions.push_back(versionNumber);
-								}
-							}
-							
-						}						
-						catch (...)
-						{
-							requestFailed = true;
-						}
-						if (requestFailed)
-						{
-							LOG_LINE_W(INFO, L"Failed checking installed version from JSON (Legendary) (" << p.path().wstring() << L")")
-							continue;
-						}
-					}
-				}
-				
-			}
-		}
-	}
-	return epicVersions;
+	const auto versions = EpicVersionReader::ReadVersions(installations, manifests, legendary);
+	for (const auto& version : versions)
+		LOG_LINE(INFO, "Found Epic version " << version);
+	return versions;
 }
 
 bool BakkesModInstallation::IsSteamVersionInstalled()

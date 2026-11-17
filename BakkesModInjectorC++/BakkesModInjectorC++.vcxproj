@@ -250,6 +250,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BakkesModInstallation.h" />
+    <ClInclude Include="EpicVersionReader.h" />
     <ClInclude Include="DllInjector.h" />
     <ClInclude Include="Installer.h" />
     <ClInclude Include="json.hpp" />
